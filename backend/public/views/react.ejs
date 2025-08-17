@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        // Props biasa
+        // function H1(props) {
+        //     return <h1>Lagu Dewa19: {props.lagu}</h1>;
+        // };
+
+        // function HomePage() {
+        //     return (
+        //         <div>
+        //             <H1 lagu="SATU" />
+        //             <H1 lagu="Kangen" />
+        //             <H1 lagu="MEJIKUHIBINIU" />
+        //             <H1 lagu="Garam dan Madu" />
+        //             <H1 lagu="Calon Mantu Idaman" />
+        //         </div>
+        //     );
+        // };
+
+
+        // Props dengan default value
+        // function H1({lagu}) {
+        //     return <h1>Lagu Dewa19: {lagu ? lagu: 'Garam dan Madu'}</h1>
+        // };
+
+        // function HomePage(){
+        //     return (
+        //         <>
+        //             <H1 />
+        //             <H1 lagu="Aku Cinta Kau dan Dia" />
+        //         </>
+        //     );
+        // };
+
+
+        // Unique Key
+        // function HomePage() {
+        //     const songs = ['Garam dan Madu', 'Pupus', 'Kasih Aba-Aba']
+        //     return (
+        //         <>
+        //             <h1>List lagu hits Dewa19:</h1>
+        //             <ul>
+        //                 {songs.map((song) => (
+        //                     <li key={song}>{song}</li>
+        //                 ))}
+        //             </ul>
+        //         </>
+        //     );
+        // };
+
+
+        // State dan Hook
+        function HomePage() {
+            const [likes, setLikes] = React.useState(0);
+
+            function handleClick() {
+                setLikes(likes + 1);
+            }
+
+            return (
+                <button onClick={handleClick}>Like ({likes})</button>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<HomePage />);
+
+    </script>
+</body>
+
+</html>
