@@ -9,6 +9,7 @@ const fasilitasController = require('../controllers/fasilitas.controller');
 const busController = require('../controllers/bus.controller');
 const methodPaymentController = require('../controllers/methodPayment.controller');
 const jadwalController = require('../controllers/jadwal.controller');
+const reservasiController = require('../controllers/reservasi.controller');
 
 router.get('/', (req, res) => {
   res.render('react', { title: 'Hello EJS' });
@@ -68,6 +69,13 @@ router.get('/jadwal/:id', jadwalController.show);
 router.post('/jadwal', jadwalController.store);
 router.put('/jadwal/:id', jadwalController.update);
 router.delete('/jadwal/:id', jadwalController.destroy);
+
+router.get('/reservasi', reservasiController.getAllReservasi);
+router.get('/reservasi/:id', reservasiController.show);
+router.post('/reservasi', reservasiController.store);
+router.put('/reservasi/:id', reservasiController.update);
+router.delete('/reservasi/:id', reservasiController.destroy);
+
 
 
 module.exports = router;

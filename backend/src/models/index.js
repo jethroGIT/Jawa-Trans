@@ -15,6 +15,7 @@ db.Fasilitas = require('./fasilitas')(sequelize, DataTypes);
 db.Bus_Fasilitas = require('./bus_fasilitas')(sequelize, DataTypes);
 db.methodPayment = require('./methodPayment')(sequelize, DataTypes);
 db.Jadwal = require('./jadwal')(sequelize, DataTypes);
+db.Reservasi = require('./reservasi')(sequelize, DataTypes);
 
 // User ->|---||- Role
 db.Role.hasMany(db.User, {
@@ -84,6 +85,27 @@ db.Bus.hasMany(db.Jadwal, {
 db.Jadwal.belongsTo(db.Bus, {
     foreignKey: 'idBus',
     as: 'bus'
+});
+
+// User -||---|<- Reservasi ->|---||- Jadwal
+db.User.hasMany(db.Reservasi, {
+    foreignKey: 'idUser',
+    as: 'reservasi'
+});
+
+db.Reservasi.belongsTo(db.User, {
+    foreignKey: 'idUser',
+    as: 'user'
+});
+
+db.Jadwal.hasMany(db.Reservasi, {
+    foreignKey: 'idJadwal',
+    as: 'reservasi'
+});
+
+db.Reservasi.belongsTo(db.Jadwal, {
+    foreignKey: 'idJadwal',
+    as: 'jadwal'
 });
 
 module.exports = db;
