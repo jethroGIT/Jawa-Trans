@@ -9,7 +9,7 @@ const findBusOrFail = async (id) => {
     const existingBus = await Bus.findByPk(id, {
         include: [
             {
-                model: db.Fasilitas,
+                model: Fasilitas,
                 as: 'fasilitas',
                 through: { attributes: [] }
             },

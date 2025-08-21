@@ -16,6 +16,8 @@ db.Bus_Fasilitas = require('./bus_fasilitas')(sequelize, DataTypes);
 db.methodPayment = require('./methodPayment')(sequelize, DataTypes);
 db.Jadwal = require('./jadwal')(sequelize, DataTypes);
 db.Reservasi = require('./reservasi')(sequelize, DataTypes);
+db.Payment = require('./payment')(sequelize, DataTypes);
+db.Foto_Bus = require('./foto')(sequelize, DataTypes);
 
 // User ->|---||- Role
 db.Role.hasMany(db.User, {
@@ -40,7 +42,7 @@ db.Bus.belongsToMany(db.Fasilitas, {
 db.Fasilitas.belongsToMany(db.Bus, {
     through: db.Bus_Fasilitas,
     foreignKey: 'idFasilitas',
-    otherKey: 'idbus',
+    otherKey: 'idBus',
     as: 'bus'
 });
 
@@ -106,6 +108,40 @@ db.Jadwal.hasMany(db.Reservasi, {
 db.Reservasi.belongsTo(db.Jadwal, {
     foreignKey: 'idJadwal',
     as: 'jadwal'
+});
+
+
+// Method Payment -||---<- Payment ->|---||- Reservasi
+db.methodPayment.hasMany(db.Payment, {
+    foreignKey: 'idmethodPayment',
+    as: 'payment'
+});
+
+db.Payment.belongsTo(db.methodPayment, {
+    foreignKey: 'idmethodPayment',
+    as: 'methodPayment'
+});
+
+db.Reservasi.hasMany(db.Payment, {
+    foreignKey: 'idReservasi',
+    as: 'payment'
+});
+
+db.Payment.belongsTo(db.Reservasi, {
+    foreignKey: 'idReservasi',
+    as: 'reservasi'
+});
+
+
+// Bus -||---<- Foto_Bus
+db.Bus.hasMany(db.Foto_Bus, {
+    foreignKey: 'idBus',
+    as: 'foto'
+});
+
+db.Foto_Bus.belongsTo(db.Bus, {
+    foreignKey: 'idBus',
+    as: 'bus'
 });
 
 module.exports = db;
