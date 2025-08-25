@@ -1,4 +1,4 @@
-const mitraService = require('../services/mitraService');
+const mitraService = require('../services/mitra.service');
 
 const gettAllMitra = async (req, res) => {
     try {

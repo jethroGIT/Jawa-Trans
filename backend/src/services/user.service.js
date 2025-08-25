@@ -18,6 +18,7 @@ const db = require('../models');
 const Role = db.Role;
 const User = db.User;
 const bcrypt = require('bcrypt');
+const { notify } = require('../routes/api');
 
 /**
  * Helper function untuk mencari user beserta role-nya
@@ -93,9 +94,19 @@ const checkDuplicateUser = async (email, userId = null) => {
  * @returns {boolean} True jika semua validasi passed
  * @throws {Error} Jika ada field yang kosong atau password terlalu pendek
  */
-const userValidation = (idRole, nama, alamat, telephone, email, password) => {
+const userValidation = async ({ id = null, idRole, nama, alamat, telephone, email, password }) => {
+    const role = await Role.findByPk(idRole);
+    const userTlp = await User.findOne({
+        where: { telephone }
+    });
     if (!idRole || !nama || !alamat || !telephone || !email || !password) {
         throw new Error('Semua field wajib diisi!');
+    }
+    if (!role) {
+        throw new Error('Role tidak ditemukan');
+    }
+    if (userTlp && userTlp.idUser != id) {
+        throw new Error('Nomor telephone sudah digunakan');
     }
     if (password.length < 6) {
         throw new Error('Password minimal 6 karakter!');
@@ -172,7 +183,7 @@ const getUserById = async (id) => {
  */
 const createUser = async ({ idRole, nama, alamat, telephone, email, password }) => {
     // Validasi input
-    userValidation(idRole, nama, alamat, telephone, email, password);
+    await userValidation({ idRole, nama, alamat, telephone, email, password });
     
     // Cek duplikasi email
     await checkDuplicateUser(email);
@@ -224,7 +235,7 @@ const updateUser = async ({ id, idRole, nama, alamat, telephone, email, password
     const user = await findUserOrFail(id);
     
     // Validasi input
-    userValidation(idRole, nama, alamat, telephone, email, password);
+    await userValidation({ id, idRole, nama, alamat, telephone, email, password });
     
     // Cek duplikasi email (kecuali untuk user ini sendiri)
     await checkDuplicateUser(email, id);

@@ -40,6 +40,25 @@ const checkDuplicateReservasi = async (idUser, idJadwal, noKursi, id = null) => 
     return true;
 };
 
+const checkUserExist = async (idUser) => {
+    const user = await User.findByPk(idUser);
+    if (!user) {
+        throw new Error('User tidak ditemukan!');
+    }
+
+    return true;
+};
+
+const checkJadwalExist = async (idJadwal) => {
+    const jadwal =  await Jadwal.findByPk(idJadwal);
+    if (!jadwal) {
+        throw new Error('Jadwal tidak ditemukan!');
+    }
+    
+    return true;
+};
+
+
 const getAllReservasi = async () => {
     return await Reservasi.findAll({
         include: [
@@ -63,7 +82,11 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, noKursi, status = 
     if (!idUser || !idJadwal || !penumpang) {
         throw new Error('Field idUser, idJadwal, dan penumpang wajib diisi!');
     }
+    
+    await checkUserExist(idUser);
 
+    await checkJadwalExist(idJadwal);
+    
     // Cek duplikasi jika ada nomor kursi
     if (noKursi) {
         await checkDuplicateReservasi(idUser, idJadwal, noKursi);
@@ -79,17 +102,20 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, noKursi, status = 
 };
 
 const updateReservasi = async ({ id, idUser, idJadwal, penumpang, noKursi, status }) => {
+    const existingReservasi = await findReservasiOrFail(id);
+
     if (!idUser || !idJadwal || !penumpang) {
         throw new Error('Field idUser, idJadwal, dan penumpang wajib diisi!');
     }
-    
-    const existingReservasi = await findReservasiOrFail(id);
 
+    await checkUserExist(idUser);
+
+    await checkJadwalExist(idJadwal);
+    
     // Cek duplikasi jika ada nomor kursi
     if (noKursi) {
         await checkDuplicateReservasi(idUser, idJadwal, noKursi, id);
     }
-
 
     return await existingReservasi.update({
         idUser,

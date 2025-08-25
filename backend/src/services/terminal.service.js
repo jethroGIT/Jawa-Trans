@@ -9,11 +9,11 @@ const findTerminalOrFail = async (id) => {
     return terminal;
 };
 
-const checkDuplicateTemrinal = async (nama) => {
+const checkDuplicateTemrinal = async (nama, id = null) => {
     const existingTerminal = await Terminal.findOne({
         where: { nama }
     });
-    if (existingTerminal) {
+    if (existingTerminal && existingTerminal.idTerminal != id) {
         throw new Error('Terminal sudah ada!')
     }
     return true;
@@ -41,17 +41,15 @@ const createTerminal = async (nama) => {
 };
 
 const updateTerminal = async (id, nama) => {
+    const existingTerminal = await findTerminalOrFail(id);
+
     if (!nama) {
         throw new Error ('Semua field wajib diisi!')
     }
     
-    await checkDuplicateTemrinal(nama);
+    await checkDuplicateTemrinal(nama, id);
 
-    const existingTerminal = await findTerminalOrFail(id);
-
-    return await existingTerminal.update({
-        nama
-    });
+    return await existingTerminal.update({ nama });
 };
 
 

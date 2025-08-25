@@ -43,21 +43,20 @@ const createFasilitas = async (nama) => {
 };
 
 const updateFasilitas = async (id, nama) => {
+    const existingFasilitas = await findFasilitasOrFail(id);
+
     if (!nama) {
         throw new Error('Semua field wajib diisi!')
     }
 
     await checkDuplicateFasilitas(nama, id);
-    
-    const existingFasilitas = await findFasilitasOrFail(id);
 
-    return await existingFasilitas.update({ 
-        nama 
-    });
+    return await existingFasilitas.update({ nama });
 };
 
 const destroyFasilitas = async (id) => {
     const existingFasilitas = await findFasilitasOrFail(id)
+    
     return await existingFasilitas.destroy();
 };
 

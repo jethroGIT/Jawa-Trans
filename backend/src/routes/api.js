@@ -11,9 +11,10 @@ const methodPaymentController = require('../controllers/methodPayment.controller
 const jadwalController = require('../controllers/jadwal.controller');
 const reservasiController = require('../controllers/reservasi.controller');
 const paymentController = require('../controllers/payment.controller');
+const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
 router.get('/', (req, res) => {
-  res.render('react', { title: 'Hello EJS' });
+  res.render('index', { title: 'Hello EJS' });
 });
 
 
@@ -23,7 +24,7 @@ router.get('/login', (req, res) => {
 router.post('/login', authController.login);
 router.post('/logout', authController.logout);
 
-router.get('/roles', roleController.getAllRoles);
+router.get('/roles', authenticate, authorize([1, 3]), roleController.getAllRoles);
 router.get('/roles/:id', roleController.show);
 router.post('/roles', roleController.store);
 router.put('/roles/:id', roleController.update);

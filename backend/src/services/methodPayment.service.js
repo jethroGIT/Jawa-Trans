@@ -54,11 +54,11 @@ const createMethodPayment = async (nama, code) => {
 };
 
 const updateMethodPayment = async ({ id, nama, code }) => {
-    fieldValidation(nama, code);
-
-    await checkDuplicate(nama, id);
-
     const existingFMethodPayment = await findOrFail(id);
+    
+    fieldValidation(nama, code);
+    
+    await checkDuplicate(nama, id);
 
     return await existingFMethodPayment.update({
         nama,

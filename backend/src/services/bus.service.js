@@ -71,7 +71,7 @@ const getAllBus = async () => {
     return await Bus.findAll({
         include: [
             {
-                model: db.Fasilitas,
+                model: Fasilitas,
                 as: 'fasilitas',
                 through: { attributes: [] }
             },
@@ -91,9 +91,9 @@ const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fas
     try {
         fieldValidation({ idMitra, kode_bus, nama, type, kapasitas, status });
 
-        const validFasilitas = await validateFasilitas(fasilitas);
-
         await checkDuplicateBus(kode_bus);
+
+        const validFasilitas = await validateFasilitas(fasilitas);
 
         const newBus = await Bus.create({
             idMitra,
@@ -119,13 +119,13 @@ const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fas
 const updatebus = async ({ id, idMitra, kode_bus, nama, type, kapasitas, status, fasilitas }) => {
     const transaction = await sequelize.transaction();
     try {
-        fieldValidation({ idMitra, kode_bus, nama, type, kapasitas, status });
-
-        const validFasilitas = await validateFasilitas(fasilitas);
-
         const existingBus = await findBusOrFail(id);
 
+        fieldValidation({ idMitra, kode_bus, nama, type, kapasitas, status });
+
         await checkDuplicateBus(kode_bus, id);
+        
+        const validFasilitas = await validateFasilitas(fasilitas);
 
         const updateBus = await existingBus.update({
             idMitra,

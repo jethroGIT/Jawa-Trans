@@ -32,9 +32,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { idBus, tanggal, titik_naik, titik_turun, jam_keberangkatan, jam_kedatangan, harga } = req.body;
+    const { idBus, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga } = req.body;
     try {
-        const jadwal = await jadwalService.createJadwal({ idBus, tanggal, titik_naik, titik_turun, jam_keberangkatan, jam_kedatangan, harga });
+        const jadwal = await jadwalService.createJadwal({ idBus, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga });
         return res.status(200).json({
             success: true,
             message: 'Jadwal berhasil ditambahkan'

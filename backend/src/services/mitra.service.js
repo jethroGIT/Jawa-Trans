@@ -10,11 +10,23 @@ const findMitraOrFail = async (id) => {
     return mitra;
 };
 
-const checkDuplicateMitra = async (email, id = null) => {
+const checkDuplicateMitra = async ({ nama, telephone, email, id = null }) => {
     const existingMitra = await Mitra.findOne({
+        where: { nama }
+    })
+    const existingPhone = await Mitra.findOne({
+        where: { telephone }
+    });
+    const existingMail = await Mitra.findOne({
         where: { email }
     });
     if (existingMitra && existingMitra.idMitra != id) {
+        throw new Error('Nama mitra sudah digunakan oleh mitra lain')
+    }
+    if (existingPhone && existingPhone.idMitra != id) {
+        throw new Error('Nomor telephone sudah digunakan oleh mitra lain.')
+    }
+    if (existingMail && existingMail.idMitra != id) {
         throw new Error('Email sudah digunakan oleh mitra lain.');
     }
     return true;
@@ -41,7 +53,7 @@ const getMitraById = async (id) => {
 const createMitra = async ({ logo, nama, alamat, telephone, email }) => {
     fieldValidation({ logo, nama, alamat, telephone, email });
 
-    await checkDuplicateMitra(email);
+    await checkDuplicateMitra({ nama, telephone, email });
 
     return await Mitra.create({ 
         logo, 
@@ -57,7 +69,7 @@ const updateMitra = async({ id, logo, nama, alamat, telephone, email }) => {
 
     fieldValidation({ logo, nama, alamat, telephone, email });
 
-    await checkDuplicateMitra(email, id);
+    await checkDuplicateMitra({ nama, telephone, email, id });
     
     return await mitra.update({
         logo,

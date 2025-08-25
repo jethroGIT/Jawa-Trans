@@ -1,3 +1,4 @@
+const { parse } = require('dotenv');
 const db = require('../models');
 
 const Jadwal = db.Jadwal;
@@ -22,7 +23,7 @@ const findOrFail = async (id) => {
             }
         ]
     });
-    
+
     if (!jadwal) {
         throw new Error('Jadwal tidak ditemukan.');
     }
@@ -30,15 +31,17 @@ const findOrFail = async (id) => {
     return jadwal;
 };
 
-const checkDuplicate = async (idBus, tanggal, titik_naik, titik_turun, jam_keberangkatan, id = null) => {
+const checkDuplicate = async ({ idBus, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, id = null }) => {
+    const normalizedData = {
+        idBus: parseInt(idBus),
+        titik_naik: parseInt(titik_naik),
+        titik_turun: parseInt(titik_turun),
+        tanggal_keberangkatan: new Date(tanggal_keberangkatan),
+        jam_keberangkatan: new Date(jam_keberangkatan)
+    };
+
     const existingJadwal = await Jadwal.findOne({
-        where: { 
-            idBus,
-            tanggal,
-            titik_naik,
-            titik_turun,
-            jam_keberangkatan
-        }
+        where: normalizedData
     });
 
     if (existingJadwal && existingJadwal.idJadwal != id) {
@@ -48,17 +51,28 @@ const checkDuplicate = async (idBus, tanggal, titik_naik, titik_turun, jam_keber
     return true;
 };
 
-const fieldValidation = (idBus, titik_naik, titik_turun, jam_keberangkatan, jam_kedatangan, harga) => {
-    if (!idBus || !titik_naik || !titik_turun || !jam_keberangkatan || !jam_kedatangan || !harga) {
+const fieldValidation = ({ idBus, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga }) => {
+    // Cek field wajib
+    if (!idBus || !titik_naik || !titik_turun || !tanggal_keberangkatan || !jam_keberangkatan || !tanggal_kedatangan || !jam_kedatangan || !harga) {
         throw new Error('Semua field wajib diisi!');
     }
 
+    // Validasi titik naik dan turun
     if (titik_naik === titik_turun) {
         throw new Error('Titik naik dan titik turun tidak boleh sama!');
     }
 
+    // Validasi waktu keberangkatan dan kedatangan
+    if (tanggal_keberangkatan >= tanggal_kedatangan) {
+        throw new Error('Waktu kedatangan harus setelah waktu keberangkatan!');
+    }
+
     if (jam_keberangkatan === jam_kedatangan) {
-        throw new Error('Jam kebarangkatan dan kedatangan tidak boleh sama!');
+        throw new Error('Waktu kebarangkatan dan waktu kedatangan tidak boleh sama!');
+    }
+
+    if (parse(harga) <= 0) {
+        throw new Error('Harga harus lebih besar dari 0 !');
     }
 
     return true;
@@ -75,15 +89,15 @@ const checkBusExists = async (idBus) => {
 const checkTerminalExists = async (titik_naik, titik_turun) => {
     const terminalNaik = await Terminal.findByPk(titik_naik);
     const terminalTurun = await Terminal.findByPk(titik_turun);
-    
+
     if (!terminalNaik) {
         throw new Error('Terminal keberangkatan tidak ditemukan!');
     }
-    
+
     if (!terminalTurun) {
         throw new Error('Terminal kedatangan tidak ditemukan!');
     }
-    
+
     return true;
 };
 
@@ -103,7 +117,7 @@ const getAllJadwal = async () => {
                 as: 'terminalTurun'
             }
         ],
-        order: [['tanggal', 'ASC'], ['jam_keberangkatan', 'ASC']]
+        order: [['tanggal_keberangkatan', 'ASC'], ['jam_keberangkatan', 'ASC']]
     });
 };
 
@@ -114,16 +128,26 @@ const getJadwalById = async (id) => {
 const createJadwal = async (jadwalData) => {
     const {
         idBus,
-        tanggal,
         titik_naik,
         titik_turun,
+        tanggal_keberangkatan,
         jam_keberangkatan,
+        tanggal_kedatangan,
         jam_kedatangan,
         harga
     } = jadwalData;
 
     // Validasi field wajib
-    fieldValidation(idBus, titik_naik, titik_turun, jam_keberangkatan, jam_kedatangan, harga);
+    fieldValidation({ 
+        idBus, 
+        titik_naik, 
+        titik_turun, 
+        tanggal_keberangkatan, 
+        jam_keberangkatan, 
+        tanggal_kedatangan, 
+        jam_kedatangan, 
+        harga 
+    });
 
     // Cek apakah bus ada
     await checkBusExists(idBus);
@@ -132,22 +156,29 @@ const createJadwal = async (jadwalData) => {
     await checkTerminalExists(titik_naik, titik_turun);
 
     // Cek duplikasi
-    await checkDuplicate(idBus, tanggal, titik_naik, titik_turun, jam_keberangkatan);
+    await checkDuplicate({ 
+        idBus, 
+        titik_naik, 
+        titik_turun, 
+        tanggal_keberangkatan, 
+        jam_keberangkatan
+    });
 
     return await Jadwal.create({
-        idBus,
-        tanggal,
-        titik_naik,
-        titik_turun,
-        jam_keberangkatan,
-        jam_kedatangan,
-        harga
+        idBus: parseInt(idBus),
+        titik_naik: parseInt(titik_naik),
+        titik_turun: parseInt(titik_turun),
+        tanggal_keberangkatan: new Date(tanggal_keberangkatan),
+        jam_keberangkatan: new Date(jam_keberangkatan),
+        tanggal_kedatangan: new Date(tanggal_kedatangan),
+        jam_kedatangan: new Date(jam_kedatangan),
+        harga: parseFloat(harga)
     });
 };
 
-const updateJadwal = async ({ id, idBus, tanggal, titik_naik, titik_turun, jam_keberangkatan, jam_kedatangan, harga }) => {
+const updateJadwal = async ({ id, idBus, tanggal, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga }) => {
     // Validasi field wajib
-    fieldValidation(idBus, titik_naik, titik_turun, jam_keberangkatan, jam_kedatangan, harga);
+    fieldValidation({ idBus, titik_naik, titik_turun, tanggal_keberangkatan,jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga });
 
     // Cek apakah bus ada
     await checkBusExists(idBus);
@@ -156,19 +187,19 @@ const updateJadwal = async ({ id, idBus, tanggal, titik_naik, titik_turun, jam_k
     await checkTerminalExists(titik_naik, titik_turun);
 
     // Cek duplikasi (exclude current record)
-    await checkDuplicate(idBus, tanggal, titik_naik, titik_turun, jam_keberangkatan, id);
+    await checkDuplicate({ idBus, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, id });
 
     // Cari jadwal yang akan diupdate
     const existingJadwal = await findOrFail(id);
 
     return await existingJadwal.update({
-        idBus,
-        tanggal,
-        titik_naik,
-        titik_turun,
-        jam_keberangkatan,
-        jam_kedatangan,
-        harga
+        idBus: parseInt(idBus),
+        tanggal: new Date(tanggal),
+        titik_naik: parseInt(titik_naik),
+        titik_turun: parseInt(titik_turun),
+        jam_keberangkatan: new Date(jam_keberangkatan),
+        jam_kedatangan: new Date(jam_kedatangan),
+        harga: harga.toString()
     });
 };
 

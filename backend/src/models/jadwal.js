@@ -14,10 +14,6 @@ const defineJadwalModel = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        tanggal: {
-            type: DataTypes.DATE,
-            allowNull: true
-        },
         titik_naik: {
             type: DataTypes.INTEGER,
             allowNull: false
@@ -26,17 +22,25 @@ const defineJadwalModel = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false
         },
+        tanggal_keberangkatan: {
+            type: DataTypes.DATE,
+            allowNull: false
+        },
         jam_keberangkatan: {
             type: DataTypes.TIME,
-            allowNull: true,
+            allowNull: false,
+        },
+        tanggal_kedatangan: {
+            type: DataTypes.DATE,
+            allowNull: false
         },
         jam_kedatangan: {
             type: DataTypes.TIME,
-            allowNull: true,
+            allowNull: false,
         },
         harga: {
-            type: DataTypes.STRING(45),
-            allowNull: true
+            type: DataTypes.DECIMAL,
+            allowNull: false
         }
     }, {
         tableName: 'Jadwal',
