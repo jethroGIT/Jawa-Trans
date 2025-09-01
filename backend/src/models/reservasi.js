@@ -20,10 +20,6 @@ const defineReservasiModel = (sequelize) => {
         },
         penumpang: {
             type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        noKursi: {
-            type: DataTypes.STRING(5),
             allowNull: false
         },
         status: {

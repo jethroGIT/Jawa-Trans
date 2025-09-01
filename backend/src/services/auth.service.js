@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../models');
 const User = db.User;
+const Role = db.Role;
 require('dotenv').config();
 
 // Reusable Helper 
@@ -19,7 +20,13 @@ const fieldValidation = (email, password) => {
 
 const findUserOrFail = async (email, password) => {
     const existingUser = await User.findOne({
-        where: { email }
+        where: { email },
+        include: [
+            {
+                model: Role,
+                as: 'role'
+            }
+        ]
     });
     if (!existingUser) {
         throw new Error('Email atau password salah')
@@ -49,6 +56,7 @@ const login = async (email, password) => {
     const payload = {
         idUser: user.idUser,
         idRole: user.idRole,
+        role: user.role.nama,
         nama: user.nama,
         email: user.email,
         telephone: user.telephone,
@@ -62,6 +70,7 @@ const login = async (email, password) => {
         user: {
             idUser: user.idUser,
             idRole: user.idRole,
+            role: user.role.nama,
             nama: user.nama,
             email: user.email,
             telephone: user.telephone

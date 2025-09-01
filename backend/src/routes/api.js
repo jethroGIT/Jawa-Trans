@@ -24,7 +24,10 @@ router.get('/login', (req, res) => {
 router.post('/login', authController.login);
 router.post('/logout', authController.logout);
 
-router.get('/roles', authenticate, authorize([1, 3]), roleController.getAllRoles);
+// versi menggunakan idRole
+// router.get('/roles', authenticate, authorize([1, 5]), roleController.getAllRoles);
+// versi menggunakan nama role
+router.get('/roles', authenticate, authorize(['admin', 'mitra']), roleController.getAllRoles);
 router.get('/roles/:id', roleController.show);
 router.post('/roles', roleController.store);
 router.put('/roles/:id', roleController.update);
