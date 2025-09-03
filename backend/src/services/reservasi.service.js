@@ -3,6 +3,7 @@ const Reservasi = db.Reservasi;
 const User = db.User;
 const Jadwal = db.Jadwal;
 
+
 const findReservasiOrFail = async (id) => {
     const reservasi = await Reservasi.findByPk(id, {
         include: [
@@ -22,11 +23,10 @@ const findReservasiOrFail = async (id) => {
     return reservasi;
 };
 
-const checkDuplicateReservasi = async (idUser, idJadwal, noKursi, id = null) => {
+const checkDuplicateReservasi = async (idUser, idJadwal, id = null) => {
     const whereCondition = {
         idUser,
         idJadwal,
-        noKursi
     };
 
     const existingReservasi = await Reservasi.findOne({
@@ -78,7 +78,7 @@ const getReservasiById = async (id) => {
     return await findReservasiOrFail(id);
 };
 
-const createReservasi = async ({ idUser, idJadwal, penumpang, noKursi, status = 'pending' }) => {
+const createReservasi = async ({ idUser, idJadwal, penumpang, status = 'pending' }) => {
     if (!idUser || !idJadwal || !penumpang) {
         throw new Error('Field idUser, idJadwal, dan penumpang wajib diisi!');
     }
@@ -88,20 +88,17 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, noKursi, status = 
     await checkJadwalExist(idJadwal);
     
     // Cek duplikasi jika ada nomor kursi
-    if (noKursi) {
-        await checkDuplicateReservasi(idUser, idJadwal, noKursi);
-    }
+    await checkDuplicateReservasi(idUser, idJadwal);
 
     return await Reservasi.create({
         idUser,
         idJadwal,
         penumpang,
-        noKursi,
         status
     });
 };
 
-const updateReservasi = async ({ id, idUser, idJadwal, penumpang, noKursi, status }) => {
+const updateReservasi = async ({ id, idUser, idJadwal, penumpang, status }) => {
     const existingReservasi = await findReservasiOrFail(id);
 
     if (!idUser || !idJadwal || !penumpang) {
@@ -113,15 +110,12 @@ const updateReservasi = async ({ id, idUser, idJadwal, penumpang, noKursi, statu
     await checkJadwalExist(idJadwal);
     
     // Cek duplikasi jika ada nomor kursi
-    if (noKursi) {
-        await checkDuplicateReservasi(idUser, idJadwal, noKursi, id);
-    }
+    await checkDuplicateReservasi(idUser, idJadwal, id);
 
     return await existingReservasi.update({
         idUser,
         idJadwal,
         penumpang,
-        noKursi,
         status
     });
 };

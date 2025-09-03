@@ -11,6 +11,7 @@ const methodPaymentController = require('../controllers/methodPayment.controller
 const jadwalController = require('../controllers/jadwal.controller');
 const reservasiController = require('../controllers/reservasi.controller');
 const paymentController = require('../controllers/payment.controller');
+const kursiController = require('../controllers/kursi.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
 router.get('/', (req, res) => {
@@ -86,5 +87,13 @@ router.get('/payment/:id', paymentController.show);
 router.post('/payment', paymentController.store);
 router.put('/payment/:id', paymentController.update);
 router.delete('/payment/:id', paymentController.destroy);
+
+router.get('/bus/:idBus/kursi', kursiController.getKursiByIdBus);
+router.get('/bus/:idBus/kursi/:idKursi', kursiController.show);
+router.post('/bus/:idBus/kursi', kursiController.store);
+router.put('/bus/:idBus/kursi/:idKursi', kursiController.update);
+router.delete('/bus/:idBus/kursi/:idKursi', kursiController.destroy);
+
+router.get('/kursi', kursiController.getAllKursi);
 
 module.exports = router;
