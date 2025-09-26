@@ -37,7 +37,11 @@ const store = async (req, res) => {
         const payment = await paymentService.createPayment({ idReservasi, idmethodPayment, status, totalBayar, waktuBayar });
         return res.status(200).json({
             success: true,
-            message:'Transaksi telah berhasil ditambahkan'
+            message:'Transaksi telah berhasil ditambahkan',
+            data: {
+                payment: payment.payment,
+                midtrans: payment.midtrans
+            }
         });
     } catch (error) {
         return res.status(400).json({

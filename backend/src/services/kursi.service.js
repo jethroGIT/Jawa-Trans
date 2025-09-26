@@ -20,13 +20,16 @@ const validateBus = async (idBus) => {
     return true;
 };
 
-const checkKursiDuplicate = async (noKursi, idKursi = null) => {
+const checkKursiDuplicate = async ({  idKursi = null, idBus, noKursi }) => {
     const kursi = await Kursi.findOne({
-        where: {noKursi}
+        where: { 
+            noKursi,
+            idBus
+        }
     });
 
     if (kursi && kursi.idKursi != idKursi) {
-        throw new Error('Kursi sudah ada!');
+        throw new Error('Nomor Kursi sudah ada di bus ini!');
     }
 
     return true;
@@ -57,13 +60,13 @@ const getKursiById = async (idBus, idKursi) => {
 };
 
 const createKursi = async({ idBus, noKursi, tipe }) => {
-    if (!idBus || !noKursi || !tipe) {
+    if (!noKursi || !tipe) {
         throw new Error('Semua field wajib diisi!');
     }
 
     await validateBus(idBus);
 
-    await checkKursiDuplicate(noKursi);
+    await checkKursiDuplicate({ idBus, noKursi });
 
     return await Kursi.create({
         idBus,
@@ -72,16 +75,16 @@ const createKursi = async({ idBus, noKursi, tipe }) => {
     });
 }
 
-const updateKursi = async ({ idBus, idKursi, noKursi, tipe }) => {
+const updateKursi = async ({ idKursi, idBus, noKursi, tipe }) => {
     const kursi = await findKursiOrFail(idKursi);
 
-    if (!idBus || !noKursi || !tipe) {
+    if (!noKursi || !tipe) {
         throw new Error('Semua field wajib diisi!');
     }
 
     await validateBus(idBus);
 
-    await checkKursiDuplicate(noKursi, idKursi);
+    await checkKursiDuplicate({ idKursi, idBus, noKursi });
 
     return await kursi.update({
         idBus,

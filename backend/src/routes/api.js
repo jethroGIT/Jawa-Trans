@@ -93,7 +93,8 @@ router.get('/bus/:idBus/kursi/:idKursi', kursiController.show);
 router.post('/bus/:idBus/kursi', kursiController.store);
 router.put('/bus/:idBus/kursi/:idKursi', kursiController.update);
 router.delete('/bus/:idBus/kursi/:idKursi', kursiController.destroy);
-
 router.get('/kursi', kursiController.getAllKursi);
+
+
 
 module.exports = router;

@@ -66,10 +66,10 @@ const store = async (req, res) => {
 };
 
 const update = async (req, res) => {
-    const { idBus, idKursi } = req.params;
+    const { idKursi, idBus } = req.params;
     const { noKursi, tipe } = req.body
     try {
-        const kursi = await kursiService.updateKursi({ idBus, idKursi, noKursi, tipe });
+        const kursi = await kursiService.updateKursi({ idKursi, idBus, noKursi, tipe });
         return res.status(200).json({
             success: true,
             message: 'Kursi berhasil diperbaharui.'

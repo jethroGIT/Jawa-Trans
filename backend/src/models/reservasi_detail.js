@@ -1,9 +1,9 @@
 const { DataTypes } = require('sequelize');
 
-let Reservasi_Detail; // Inisialisasi variabel model
+let ReservasiDetail; // Inisialisasi variabel model
 
 const defineReservasiDetailModel = (sequelize) => {
-    Reservasi_Detail = sequelize.define('Reservasi_Detail', {
+    ReservasiDetail = sequelize.define('ReservasiDetail', {
         idDetail: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -23,13 +23,13 @@ const defineReservasiDetailModel = (sequelize) => {
             allowNull: true
         }
     }, {
-        tableName: 'Reservasi_Detail',
+        tableName: 'ReservasiDetail',
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at'
     });
 
-    return Reservasi_Detail;
+    return ReservasiDetail;
 };
 
 module.exports = defineReservasiDetailModel;

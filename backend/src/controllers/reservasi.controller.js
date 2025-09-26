@@ -32,9 +32,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const  { idUser, idJadwal, penumpang, status } = req.body;
+    const  { idUser, idJadwal, penumpang, kursi, status } = req.body;
     try {
-        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, status })
+        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, kursi, status })
         return res.status(200).json({
             succes: true,
             data: 'Reservasi berhasil ditambahkan'
