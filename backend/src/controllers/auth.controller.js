@@ -15,7 +15,7 @@ const login = async (req, res) => {
         return res.status(404).json({
             success: false,
             message: error.message
-        });
+        })
     }
 };
 
@@ -35,7 +35,24 @@ const logout = async (req, res) => {
     }
 };
 
+const register = async (req, res) => {
+    const {nama, alamat, telephone, email, password} = req.body;
+    try {
+        const register = await authService.register({ nama, alamat, telephone, email, password });
+        return res.status(200).json({
+            success: true,
+            message: 'Akun berhasil dibuat!'
+        })
+    } catch(error) {
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        })
+    }
+};
+
 module.exports = {
     login,
     logout,
+    register,
 };

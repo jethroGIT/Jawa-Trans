@@ -18,6 +18,22 @@ const fieldValidation = (email, password) => {
     return true;
 };
 
+const registerValidation = ({ nama, alamat, telephone, email, password }) => {
+    if (!nama || !alamat || !telephone || !email || !password) {
+        throw new Error('Semua field wajib diisi!')
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        throw new Error('Format email tidak valid!')
+    }
+
+    if (password.length <= 8) {
+        throw new Error('Password kurang dari 8 karakter')
+    }
+    return true;
+}
+
 const findUserOrFail = async (email, password) => {
     const existingUser = await User.findOne({
         where: { email },
@@ -144,8 +160,31 @@ const logout = async (token) => {
     }
 };
 
+const register = async ({ nama, alamat, telephone, email, password }) => {
+    registerValidation({ nama, alamat, telephone, email, password });
+    
+    const existingUser = await User.findOne({
+        where: { email }
+    });
+    
+    if (existingUser) {
+        throw new Error('Email sudah digunakan!');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    return await User.create({
+        idRole: 2,
+        nama,
+        alamat,
+        telephone,
+        email,
+        password: hashedPassword
+    });
+}
 
 module.exports = {
     login,
     logout,
+    register
 }

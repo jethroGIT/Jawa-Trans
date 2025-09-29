@@ -18,7 +18,7 @@ router.get('/', (req, res) => {
   res.render('index', { title: 'Hello EJS' });
 });
 
-
+router.post('/register', authController.register);
 router.get('/login', (req, res) => {
   res.render('login');
 });
