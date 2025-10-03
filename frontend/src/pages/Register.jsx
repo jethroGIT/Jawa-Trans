@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { registerRequest } from "../services/api";
 import AuthLayout from "../layouts/AuthLayout";
+import Swal from "sweetalert2";
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { Link } from "react-router-dom";
 
 export default function RegisterPage() {
     const [nama, setNama] = useState("");
@@ -10,96 +13,144 @@ export default function RegisterPage() {
     const [password, setPassword] = useState("");
     const [response, setResponse] = useState(null);
     const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    useDocumentTitle('Register');
 
     async function handleSubmit(event) {
         event.preventDefault();
         setError(null);
         setResponse(null);
+        setIsLoading(true);
 
         try {
             const data = await registerRequest({ nama, alamat, telephone, email, password });
             setResponse(data);
-        } catch(err) {
+
+            Swal.fire({
+                icon: "success",
+                title: "Akun Berhasil Dibuat",
+                text: data.message,
+                timer: 3000,
+                showConfirmButton: false,
+                width: "350px",
+            });
+        } catch (err) {
             setError(err.message);
+
+            Swal.fire({
+                icon: "error",
+                title: "Terjadi Kesalahan",
+                text: err.message,
+                width: "350px"
+            });
+        } finally {
+            setIsLoading(false);
         }
     }
 
     return (
-        <AuthLayout title="Register">
-            <form onSubmit ={handleSubmit}>
-                <div className="mb-3">
-                    <label htmlFor="form-label">Nama</label>
-                    <input 
-                        type="text" 
-                        className="form-control"
-                        value={nama}
-                        onChange={(e) => setNama(e.target.value)}
-                        placeholder="Masukan nama Anda"
-                    />
-                </div>
+        <AuthLayout title="Daftar Akun Baru">
+            <div className="w-full max-w-md mx-auto"> {/* Container dengan max width */}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Nama Lengkap
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            value={nama}
+                            onChange={(e) => setNama(e.target.value)}
+                            placeholder="Masukkan nama lengkap Anda"
+                            required
+                        />
+                    </div>
 
-                <div className="mb-3">
-                    <label htmlFor="form-label">Alamat</label>
-                    <input 
-                        type="text" 
-                        className="form-control"
-                        value={alamat}
-                        onChange={(e) => setAlamat(e.target.value)}
-                        placeholder="Masukan alamat Anda"
-                    />
-                </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Alamat
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            value={alamat}
+                            onChange={(e) => setAlamat(e.target.value)}
+                            placeholder="Masukkan alamat lengkap Anda"
+                            required
+                        />
+                    </div>
 
-                <div className="mb-3">
-                    <label htmlFor="form-label">Telephone</label>
-                    <input 
-                        type="text" 
-                        className="form-control"
-                        value={telephone}
-                        onChange={(e) => setTelephone(e.target.value)}
-                        placeholder="Masukan nomer telephone Anda"
-                    />
-                </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Nomor Telepon
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            value={telephone}
+                            onChange={(e) => setTelephone(e.target.value)}
+                            placeholder="Masukkan nomor telepon Anda"
+                            required
+                        />
+                    </div>
 
-                <div className="mb-3">
-                    <label htmlFor="form-label">Email</label>
-                    <input 
-                        type="email" 
-                        className="form-control"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Masukan email Anda"
-                    />
-                </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Masukkan email Anda"
+                            required
+                        />
+                    </div>
 
-                <div className="mb-3">
-                    <label htmlFor="form-label">Password</label>
-                    <input 
-                        type="password" 
-                        className="form-control"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Masukan password Anda"
-                    />
-                </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Buat password Anda"
+                            required
+                        />
+                    </div>
 
-                <button type="submit" className="btn btn-primary w-100">
-                    Register
-                </button>
-            </form>
+                    <button 
+                        type="submit" 
+                        disabled={isLoading}
+                        className={`w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 ${
+                            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                    >
+                        {isLoading ? (
+                            <span className="flex items-center justify-center">
+                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Membuat Akun...
+                            </span>
+                        ) : 'Daftar'}
+                    </button>
+                </form>
 
-            {error && (
-                <div className="alert alert-danger mt-3">{error}</div>
-            )}
-
-            {response && (
-                <div className="mt-3">
-                    <h6>Respon API</h6>
-                    <pre className="bg-light p-2 rounded">
-                        {JSON.stringify(response, null, 2)}
-                    </pre>
-                </div>
-            )}
+                <p className="text-center mt-6 text-sm text-gray-600">
+                    Sudah punya akun?{" "}
+                    <Link 
+                        to="/login" 
+                        className="font-medium text-blue-600 hover:text-blue-500 transition duration-200"
+                    >
+                        Login disini
+                    </Link>
+                </p>
+            </div>
         </AuthLayout>
     );
-
 }
