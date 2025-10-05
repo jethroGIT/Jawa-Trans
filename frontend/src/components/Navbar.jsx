@@ -1,8 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import logo from '../assets/BW/banner.png';
+import logo2 from '../assets/CL/banner.png';
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 50) {
+                setIsScrolled(true);
+            } else {
+                setIsScrolled(false);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
 
     const navItems = [
         { name: 'Home', path: '/' },
@@ -12,13 +31,18 @@ export default function Navbar() {
     ];
 
     return (
-        <nav className="bg-white shadow-lg fixed top-0 w-full z-50">
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-lg' : 'bg-transparent'
+            }`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <div className="flex-shrink-0">
                         <Link to="/" className="text-2xl font-bold text-blue-600">
-                            JawaTrans
+                            <img
+                                src={isScrolled ? logo2 : logo}
+                                alt="JawaTrans Logo"
+                                className="h-20 w-auto transition-all duration-300"
+                            />
                         </Link>
                     </div>
 
@@ -29,7 +53,10 @@ export default function Navbar() {
                                 <Link
                                     key={item.name}
                                     to={item.path}
-                                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-200"
+                                    className={`px-3 py-2 rounded-md text-sm font-medium transition duration-200 ${isScrolled
+                                        ? 'text-gray-700 hover:text-blue-600'
+                                        : 'text-white hover:text-blue-300'
+                                        }`}
                                 >
                                     {item.name}
                                 </Link>
@@ -41,7 +68,10 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center space-x-4">
                         <Link
                             to="/login"
-                            className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium"
+                            className={`px-3 py-2 text-sm font-medium transition duration-200 ${isScrolled
+                                ? 'text-gray-700 hover:text-blue-600'
+                                : 'text-white hover:text-blue-300'
+                                }`}
                         >
                             Log In
                         </Link>
@@ -57,7 +87,10 @@ export default function Navbar() {
                     <div className="md:hidden">
                         <button
                             onClick={() => setIsOpen(!isOpen)}
-                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 focus:outline-none"
+                            className={`inline-flex items-center justify-center p-2 rounded-md focus:outline-none ${isScrolled
+                                ? 'text-gray-700 hover:text-blue-600'
+                                : 'text-white hover:text-blue-300'
+                                }`}
                         >
                             <svg
                                 className="h-6 w-6"

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { loginRequest } from "../services/api";
-import AuthLayout from "../layouts/AuthLayout";
+import { loginRequest } from "../../services/api";
+import AuthLayout from "../../layouts/AuthLayout";
 import Swal from "sweetalert2";
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { Link } from "react-router-dom";
 
 export default function LoginPage() {
