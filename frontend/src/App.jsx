@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import LoginPage from "./pages/auth/Login"
 import RegisterPage from "./pages/auth/Register"
-import HomePage from "./pages/home/Home"
+import HomePage from "./pages/home/HomePage"
 import './styles/index.css';
 
 export default function Root() {

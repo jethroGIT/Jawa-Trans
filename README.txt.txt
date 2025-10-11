@@ -23,3 +23,15 @@ mysql --version
 -> mysql -u root -p
 -> net stop MySQLLaragon
 
+Tailwind CSS v3 (Stable)
+npm install -D tailwindcss@^3.4.0 postcss@^8.4.0 autoprefixer@^10.4.0
+npx tailwindcss init -p
+npm install @material-tailwind/react
+
+index.css :
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+main.jsx | App.jsx :
+import './styles/index.css'

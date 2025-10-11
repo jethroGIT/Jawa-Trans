@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loginRequest } from "../../services/api";
+import authService from "../../services/authService";
 import AuthLayout from "../../layouts/AuthLayout";
 import Swal from "sweetalert2";
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
@@ -20,7 +20,7 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const data = await loginRequest(email, password);
+            const data = await authService.loginRequest(email, password);
             setResponse(data);
             localStorage.setItem("token", data.token);
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { registerRequest } from "../../services/api";
+import authService from "../../services/authService";
 import AuthLayout from "../../layouts/AuthLayout";
 import Swal from "sweetalert2";
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
@@ -23,7 +23,7 @@ export default function RegisterPage() {
         setIsLoading(true);
 
         try {
-            const data = await registerRequest({ nama, alamat, telephone, email, password });
+            const data = await authService.registerRequest({ nama, alamat, telephone, email, password });
             setResponse(data);
 
             Swal.fire({

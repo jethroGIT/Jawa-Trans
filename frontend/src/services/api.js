@@ -1,36 +1,23 @@
 const API_BASE = "http://localhost:8000/api";
 
-export async function loginRequest(email, password) {
-    const response = await fetch(`${API_BASE}/login`, {
-        method: "POST",
+export async function apiRequest(endpoint, method = "GET", body = null, headers = {}) {
+    const config = {
+        method,
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...headers
         },
-        body: JSON.stringify({ email, password })
-    });
+    };
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message);
+    if (body) {
+        config.body = JSON.stringify(body);
     }
 
-    return data;
-}
-
-export async function registerRequest({ nama, alamat, telephone, email, password }) {
-    const response = await fetch(`${API_BASE}/register`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ nama, alamat, telephone, email, password })
-    });
-
+    const response = await fetch(`${API_BASE}/${endpoint}`, config);
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message);
+        throw new Error(data.message || 'Something went wrong');
     }
 
     return data;
