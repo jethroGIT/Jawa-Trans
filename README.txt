@@ -35,3 +35,6 @@ index.css :
 
 main.jsx | App.jsx :
 import './styles/index.css'
+
+HeroIcon/(Tailwind  Ecosystem)
+npm install react-icons

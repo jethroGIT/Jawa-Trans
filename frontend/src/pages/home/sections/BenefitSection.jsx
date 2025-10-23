@@ -72,10 +72,10 @@ export default function BenefitSection() {
 
                             {/* Konten (judul + deskripsi) */}
                             <div className="flex-1 text-right md:text-left">
-                                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">
                                     {benefit.title}
                                 </h3>
-                                <p className="text-sm text-gray-700 leading-relaxed">
+                                <p className="text-l text-gray-700 leading-relaxed">
                                     {benefit.description}
                                 </p>
                             </div>

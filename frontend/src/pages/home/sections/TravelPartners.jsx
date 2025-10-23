@@ -1,39 +1,39 @@
 import React from 'react';
 
 // Import logos (gunakan path sesuai struktur project Anda)
-import bca from "../../../assets/Pembayaran/bca.png";
-import bri from "../../../assets/Pembayaran/bri.png";
-import bni from "../../../assets/Pembayaran/bni.png";
-import mandiri from "../../../assets/Pembayaran/mandiri.png";
-import alfamart from "../../../assets/Pembayaran/alfamart.png";
-import indomaret from "../../../assets/Pembayaran/indomaret.png";
-import oripay from "../../../assets/Pembayaran/oripay.png";
-import ovo from "../../../assets/Pembayaran/ovo.png";
-import gopay from "../../../assets/Pembayaran/gopay.png";
-import dana from "../../../assets/Pembayaran/dana.png";
-import seabank from "../../../assets/Pembayaran/seabank.png";
-import superbank from "../../../assets/Pembayaran/superbank.png";
+import damri from "../../../assets/Travel/damri.png";
+import pasteur from "../../../assets/Travel/pasteur.png";
+import cititrans from "../../../assets/Travel/cititrans.jpeg";
+import id90 from "../../../assets/Travel/id90.png";
+import primajasa from "../../../assets/Travel/primajasa.jpeg";
+import rosin from "../../../assets/Travel/rosin.png";
+import jackal from "../../../assets/Travel/jackal.png";
+import arnes from "../../../assets/Travel/arnes.jpeg";
+import daytrans from "../../../assets/Travel/daytrans.png";
+import xtrans from "../../../assets/Travel/xtrans.png";
+import aragon from "../../../assets/Travel/aragon.png";
+import lintas from "../../../assets/Travel/lintas.png";
 
 export default function PaymentPartners() {
     const firstRowLogos = [
-        { name: 'BCA', logo: bca },
-        { name: 'Mandiri', logo: mandiri },
-        { name: 'BNI', logo: bni },
-        { name: 'BRI', logo: bri },
+        { name: 'Damri', logo: damri },
+        { name: 'ID90', logo: id90 },
+        { name: 'Cititrans', logo: cititrans },
+        { name: 'Pasteurtrans', logo: pasteur },
     ];
 
     const secondRowLogos = [
-        { name: 'Oripay', logo: oripay },
-        { name: 'OVO', logo: ovo },
-        { name: 'GoPay', logo: gopay },
-        { name: 'DANA', logo: dana }
+        { name: 'Primajasa', logo: primajasa },
+        { name: 'Rosin', logo: rosin },
+        { name: 'Jackal', logo: jackal },
+        { name: 'Arnes', logo: arnes }
     ];
 
     const thirdRowLogos = [
-        { name: 'Alfamart', logo: alfamart },
-        { name: 'Indomaret', logo: indomaret },
-        { name: 'Seabank', logo: seabank },
-        { name: 'Superbank', logo: superbank }
+        { name: 'Daytrans', logo: daytrans },
+        { name: 'Xtrans', logo: xtrans },
+        { name: 'Aragon', logo: aragon },
+        { name: 'Lintas', logo: lintas }
     ];
 
     return (
@@ -44,13 +44,13 @@ export default function PaymentPartners() {
                     {/* Left side content */}
                     <div className="md:w-2/5">
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                            Partner Pembayaran
+                            Partner Travel
                         </h2>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            Jadikan Pembayaran Lebih Mudah
+                            Operator Travel Favorit
                         </h3>
                         <p className="text-base text-gray-600 leading-relaxed">
-                            Kami bekerja sama dengan bank dan mini market tepercaya untuk kenyamanan pembayaran Anda.
+                            Baik untuk liburan atau pulang ke rumah, kini Anda bisa pesan tiket travel favorit dengan lebih mudah bersama kami.
                         </p>
                     </div>
 

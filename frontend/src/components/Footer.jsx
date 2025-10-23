@@ -10,7 +10,7 @@ export default function Footer() {
                     <div>
                         <img src={logo} alt="JawaTrans Logo" className="h-20 w-auto mb-3" />
                         <p className="text-gray-600 text-sm mb-4">
-                            JawaTrans adalah solusi transportasi travel terpercaya yang siap menghubungkan kota-kota di Jawa Barat dengan aman, nyaman, dan harga yang bersaing.
+                            JawaTrans adalah solusi transportasi travel terpercaya yang siap menghubungkan kota-kota di Pulau Jawa dengan aman, nyaman, dan harga yang bersaing.
                         </p>
                         <p className="text-gray-600 text-sm">
                             Rasakan pengalaman perjalanan yang tenang dengan armada berkualitas dan layanan pelanggan yang responsif.
