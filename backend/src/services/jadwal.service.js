@@ -3,6 +3,7 @@ const db = require('../models');
 
 const Jadwal = db.Jadwal;
 const Bus = db.Bus;
+const Fasilitas = db.Fasilitas;
 const Terminal = db.Terminal;
 
 // Reusable Helper
@@ -106,7 +107,13 @@ const getAllJadwal = async () => {
         include: [
             {
                 model: Bus,
-                as: 'bus'
+                as: 'bus',
+                include: [
+                    {
+                        model: Fasilitas,
+                        as: 'fasilitas'
+                    }
+                ]
             },
             {
                 model: Terminal,

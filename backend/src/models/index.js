@@ -60,7 +60,7 @@ db.Bus.belongsTo(db.Mitra, {
 });
 
 
-// Temrinal -||---|<- Jadwal ->|---||- Bus
+// Terminal -||---|<- Jadwal ->|---||- Bus
 db.Terminal.hasMany(db.Jadwal, {
     foreignKey: 'titik_naik', // atau idTerminalNaik
     as: 'jadwalKeberangkatan'
