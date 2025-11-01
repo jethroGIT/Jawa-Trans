@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import jadwalService from '../../../services/jadwalService';
+
 
 export default function HeroSection() {
     const [tripType, setTripType] = useState('sekali-jalan');
@@ -7,19 +9,29 @@ export default function HeroSection() {
     const [to, setTo] = useState('');
     const [date, setDate] = useState('');
     const [passengers, setPassengers] = useState(1);
+    const navigate = useNavigate();
 
     const handleSearch = async () => {
-        console.log('Tombol diklik, memanggil API...');
-        console.log({ tripType, from, to, date, passengers });
-        
-        try {
-            const response = await jadwalService.getAllJadwal();
-            console.log('Response dari API:', response);
-            alert('Berhasil! Lihat console untuk response data');
-        } catch (err) {
-            console.error('Error:', err);
-            alert('Error! Lihat console untuk detail error');
-        }
+        navigate(`/jadwal?tripType=${tripType}&from=${from}&to=${to}&date=${date}&passengers=${passengers}`);
+
+        // console.log('Tombol diklik, memanggil API...');
+        // console.log({ tripType, from, to, date, passengers });
+
+        // try {
+        //     const response = await jadwalService.testSearchParams({
+        //         tripType: tripType,           // dari state
+        //         from: from,                   // dari input form
+        //         to: to,                       // dari input form
+        //         date: date,                   // dari input date
+        //         passengers: parseInt(passengers) // convert ke number
+        //     });
+        //     console.log(response);
+
+        //     alert('Berhasil! Lihat console untuk response data');
+        // } catch (err) {
+        //     console.error('Error:', err);
+        //     alert('Error! Lihat console untuk detail error');
+        // }
     };
 
     return (
