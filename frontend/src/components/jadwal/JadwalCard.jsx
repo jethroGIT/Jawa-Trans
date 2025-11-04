@@ -1,3 +1,12 @@
+import {
+    AirVent,
+    Wifi,
+    Cctv,
+    Armchair,
+    Plus,
+    ArrowRight,
+} from "lucide-react";
+
 // components/JadwalCard.jsx
 export default function JadwalCard({ item }) {
     const formatTime = (isoString) => {
@@ -76,22 +85,43 @@ export default function JadwalCard({ item }) {
 
                 {/* Facilities Icons */}
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center">
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                    <div className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center">
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                    </div>
-                    <div className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center">
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    <span className="text-sm text-gray-600 ml-1">+ {item.bus?.kapasitas - 3}</span>
+                    {item.bus?.fasilitas.slice(0, 3).map((fasilitas, index) => {
+                        let IconComponent;
+
+                        switch (fasilitas.nama.toLowerCase()) {
+                            case "ac":
+                                IconComponent = AirVent;
+                                break;
+                            case "cctv":
+                                IconComponent = Cctv;
+                                break;
+                            case "kursi luas":
+                                IconComponent = Armchair;
+                                break;
+                            case "wifi":
+                                IconComponent = Wifi;
+                                break;
+                            default:
+                                IconComponent = Plus;
+                                break;
+                        }
+
+                        return (
+                            <div
+                                key={index}
+                                className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center"
+                            >
+                                <IconComponent className="w-4 h-4 text-gray-600" />
+                            </div>
+                        );
+                    })}
+
+                    {/* Jika fasilitas lebih dari 3, tampilkan +n */}
+                    {item.bus?.fasilitas.length > 3 && (
+                        <div className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center text-gray-600 text-sm">
+                            +{item.bus.fasilitas.length - 3}
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Section - Price & Button */}

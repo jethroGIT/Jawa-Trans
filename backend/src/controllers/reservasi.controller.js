@@ -16,7 +16,7 @@ const getAllReservasi = async (req, res) => {
 };
 
 const show = async (req, res) => {
-    const { idBus, idKursi} = req.params;
+    const { id } = req.params;
     try {
         const reservasi = await reservasiService.getReservasiById(id);
         return res.status(200).json({
@@ -32,9 +32,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const  { idUser, idJadwal, penumpang, kursi, status } = req.body;
+    const  { idUser, idJadwal, penumpang, namaPenumpang, kursi, status } = req.body;
     try {
-        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, kursi, status })
+        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, namaPenumpang, kursi, status })
         return res.status(200).json({
             succes: true,
             data: 'Reservasi berhasil ditambahkan'

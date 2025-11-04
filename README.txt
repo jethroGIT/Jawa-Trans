@@ -38,3 +38,6 @@ import './styles/index.css'
 
 HeroIcon/(Tailwind  Ecosystem)
 npm install react-icons
+
+Lucide icon
+npm install lucide-react

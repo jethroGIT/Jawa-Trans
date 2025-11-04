@@ -17,6 +17,10 @@ const findReservasiOrFail = async (id) => {
             {
                 model: Jadwal,
                 as: 'jadwal'
+            },
+            {
+                model: Reservasi_Detail,
+                as: 'reservasi_detail'
             }
         ]
     });
@@ -81,9 +85,21 @@ const getReservasiById = async (id) => {
     return await findReservasiOrFail(id);
 };
 
-const createReservasi = async ({ idUser, idJadwal, penumpang, kursi, status = 'pending' }) => {
-    if (!idUser || !idJadwal || !penumpang || !kursi || !Array.isArray(kursi) || kursi.length === 0) {
-        throw new Error('Field idUser, idJadwal, penumpang, kursi wajib diisi!');
+const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kursi, status = 'pending' }) => {
+    if (!idUser || !idJadwal || !penumpang) {
+        throw new Error('Field idUser, idJadwal, dan penumpang wajib diisi!');
+    }
+    
+    if (!Array.isArray(namaPenumpang) || namaPenumpang.length === 0) {
+        throw new Error('Mohon masukan nama penumpang');
+    }
+
+    if (!Array.isArray(kursi) || kursi.length === 0) {
+        throw new Error('Mohon masukan nomor kursi');
+    }
+
+    if (namaPenumpang.length !== penumpang) {
+        throw new Error(`Jumlah nama penumpang (${namaPenumpang.length}) harus sama dengan jumlah penumpang (${penumpang})!`);
     }
 
     if (kursi.length !== penumpang) {
@@ -144,10 +160,11 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, kursi, status = 'p
 
         // Buat data reservasi detail untuk setiap kursi
         const reservasiDetails = [];
-        for (const noKursi of kursi) {
+        for (let i = 0; i < kursi.length; i++) {
             const detail = await Reservasi_Detail.create({
                 idReservasi: reservasi.idReservasi,
-                noKursi: noKursi,
+                namaPenumpang: namaPenumpang[i],
+                noKursi: kursi[i],
                 status: "pending"
             }, { transaction });
 
@@ -156,13 +173,6 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, kursi, status = 'p
 
         // Commit transaksi
         await transaction.commit();
-
-        // Return data reservasi beserta detail
-        return {
-            reservasi: reservasi,
-            details: reservasiDetails,
-            message: 'Reservasi berhasil dibuat!'
-        };
 
     } catch (error) {
         // Rollback transaksi jika ada error

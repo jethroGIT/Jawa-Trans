@@ -14,6 +14,10 @@ const defineReservasiDetailModel = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        namaPenumpang: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+        },
         noKursi: {
             type: DataTypes.STRING(10),
             allowNull: true,
