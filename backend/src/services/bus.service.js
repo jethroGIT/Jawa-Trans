@@ -3,11 +3,16 @@ const Mitra = db.Mitra;
 const Bus = db.Bus;
 const Fasilitas = db.Fasilitas;
 const Bus_Fasilitas = db.Bus_Fasilitas;
+const Foto_Bus = db.Foto_Bus;
 const { sequelize } = require('../models');
 
 const findBusOrFail = async (id) => {
     const existingBus = await Bus.findByPk(id, {
         include: [
+            {
+                model: db.Foto_Bus,
+                as: 'foto_bus'
+            },
             {
                 model: Fasilitas,
                 as: 'fasilitas',
@@ -62,7 +67,7 @@ const checkDuplicateBus = async (kode_bus, id = null) => {
     if (existingBus && existingBus.idBus != id) {
         throw new Error('Bus sudah ada!')
     }
-    
+
     return true;
 };
 
@@ -70,6 +75,10 @@ const checkDuplicateBus = async (kode_bus, id = null) => {
 const getAllBus = async () => {
     return await Bus.findAll({
         include: [
+            {
+                model: db.Foto_Bus,
+                as: 'foto_bus'
+            },
             {
                 model: Fasilitas,
                 as: 'fasilitas',
@@ -104,6 +113,7 @@ const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fas
             status
         }, { transaction });
 
+
         await newBus.setFasilitas(validFasilitas, { transaction });
         console.log(`Linked ${validFasilitas.length} fasilitas to bus ${newBus.idBus}`);
 
@@ -124,7 +134,7 @@ const updatebus = async ({ id, idMitra, kode_bus, nama, type, kapasitas, status,
         fieldValidation({ idMitra, kode_bus, nama, type, kapasitas, status });
 
         await checkDuplicateBus(kode_bus, id);
-        
+
         const validFasilitas = await validateFasilitas(fasilitas);
 
         const updateBus = await existingBus.update({

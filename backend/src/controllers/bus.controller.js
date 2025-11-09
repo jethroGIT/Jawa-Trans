@@ -35,7 +35,7 @@ const show = async (req, res) => {
 const store = async (req, res) => {
     const { idMitra, kode_bus, nama, type, kapasitas, status, fasilitas } = req.body;
     try {
-        const createBus = await busService.createBus({ idMitra, kode_bus, nama, type, kapasitas, status, fasilitas });
+        const createBus = await busService.createBus({ idMitra, kode_bus, nama, type, kapasitas, status, fasilitas, fotos });
         return res.status(200).json({
             success: true,
             message: 'Bus berhasil ditambahkan.'

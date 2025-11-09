@@ -9,6 +9,7 @@ app.set('views', path.resolve(__dirname, '../public/views'));
 
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', apiRoutes);
 
 app.use((req, res, next) => {

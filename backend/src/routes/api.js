@@ -3,9 +3,11 @@ const router = express.Router();
 const roleController = require('../controllers/role.controller');
 const userController = require('../controllers/user.controller');
 const authController = require('../controllers/auth.controller');
+const uploadLogoMitra = require('../config/multerMitra');
 const mitraController = require('../controllers/mitra.controller');
 const terminalController = require('../controllers/terminal.controller');
 const fasilitasController = require('../controllers/fasilitas.controller');
+// const uploadFotoBus = require('../config/multerBus');
 const busController = require('../controllers/bus.controller');
 const methodPaymentController = require('../controllers/methodPayment.controller');
 const jadwalController = require('../controllers/jadwal.controller');
@@ -42,8 +44,8 @@ router.delete('/users/:id', userController.destroy);
 
 router.get('/mitra', mitraController.gettAllMitra);
 router.get('/mitra/:id', mitraController.show);
-router.post('/mitra', mitraController.store);
-router.put('/mitra/:id', mitraController.update);
+router.post('/mitra', uploadLogoMitra.single('logo'), mitraController.store);
+router.put('/mitra/:id', uploadLogoMitra.single('logo'), mitraController.update);
 router.delete('/mitra/:id', mitraController.destroy);
 
 router.get('/terminal', terminalController.getAllTerminal);

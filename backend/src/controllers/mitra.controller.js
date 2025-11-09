@@ -2,7 +2,8 @@ const mitraService = require('../services/mitra.service');
 
 const gettAllMitra = async (req, res) => {
     try {
-        const mitra = await mitraService.gettAllMitra();
+        const mitra = await mitraService.gettAllMitra(req);
+        
         return res.status(200).json({
             success: true,
             data: mitra
@@ -18,7 +19,7 @@ const gettAllMitra = async (req, res) => {
 const show = async (req, res) => {
     const { id } = req.params;
     try {
-        const mitra = await mitraService.getMitraById(id);
+        const mitra = await mitraService.getMitraById(req, id);
         return res.status(200).json({
             success: true,
             data: mitra
@@ -32,7 +33,8 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { logo, nama, alamat, telephone, email } = req.body;
+    const logo = req.file ? req.file.filename : null;
+    const { nama, alamat, telephone, email } = req.body;
     try {
         const mitra = await mitraService.createMitra({ logo, nama, alamat, telephone, email });
         return res.status(200).json({
@@ -49,7 +51,8 @@ const store = async (req, res) => {
 
 const update = async(req, res) => {
     const { id } = req.params;
-    const { logo, nama, alamat, telephone, email } = req.body;
+    const logo = req.file ? req.file.filename : null;
+    const { nama, alamat, telephone, email } = req.body;
     try {
         const mitra = await mitraService.updateMitra({ id, logo, nama, alamat, telephone, email });
         return res.status(200).json({

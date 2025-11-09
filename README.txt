@@ -41,3 +41,6 @@ npm install react-icons
 
 Lucide icon
 npm install lucide-react
+
+Install Mutler untuk handle multipart/form-data (file upload).
+npm install mutler
