@@ -7,7 +7,7 @@ const uploadLogoMitra = require('../config/multerMitra');
 const mitraController = require('../controllers/mitra.controller');
 const terminalController = require('../controllers/terminal.controller');
 const fasilitasController = require('../controllers/fasilitas.controller');
-// const uploadFotoBus = require('../config/multerBus');
+const uploadFotoBus = require('../config/multerBus');
 const busController = require('../controllers/bus.controller');
 const methodPaymentController = require('../controllers/methodPayment.controller');
 const jadwalController = require('../controllers/jadwal.controller');
@@ -62,8 +62,8 @@ router.delete('/fasilitas/:id', fasilitasController.destroy);
 
 router.get('/bus', busController.getAllBus);
 router.get('/bus/:id', busController.show);
-router.post('/bus', busController.store);
-router.put('/bus/:id', busController.update);
+router.post('/bus', uploadFotoBus.array('fotos', 5), busController.store);
+router.put('/bus/:id', uploadFotoBus.array('fotos', 5), busController.update);
 router.delete('/bus/:id', busController.destroy);
 
 router.get('/methodpayment', methodPaymentController.getAllMethodPayment);

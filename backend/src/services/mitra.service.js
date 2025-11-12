@@ -1,6 +1,6 @@
 const db = require('../models');
 const Mitra = db.Mitra;
-const fs = require('fs').promises;
+const fs = require('fs');
 const path = require('path');
 
 
@@ -37,7 +37,7 @@ const checkDuplicateMitra = async ({ nama, telephone, email, id = null }) => {
 
 const fieldValidation = ({ logo, nama, alamat, telephone, email }) => {
     if (!logo || !nama || !alamat || !telephone || !email) {
-        throw new Error(logo);
+        throw new Error('Semua field wajib diisi');
     }
     return true;
 };
@@ -61,56 +61,73 @@ const urlLogoMitra = (req, mitras) => {
     }
 }
 
+const hapusFileStorage = (fileLogo) => {
+    const filePath = path.join(__dirname, '../uploads/mitra', fileLogo);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted foto: ${fileLogo}`);
+    }
+}
+
 
 const gettAllMitra = async (req) => {
     const mitra = await Mitra.findAll();
 
-    const mitraWithLogoURL = urlLogoMitra(req, mitra);
-
-    return mitraWithLogoURL;
+    return urlLogoMitra(req, mitra);
 };
 
 const getMitraById = async (req, id) => {
     const mitra = await findMitraOrFail(id);
 
-    const mitraWithLogoURL = urlLogoMitra(req, mitra);
-
-    return mitraWithLogoURL;
+    return urlLogoMitra(req, mitra);
 };
 
 const createMitra = async ({ logo, nama, alamat, telephone, email }) => {
-    fieldValidation({ logo, nama, alamat, telephone, email });
+    try {
+        fieldValidation({ logo, nama, alamat, telephone, email });
 
-    await checkDuplicateMitra({ nama, telephone, email });
+        await checkDuplicateMitra({ nama, telephone, email });
 
-    return await Mitra.create({
-        logo,
-        nama,
-        alamat,
-        telephone,
-        email
-    });
+        return await Mitra.create({
+            logo,
+            nama,
+            alamat,
+            telephone,
+            email
+        });
+    } catch (error) {
+        hapusFileStorage(logo);
+
+        throw error;
+    }
 };
 
 const updateMitra = async ({ id, logo, nama, alamat, telephone, email }) => {
     const mitra = await findMitraOrFail(id);
 
-    fieldValidation({ logo, nama, alamat, telephone, email });
+    try {
+        fieldValidation({ logo, nama, alamat, telephone, email });
 
-    await checkDuplicateMitra({ nama, telephone, email, id });
+        await checkDuplicateMitra({ nama, telephone, email, id });
 
-    if (logo && mitra.logo) {
-        const oldLogoPath = path.join(__dirname, '../uploads/mitra/', mitra.logo);
-        await fs.unlink(oldLogoPath);
+        if (logo && mitra.logo && logo !== mitra.logo) { 
+            hapusFileStorage(mitra.logo); 
+        }
+
+        await mitra.update({
+            logo,
+            nama,
+            alamat,
+            telephone,
+            email
+        });
+
+        return mitra;
+    } catch (error) {
+        if (mitra) { hapusFileStorage(logo); }
+
+        throw error;
     }
-
-    return await mitra.update({
-        logo,
-        nama,
-        alamat,
-        telephone,
-        email
-    });
 };
 
 const destroyMitra = async (id) => {

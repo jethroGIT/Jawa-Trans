@@ -33,6 +33,7 @@ const show = async (req, res) => {
 
 
 const store = async (req, res) => {
+    const fotos = req.files ? req.files.map(file => file.filename) : [];
     const { idMitra, kode_bus, nama, type, kapasitas, status, fasilitas } = req.body;
     try {
         const createBus = await busService.createBus({ idMitra, kode_bus, nama, type, kapasitas, status, fasilitas, fotos });
@@ -50,9 +51,10 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
+    const fotos = req.files ? req.files.map(file => file.filename) : [];
     const { idMitra, kode_bus, nama, type, kapasitas, status, fasilitas } = req.body;
     try {
-        const updateBus = await busService.updatebus({ id, idMitra, kode_bus, nama, type, kapasitas, status, fasilitas });
+        const updateBus = await busService.updatebus({ id, idMitra, kode_bus, nama, type, kapasitas, status, fasilitas, fotos });
         return res.status(200).json({
             success: true,
             message: 'Bus berhasil diperbarui.'
