@@ -2,7 +2,7 @@ const busService = require('../services/bus.service');
 
 const getAllBus = async (req, res) => {
     try {
-        const bus = await busService.getAllBus();
+        const bus = await busService.getAllBus(req);
         return res.status(200).json({
             success: true,
             data: bus
@@ -18,7 +18,7 @@ const getAllBus = async (req, res) => {
 const show = async (req, res) => {
     const { id } = req.params;
     try {
-        const bus = await busService.getBusById(id);
+        const bus = await busService.getBusById(req, id);
         return res.status(200).json({
             success: true,
             data: bus

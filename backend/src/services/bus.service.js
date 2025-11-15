@@ -100,24 +100,27 @@ const konversiStringToIntArray = (fasilitas) => {
     return fasilitasArray;
 };
 
-const urlFotoBus = (req, fotos) => {
-    const baseURL = `${req.protocol}://${req.get('host')}`;
-    if (Array.isArray(fotos)) {
-        return fotos.map(foto => ({
-            ...foto.toJSON(),
-            logoURL: foto.nama
-                ? `${baseURL}/uploads/foto_bus/${foto.nama}`
-                : null
+const urlFotoBus = (req, data) => {
+    if (Array.isArray(data)) {
+        return data.map(item => ({
+            ...item.toJSON(),
+            foto_bus: item.foto_bus.map(foto => ({
+                ...foto.toJSON(),
+                url: `${req.protocol}://${req.get('host')}/foto_bus/${foto.nama}`
+            }))
         }));
     } else {
         return {
-            ...fotos.toJSON(),
-            logoURL: fotos.nama
-                ? `${baseURL}/uploads/foto_bus/${fotos.nama}`
-                : null
+            ...data.toJSON(),
+            foto_bus: data.foto_bus.map(foto => ({
+                ...foto.toJSON(),
+                url: `${req.protocol}://${req.get('host')}/foto_bus/${foto.nama}`
+            }))
         };
     }
-}
+
+};
+
 
 const hapusFileStorage = (fotoFile) => {
     const filePath = path.join(__dirname, '../uploads/foto_bus', fotoFile);
@@ -127,8 +130,8 @@ const hapusFileStorage = (fotoFile) => {
     }
 }
 
-const getAllBus = async () => {
-    return await Bus.findAll({
+const getAllBus = async (req) => {
+    const data = await Bus.findAll({
         include: [
             {
                 model: db.Foto_Bus,
@@ -144,10 +147,13 @@ const getAllBus = async () => {
                 as: 'mitra'
             }]
     });
+
+    return urlFotoBus(req, data);
 };
 
-const getBusById = async (id) => {
-    return await findBusOrFail(id);
+const getBusById = async (req, id) => {
+    const bus = await findBusOrFail(id);
+    return urlFotoBus(req, bus);
 };
 
 const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fasilitas, fotos }) => {
@@ -209,60 +215,79 @@ const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fas
 
 const updatebus = async ({ id, idMitra, kode_bus, nama, type, kapasitas, status, fasilitas, fotos }) => {
     const transaction = await sequelize.transaction();
-    let oldFotos = [];
+
     try {
         const existingBus = await findBusOrFail(id);
 
         fieldValidation({ idMitra, kode_bus, nama, type, kapasitas, status, fotos, isUpdate: true });
-
         await checkDuplicateBus(kode_bus, id);
 
         const fasilitasArray = konversiStringToIntArray(fasilitas);
         const validFasilitas = await validateFasilitas(fasilitasArray);
 
         await existingBus.update({
-            idMitra,
-            kode_bus,
-            nama,
-            type,
-            kapasitas,
-            status
+            idMitra, kode_bus, nama, type, kapasitas, status
         }, { transaction });
 
-        // Jika ada foto baru
+        // OPTIMAL: Hanya update yang berbeda
         if (fotos && fotos.length > 0) {
-            const oldFotoRecords = await Foto_Bus.findAll({ where: { idBus: id }, transaction });
-            const oldFotoNames = oldFotoRecords.map(fotoBus => fotoBus.nama);
+            const oldFotoRecords = await Foto_Bus.findAll({
+                where: { idBus: id },
+                transaction
+            });
+            const oldFotoNames = oldFotoRecords.map(foto => foto.nama);
 
-            // cek apakah nama file sama persis (tidak ada perubahan)
-            const isSame = fotos.every(fotoBus => oldFotoNames.includes(fotoBus));
+            const fotosSet = new Set(fotos);
+            const oldFotosSet = new Set(oldFotoNames);
 
-            if (!isSame) {
-                // simpan foto lama untuk dihapus nanti setelah commit
-                oldFotos = oldFotoRecords;
+            // Cari foto yang perlu DIHAPUS (ada di old, tidak ada di new)
+            const fotosToDelete = oldFotoRecords.filter(
+                oldFoto => !fotosSet.has(oldFoto.nama)
+            );
 
-                // hapus data lama di DB
-                await Foto_Bus.destroy({ where: { idBus: id }, transaction });
+            // Cari foto yang perlu DITAMBAH (ada di new, tidak ada di old)
+            const fotosToInsert = fotos.filter(
+                foto => !oldFotosSet.has(foto)
+            );
 
-                // insert data foto baru
-                await Promise.all(fotos.map(async (foto) => {
-                    await Foto_Bus.create({
-                        idBus: existingBus.idBus,
-                        nama: foto
-                    }, { transaction });
-                }));
+            console.log('Foto to DELETE:', fotosToDelete.map(f => f.nama));
+            console.log('Foto to INSERT:', fotosToInsert);
+
+            // DELETE hanya yang perlu dihapus
+            if (fotosToDelete.length > 0) {
+                await Foto_Bus.destroy({
+                    where: {
+                        idBus: id,
+                        nama: fotosToDelete.map(foto => foto.nama)
+                    },
+                    transaction
+                });
+            }
+
+            // INSERT hanya yang baru
+            if (fotosToInsert.length > 0) {
+                await Promise.all(
+                    fotosToInsert.map(foto =>
+                        Foto_Bus.create({
+                            idBus: existingBus.idBus,
+                            nama: foto
+                        }, { transaction })
+                    )
+                );
+            }
+
+            // Hapus file dari storage (hanya yang dihapus dari DB)
+            if (fotosToDelete.length > 0) {
+                await Promise.all(
+                    fotosToDelete.map(async foto => {
+                        hapusFileStorage(foto.nama);
+                    })
+                );
             }
         }
 
         await existingBus.setFasilitas(validFasilitas, { transaction });
-
         await transaction.commit();
-
-        if (oldFotos.length > 0 && fotos && fotos.length > 0) {
-            oldFotos.forEach(foto => {
-                hapusFileStorage(foto.nama);
-            });
-        }
 
         return existingBus;
     } catch (error) {
