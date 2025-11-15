@@ -2,7 +2,6 @@ const db = require('../models');
 const Mitra = db.Mitra;
 const Bus = db.Bus;
 const Fasilitas = db.Fasilitas;
-const Bus_Fasilitas = db.Bus_Fasilitas;
 const Foto_Bus = db.Foto_Bus;
 const { sequelize } = require('../models');
 const fs = require('fs');
@@ -33,12 +32,17 @@ const findBusOrFail = async (id) => {
     return existingBus;
 };
 
-const fieldValidation = ({ idMitra, kode_bus, nama, type, kapasitas, status, fotos, isUpdate = false }) => {
+const fieldValidation = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fotos, isUpdate = false }) => {
     if (!idMitra || !kode_bus || !nama || !type || !kapasitas || !status) {
         throw new Error('Semua field wajib diisi');
     }
 
-    // Saat create wajib upload foto, tapi saat update boleh kosong
+    const existingMitra = await Mitra.findByPk(idMitra);
+    if (!existingMitra) {
+        console.log(existingMitra);
+        throw new Error('Mitra tidak ditemukan');
+    }
+
     if (!isUpdate) {
         if ((!Array.isArray(fotos) || fotos.length < 1 || fotos.length > 5)) {
             throw new Error('Harap unggah minimal 1 foto dan maksimal 5 foto.');
@@ -96,6 +100,32 @@ const konversiStringToIntArray = (fasilitas) => {
     return fasilitasArray;
 };
 
+const urlFotoBus = (req, fotos) => {
+    const baseURL = `${req.protocol}://${req.get('host')}`;
+    if (Array.isArray(fotos)) {
+        return fotos.map(foto => ({
+            ...foto.toJSON(),
+            logoURL: foto.nama
+                ? `${baseURL}/uploads/foto_bus/${foto.nama}`
+                : null
+        }));
+    } else {
+        return {
+            ...fotos.toJSON(),
+            logoURL: fotos.nama
+                ? `${baseURL}/uploads/foto_bus/${fotos.nama}`
+                : null
+        };
+    }
+}
+
+const hapusFileStorage = (fotoFile) => {
+    const filePath = path.join(__dirname, '../uploads/foto_bus', fotoFile);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted foto: ${fotoFile}`);
+    }
+}
 
 const getAllBus = async () => {
     return await Bus.findAll({
@@ -139,6 +169,7 @@ const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fas
             status
         }, { transaction });
 
+        // Perulangan paralel untuk menyimpan foto
         await Promise.all(fotos.map(async (foto) => {
             await Foto_Bus.create({
                 idBus: newBus.idBus,
@@ -151,20 +182,26 @@ const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fas
 
         await transaction.commit();
 
-        return newBus;
-    } catch (error) {
-        const busExist = await Bus.findOne({ where: { kode_bus } });
-        if (!busExist && fotos && fotos.length > 0) {
-            fotos.forEach(foto => {
-                const filePath = path.join(__dirname, '../uploads/foto_bus', foto);
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                    console.log(`Deleted foto: ${foto}`);
-                }
-            });
+        // Rename file foto dari temp ke id bus
+        for (const foto of fotos) {
+            const oldPath = path.join(__dirname, '../uploads/foto_bus', foto);
+            const newName = foto.replace('bus_temp_', `bus_${newBus.idBus}_`);
+            const newPath = path.join(__dirname, '../uploads/foto_bus', newName);
+
+            if (fs.existsSync(oldPath)) {
+                fs.renameSync(oldPath, newPath);
+                await Foto_Bus.update({ nama: newName }, { where: { nama: foto } });
+                console.log(`Renamed ${foto} → ${newName}`);
+            }
         }
 
+        return newBus;
+    } catch (error) {
         await transaction.rollback();
+
+        await Promise.all(
+            fotos.map(foto => hapusFileStorage(foto))
+        );
 
         throw error;
     };
@@ -223,11 +260,7 @@ const updatebus = async ({ id, idMitra, kode_bus, nama, type, kapasitas, status,
 
         if (oldFotos.length > 0 && fotos && fotos.length > 0) {
             oldFotos.forEach(foto => {
-                const filePath = path.join(__dirname, '../uploads/foto_bus', foto.nama);
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                    console.log(`Deleted old foto: ${foto.nama}`);
-                }
+                hapusFileStorage(foto.nama);
             });
         }
 

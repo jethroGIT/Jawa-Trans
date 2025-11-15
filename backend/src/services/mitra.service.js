@@ -133,6 +133,8 @@ const updateMitra = async ({ id, logo, nama, alamat, telephone, email }) => {
 const destroyMitra = async (id) => {
     const mitra = await findMitraOrFail(id);
 
+    hapusFileStorage(mitra.logo);
+
     return await mitra.destroy();
 };
 
