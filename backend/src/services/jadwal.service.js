@@ -5,6 +5,10 @@ const Jadwal = db.Jadwal;
 const Bus = db.Bus;
 const Fasilitas = db.Fasilitas;
 const Terminal = db.Terminal;
+const Foto_Bus = db.Foto_Bus;
+const Mitra = db.Mitra;
+const ReservasiDetail = db.Reservasi_Detail;
+const Reservasi = db.Reservasi;
 
 // Reusable Helper
 const findOrFail = async (id) => {
@@ -12,7 +16,21 @@ const findOrFail = async (id) => {
         include: [
             {
                 model: Bus,
-                as: 'bus'
+                as: 'bus',
+                include:
+                    [{
+                        model: Mitra,
+                        as: 'mitra',
+                    },
+                    {
+                        model: Fasilitas,
+                        as: 'fasilitas',
+                        through: { attributes: [] }
+                    },
+                    {
+                        model: Foto_Bus,
+                        as: 'foto_bus'
+                    }]
             },
             {
                 model: Terminal,
@@ -102,18 +120,64 @@ const checkTerminalExists = async (titik_naik, titik_turun) => {
     return true;
 };
 
+const addUrlToFotoBus = (req, fotoBusArray) => {
+    if (!fotoBusArray || !Array.isArray(fotoBusArray)) {
+        return [];
+    }
+
+    return fotoBusArray.map(foto => ({
+        ...foto,
+        url: `${req.protocol}://${req.get('host')}/uploads/foto_bus/${foto.nama}`
+    }));
+};
+
+const urlFotoBusJadwal = (req, jadwal) => {
+    if (!jadwal) return jadwal;
+
+    const jadwalJSON = jadwal.toJSON();
+
+    if (jadwalJSON.bus && jadwalJSON.bus.foto_bus) {
+        jadwalJSON.bus.foto_bus = addUrlToFotoBus(req, jadwalJSON.bus.foto_bus);
+    }
+
+    return jadwalJSON;
+};
+
+const getKursiTerjual = async (idJadwal) => {
+    const kursiTerjual = await ReservasiDetail.findAll({
+        attributes: ['noKursi'],
+        include: [
+            {
+                model: Reservasi,
+                as: 'reservasi',
+                where: {
+                    idJadwal: idJadwal,
+                    status: 'pending' || 'confirmed' // atau status lain yang menandakan kursi sudah dibooking
+                },
+                attributes: [] // Tidak perlu ambil data reservasi
+            }
+        ],
+        raw: true
+    });
+
+    return kursiTerjual.map(k => k.noKursi).sort((a, b) => a - b);
+};
+
 const getAllJadwal = async () => {
     return await Jadwal.findAll({
         include: [
             {
                 model: Bus,
                 as: 'bus',
-                include: [
+                include:
+                    [{
+                        model: Mitra,
+                        as: 'mitra'
+                    },
                     {
                         model: Fasilitas,
                         as: 'fasilitas'
-                    }
-                ]
+                    }]
             },
             {
                 model: Terminal,
@@ -128,8 +192,15 @@ const getAllJadwal = async () => {
     });
 };
 
-const getJadwalById = async (id) => {
-    return await findOrFail(id);
+const getJadwalById = async (req, id) => {
+    const jadwal = await findOrFail(id);
+    const jadwalWithUrl = urlFotoBusJadwal(req, jadwal);
+    const kursiTerjual = await getKursiTerjual(id);
+    return {
+        ...jadwalWithUrl,
+        kursiTerjual,
+        kursiTersedia: jadwalWithUrl.bus.kapasitas - kursiTerjual.length
+    };
 };
 
 const createJadwal = async (jadwalData) => {
@@ -145,15 +216,15 @@ const createJadwal = async (jadwalData) => {
     } = jadwalData;
 
     // Validasi field wajib
-    fieldValidation({ 
-        idBus, 
-        titik_naik, 
-        titik_turun, 
-        tanggal_keberangkatan, 
-        jam_keberangkatan, 
-        tanggal_kedatangan, 
-        jam_kedatangan, 
-        harga 
+    fieldValidation({
+        idBus,
+        titik_naik,
+        titik_turun,
+        tanggal_keberangkatan,
+        jam_keberangkatan,
+        tanggal_kedatangan,
+        jam_kedatangan,
+        harga
     });
 
     // Cek apakah bus ada
@@ -163,11 +234,11 @@ const createJadwal = async (jadwalData) => {
     await checkTerminalExists(titik_naik, titik_turun);
 
     // Cek duplikasi
-    await checkDuplicate({ 
-        idBus, 
-        titik_naik, 
-        titik_turun, 
-        tanggal_keberangkatan, 
+    await checkDuplicate({
+        idBus,
+        titik_naik,
+        titik_turun,
+        tanggal_keberangkatan,
         jam_keberangkatan
     });
 
@@ -185,7 +256,7 @@ const createJadwal = async (jadwalData) => {
 
 const updateJadwal = async ({ id, idBus, tanggal, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga }) => {
     // Validasi field wajib
-    fieldValidation({ idBus, titik_naik, titik_turun, tanggal_keberangkatan,jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga });
+    fieldValidation({ idBus, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga });
 
     // Cek apakah bus ada
     await checkBusExists(idBus);

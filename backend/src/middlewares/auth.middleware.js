@@ -11,7 +11,7 @@ const authenticate = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({ 
-            message: 'Invalid or expired token' 
+            message: 'Token invalid atau kadaluarsa' 
         });
 
         req.user = user; // simpan payload user (misal: { id, role })
@@ -31,7 +31,7 @@ const authorize = (allowedRoles) => {
         console.log(allowedRoles);
         // versi menggunakan idrole
         // if (!allowedRoles.includes(req.user.idRole)) {
-W
+
         if (!allowedRoles.includes(req.user.role)) {
             return res.status(403).json({ 
                 message: 'Forbidden: insufficient rights' 

@@ -18,7 +18,7 @@ const getAllJadwal = async (req, res) => {
 const show = async (req, res) => {
     const { id } = req.params;
     try {
-        const jadwal = await jadwalService.getJadwalById(id);
+        const jadwal = await jadwalService.getJadwalById(req, id);
         return res.status(200).json({
             success: true,
             data: jadwal

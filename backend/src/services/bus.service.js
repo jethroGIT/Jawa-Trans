@@ -11,7 +11,7 @@ const findBusOrFail = async (id) => {
     const existingBus = await Bus.findByPk(id, {
         include: [
             {
-                model: db.Foto_Bus,
+                model: Foto_Bus,
                 as: 'foto_bus'
             },
             {
@@ -32,8 +32,8 @@ const findBusOrFail = async (id) => {
     return existingBus;
 };
 
-const fieldValidation = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fotos, isUpdate = false }) => {
-    if (!idMitra || !kode_bus || !nama || !type || !kapasitas || !status) {
+const fieldValidation = async ({ idMitra, kode_bus, type, kapasitas, status, fotos, isUpdate = false }) => {
+    if (!idMitra || !kode_bus || !type || !kapasitas || !status) {
         throw new Error('Semua field wajib diisi');
     }
 
@@ -106,7 +106,7 @@ const urlFotoBus = (req, data) => {
             ...item.toJSON(),
             foto_bus: item.foto_bus.map(foto => ({
                 ...foto.toJSON(),
-                url: `${req.protocol}://${req.get('host')}/foto_bus/${foto.nama}`
+                url: `${req.protocol}://${req.get('host')}/uploads/foto_bus/${foto.nama}`
             }))
         }));
     } else {
@@ -114,7 +114,7 @@ const urlFotoBus = (req, data) => {
             ...data.toJSON(),
             foto_bus: data.foto_bus.map(foto => ({
                 ...foto.toJSON(),
-                url: `${req.protocol}://${req.get('host')}/foto_bus/${foto.nama}`
+                url: `${req.protocol}://${req.get('host')}/uploads/foto_bus/${foto.nama}`
             }))
         };
     }
@@ -123,6 +123,7 @@ const urlFotoBus = (req, data) => {
 
 
 const hapusFileStorage = (fotoFile) => {
+    if (!fotoFile) return;
     const filePath = path.join(__dirname, '../uploads/foto_bus', fotoFile);
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -134,7 +135,7 @@ const getAllBus = async (req) => {
     const data = await Bus.findAll({
         include: [
             {
-                model: db.Foto_Bus,
+                model: Foto_Bus,
                 as: 'foto_bus'
             },
             {
@@ -156,10 +157,10 @@ const getBusById = async (req, id) => {
     return urlFotoBus(req, bus);
 };
 
-const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fasilitas, fotos }) => {
+const createBus = async ({ idMitra, kode_bus, type, kapasitas, status, fasilitas, fotos }) => {
     const transaction = await sequelize.transaction();
     try {
-        fieldValidation({ idMitra, kode_bus, nama, type, kapasitas, status, fotos });
+        fieldValidation({ idMitra, kode_bus, type, kapasitas, status, fotos });
 
         await checkDuplicateBus(kode_bus);
 
@@ -169,7 +170,6 @@ const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fas
         const newBus = await Bus.create({
             idMitra,
             kode_bus,
-            nama,
             type,
             kapasitas,
             status
@@ -213,20 +213,20 @@ const createBus = async ({ idMitra, kode_bus, nama, type, kapasitas, status, fas
     };
 };
 
-const updatebus = async ({ id, idMitra, kode_bus, nama, type, kapasitas, status, fasilitas, fotos }) => {
+const updatebus = async ({ id, idMitra, kode_bus, type, kapasitas, status, fasilitas, fotos }) => {
     const transaction = await sequelize.transaction();
 
     try {
         const existingBus = await findBusOrFail(id);
 
-        fieldValidation({ idMitra, kode_bus, nama, type, kapasitas, status, fotos, isUpdate: true });
+        fieldValidation({ idMitra, kode_bus, type, kapasitas, status, fotos, isUpdate: true });
         await checkDuplicateBus(kode_bus, id);
 
         const fasilitasArray = konversiStringToIntArray(fasilitas);
         const validFasilitas = await validateFasilitas(fasilitasArray);
 
         await existingBus.update({
-            idMitra, kode_bus, nama, type, kapasitas, status
+            idMitra, kode_bus, type, kapasitas, status
         }, { transaction });
 
         // OPTIMAL: Hanya update yang berbeda

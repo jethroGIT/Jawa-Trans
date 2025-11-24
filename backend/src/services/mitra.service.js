@@ -62,6 +62,7 @@ const urlLogoMitra = (req, mitras) => {
 }
 
 const hapusFileStorage = (fileLogo) => {
+    if (!fileLogo) return;
     const filePath = path.join(__dirname, '../uploads/mitra', fileLogo);
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -110,8 +111,8 @@ const updateMitra = async ({ id, logo, nama, alamat, telephone, email }) => {
 
         await checkDuplicateMitra({ nama, telephone, email, id });
 
-        if (logo && mitra.logo && logo !== mitra.logo) { 
-            hapusFileStorage(mitra.logo); 
+        if (logo && mitra.logo && logo !== mitra.logo) {
+            hapusFileStorage(mitra.logo);
         }
 
         await mitra.update({

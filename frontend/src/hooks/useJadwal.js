@@ -1,26 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import jadwalService from '../services/jadwalService';
 
-export function useJadwal() {
-    const [jadwal, setJadwal] = useState([]);
+export function useJadwal(idJadwal = null) {
+    const [jadwal, setJadwal] = useState(idJadwal ? null : []);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        async function fetchJadwal() {
-            try {
-                setLoading(true);
-                const response = await jadwalService.getAllJadwal();
-                setJadwal(response.data || []);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
+    const fetchJadwal = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await jadwalService.getAllJadwal();
+            setJadwal(response.data || []);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
-
-        fetchJadwal();
     }, []);
 
-    return { jadwal, loading, error };
+    const fetchJadwalById = useCallback(async (id) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await jadwalService.showJadwal(id);
+            setJadwal(response.data || null);
+        } catch (err) {
+            setError(err.message);
+            setJadwal(null);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (idJadwal) {
+            fetchJadwalById(idJadwal);
+        } else {
+            fetchJadwal();
+        }
+    }, [idJadwal, fetchJadwal, fetchJadwalById]);
+
+    return {
+        jadwal,
+        loading,
+        error,
+        fetchJadwal,
+        fetchJadwalById
+    };
 }

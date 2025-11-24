@@ -10,6 +10,10 @@ const defineTerminalModel = (sequelize) => {
             allowNull: false,
             autoIncrement: true
         },
+        kota: {
+            type: DataTypes.STRING(45),
+            allowNull: true
+        },
         nama: {
             type: DataTypes.STRING(45),
             allowNull: true

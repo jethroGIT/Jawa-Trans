@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { Link } from "react-router-dom";
 import { ChevronLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function LoginPage() {
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const navigate = useNavigate();
     useDocumentTitle('Login');
 
     async function handleSubmit(event) {
@@ -24,7 +26,7 @@ export default function LoginPage() {
         try {
             const data = await authService.loginRequest(email, password);
             setResponse(data);
-            localStorage.setItem("token", data.token);
+            authService.saveAuth(data.token, data.data);
 
             Swal.fire({
                 icon: "success",
@@ -34,6 +36,14 @@ export default function LoginPage() {
                 showConfirmButton: false,
                 width: "350px",
             });
+
+            if (data.data.role === 'admin') {
+                navigate('/');
+            } else if (data.data.role === 'mitra') {
+                navigate('/');
+            } else {
+                navigate('/');
+            }
         } catch (err) {
             setError(err.message);
 

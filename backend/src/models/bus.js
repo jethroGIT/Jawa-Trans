@@ -18,10 +18,6 @@ const defineBusModel = (sequelize) => {
       type: DataTypes.STRING(10),
       allowNull: true
     },
-    nama: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
     type: {
       type: DataTypes.STRING(100),
       allowNull: true

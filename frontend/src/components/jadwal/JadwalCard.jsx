@@ -6,9 +6,18 @@ import {
     Plus,
     ArrowRight,
 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
-// components/JadwalCard.jsx
+function useQuery() {
+    return new URLSearchParams(useLocation().search);
+}
+
 export default function JadwalCard({ item }) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const query = useQuery();
+    const jumlahPenumpang = query.get("passengers");
+
     const formatTime = (isoString) => {
         const date = new Date(isoString);
         return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -25,12 +34,16 @@ export default function JadwalCard({ item }) {
 
     const duration = calculateDuration(item.jam_keberangkatan, item.jam_kedatangan);
 
+    const handleSelect = () => {
+        navigate(`/detail-jadwal?idJadwal=${item.idJadwal}&penumpang=${jumlahPenumpang}`);
+    };
+
     return (
         <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-shadow duration-200 p-6">
             {/* Row 1 - Bus Info */}
             <div className="mb-1">
                 <h3 className="text-lg font-bold text-gray-900">
-                    {item.bus?.nama}
+                    {item.bus?.mitra.nama}
                 </h3>
                 <p className="text-sm text-gray-500">
                     {item.bus?.type}
@@ -132,7 +145,7 @@ export default function JadwalCard({ item }) {
                         </span>
                         <span className="text-1xs text-gray-400 ml-1">/kursi</span>
                     </div>
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold w-full py-2.5 rounded-lg transition-colors duration-200">
+                    <button onClick={handleSelect} className="bg-orange-500 hover:bg-orange-600 text-white font-semibold w-full py-2.5 rounded-lg transition-colors duration-200">
                         Pilih
                     </button>
                 </div>

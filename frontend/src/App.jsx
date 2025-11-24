@@ -3,6 +3,7 @@ import LoginPage from "./pages/auth/Login"
 import RegisterPage from "./pages/auth/Register"
 import HomePage from "./pages/home/HomePage"
 import JadwalPage from "./pages/jadwal/JadwalPage"
+import DetailJadwalPage from "./pages/jadwal/DetailJadwalPage"
 import './styles/index.css';
 
 export default function Root() {
@@ -11,6 +12,7 @@ export default function Root() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/jadwal" element={<JadwalPage />} />
+        <Route path="/detail-jadwal" element={<DetailJadwalPage />}/>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>
