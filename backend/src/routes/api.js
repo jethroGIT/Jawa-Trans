@@ -14,6 +14,7 @@ const jadwalController = require('../controllers/jadwal.controller');
 const reservasiController = require('../controllers/reservasi.controller');
 const paymentController = require('../controllers/payment.controller');
 const kursiController = require('../controllers/kursi.controller');
+const danaPaymentController = require('../controllers/danaPayment.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
 router.get('/', (req, res) => {
@@ -97,6 +98,9 @@ router.put('/bus/:idBus/kursi/:idKursi', kursiController.update);
 router.delete('/bus/:idBus/kursi/:idKursi', kursiController.destroy);
 router.get('/kursi', kursiController.getAllKursi);
 
-
+router.post('/dana/payment/create', danaPaymentController.createPayment);
+router.get('/dana/payment/status/:orderId', danaPaymentController.checkPaymentStatus);
+router.post('/dana/payment/webhook', danaPaymentController.handleWebhook);
+router.post('/dana/payment/refund', danaPaymentController.refundPayment);
 
 module.exports = router;
