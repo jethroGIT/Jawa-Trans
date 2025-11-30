@@ -83,6 +83,10 @@ const updatePaymentStatus = async (callbackData) => {
     }
 
     // Update reservasi
+    await Reservasi.update(
+        { status: newStatus },
+        { where: { idReservasi: reservasiId } }
+    );
     await Reservasi_Detail.update(
         { status: newStatus },            
         { where: { idReservasi: reservasiId } }
