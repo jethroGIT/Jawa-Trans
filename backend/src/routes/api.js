@@ -84,6 +84,7 @@ router.get('/reservasi/:id', reservasiController.show);
 router.post('/reservasi', reservasiController.store);
 router.put('/reservasi/:id', reservasiController.update);
 router.delete('/reservasi/:id', reservasiController.destroy);
+router.get('/reservasi/user/:id', reservasiController.getReservasiByUser);
 
 router.get('/payment', paymentController.getAllPayment);
 router.get('/payment/:id', paymentController.show);
@@ -110,5 +111,7 @@ router.get('/payment/error', midtransController.errorRedirect);
 router.post('/midtrans/create', midtransController.createTransaction);
 router.post('/midtrans/callback', midtransController.midtransCallback);
 
+// gabungan reservasi dan payment
+router.post('/reservasi/pay', reservasiController.storeAndPay);
 
 module.exports = router;

@@ -46,9 +46,9 @@ const errorRedirect = async (req, res) => {
 
 const createTransaction = async (req, res) => {
     try {
-        const { orderId, amount, customer } = req.body;
+        const { orderId, amount, customer, method } = req.body;
 
-        const response = await midtransService.createPayment(orderId, amount, customer);
+        const response = await midtransService.createPayment(orderId, amount, customer, method);
 
         return res.status(200).json({
             success: true,
@@ -67,17 +67,22 @@ const createTransaction = async (req, res) => {
 const midtransCallback = async (req, res) => {
     try {
         const notif = req.body;
-        console.log("🔥 Callback Received: ", notif);
-
+        console.log("🔥 Callback Received");
         const result = await midtransService.updatePaymentStatus(req.body);
 
+        const io = req.app.get("io");
+        // Broadcast ke frontend pakai channel unik berdasarkan order_id
+        io.emit(`payment_status_${notif.order_id}`, {
+            order_id: notif.order_id,
+            status: notif.transaction_status
+        });
+        
         return res.status(200).json({
             success: true,
             message: "Callback processed",
             data: result
         });
 
-        res.status(200).json({ message: "Callback processed" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

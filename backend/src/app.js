@@ -4,6 +4,7 @@ const path = require('path');
 const apiRoutes = require('./routes/api.js');
 const cors = require("cors");
 
+
 app.set('view engine', 'ejs');
 app.set('views', path.resolve(__dirname, '../public/views'));
 

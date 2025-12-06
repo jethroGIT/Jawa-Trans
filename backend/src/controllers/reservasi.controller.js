@@ -1,4 +1,8 @@
+const db = require('../models');
+const Jadwal = db.Jadwal;
+const Payment = db.Payment;
 const reservasiService = require('../services/reservasi.service');
+const midtransService = require('../services/midtrans.service');
 
 const getAllReservasi = async (req, res) => {
     try {
@@ -32,9 +36,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const  { idUser, idJadwal, penumpang, namaPenumpang, kursi, status } = req.body;
+    const { idUser, idJadwal, penumpang, namaPenumpang, kursi, status } = req.body;
     try {
-        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, namaPenumpang, kursi, status })
+        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, namaPenumpang, kursi })
         return res.status(200).json({
             succes: true,
             data: 'Reservasi berhasil ditambahkan'
@@ -83,8 +87,8 @@ const destroy = async (req, res) => {
 // Controller tambahan untuk fitur khusus reservasi
 const getReservasiByUser = async (req, res) => {
     try {
-        const { idUser } = req.params;
-        const reservasi = await reservasiService.getReservasiByUser(idUser);
+        const { id } = req.params;
+        const reservasi = await reservasiService.getReservasiByUser(id);
         return res.status(200).json({
             success: true,
             data: reservasi
@@ -131,6 +135,46 @@ const updateStatusReservasi = async (req, res) => {
     }
 }
 
+const storeAndPay = async (req, res) => {
+    const { idUser, idJadwal, penumpang, namaPenumpang, kursi, method, customer, totalHarga } = req.body;
+
+    try {
+        // 1. Buat reservasi
+        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, namaPenumpang, kursi });
+        const reservasiId = reservasi.idReservasi;
+
+        // 2. Buat log transaksi pembayaran
+        const log = await Payment.create({
+            idReservasi: reservasiId,
+            amount: totalHarga,
+            payment_method: method,
+            status: 'pending'
+        });
+
+        // 3. Buat transaksi Midtrans
+        const payment = await midtransService.createPayment(
+            reservasiId.toString(),
+            totalHarga,
+            customer,
+            method
+        );
+
+        return res.status(200).json({
+            success: true,
+            reservasiId,
+            payment
+        });
+
+
+    } catch (error) {
+        // await reservasiService.destroyReservasi(reservasiId);
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
 module.exports = {
     getAllReservasi,
     show,
@@ -139,5 +183,6 @@ module.exports = {
     destroy,
     getReservasiByUser,
     getReservasiByJadwal,
-    updateStatusReservasi
+    updateStatusReservasi,
+    storeAndPay
 };

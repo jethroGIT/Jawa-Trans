@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import reservasiService from "../../services/reservasiService";
-import authService from "../../services/authService"; 
+import authService from "../../services/authService";
 import Swal from "sweetalert2";
 
 export default function OrderCard({ jadwal }) {
@@ -59,7 +59,7 @@ export default function OrderCard({ jadwal }) {
         return "tersedia";
     };
 
-    const handleLanjut = async () => {
+    const handleLanjut = () => {
         if (kursiTerpilih.length === jumlahPenumpang) {
             // Validasi nama penumpang
             const namaKosong = penumpang.some(nama => !nama.trim());
@@ -68,42 +68,50 @@ export default function OrderCard({ jadwal }) {
                 return;
             }
 
+            // Siapkan data untuk halaman pembayaran
             const user = authService.getUser();
-
-            const dataReservasi = {
-                idUser: user.idUser,
+            const reservasiData = {
+                // Data Jadwal
                 idJadwal: jadwal?.idJadwal,
-                penumpang: jumlahPenumpang,
-                namaPenumpang: penumpang.map(nama => nama.trim()), // Array nama penumpang
-                kursi: kursiTerpilih.map(k => String(k)) // Array kursi 
+                terminalAsal: jadwal?.terminalNaik?.nama || "Terminal Asal",
+                terminalTujuan: jadwal?.terminalTurun?.nama || "Terminal Tujuan",
+                tanggal: new Date(jadwal?.tanggal_keberangkatan).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                }),
+                hari: new Date(jadwal?.tanggal_keberangkatan).toLocaleDateString('id-ID', { weekday: 'long' }),
+                jamKeberangkatan: new Date(jadwal?.jam_keberangkatan).toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }),
+
+                // Data Pemesan
+                idUser: user.idUser,
+                namaPemesan: user.nama,
+                emailPemesan: user.email,
+                teleponPemesan: user.telephone,
+
+                // Data Penumpang
+                penumpang: penumpang.map((nama, index) => ({
+                    nama: nama.trim(),
+                    kursi: String(kursiTerpilih[index])
+                })),
+                namaPenumpang: penumpang.map(nama => nama.trim()),
+                kursi: kursiTerpilih.map(k => String(k)),
+
+                // Data Harga
+                hargaTiket: jadwal?.harga || 0,
+                jumlahPenumpang: jumlahPenumpang,
+                totalHarga: (jadwal?.harga || 0) * jumlahPenumpang
             };
 
-            try {
-                setIsLoading(true);
-                const response = await reservasiService.orderJadwal(dataReservasi);
-
-                await Swal.fire({
-                    icon: "success",
-                    title: "Reservasi Berhasil",
-                    text: response?.message || "Reservasi Anda telah dibuat",
-                    width: "350px"
-                });
-
-                // optionally navigate to a confirmation or payment page
-                navigate('/');
-                } catch (error) {
-                    console.error(error);
-                    await Swal.fire({
-                        icon: "error",
-                        title: "Reservasi Gagal",
-                        text: error?.message || "Terjadi kesalahan saat melakukan reservasi",
-                        width: "350px"
-                    });
-                } finally {
-                    setIsLoading(false);
-                }
-            }
-        };
+            // Navigate ke halaman payment dengan data
+            navigate('/payment', { 
+                state: { reservasiData } 
+            });
+        }
+    };
 
     const handleKembali = () => {
         navigate(-1);

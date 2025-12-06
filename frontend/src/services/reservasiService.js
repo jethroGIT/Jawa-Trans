@@ -1,7 +1,7 @@
 import { apiRequest } from "./api";
 
-function orderJadwal({ idUSer, idJadwal, penumpang, namaPenumpang, kursi }) {
-    return apiRequest("reservasi", "POST", { idUSer, idJadwal, penumpang, namaPenumpang, kursi });
+function orderJadwal({ idUser, idJadwal, penumpang, namaPenumpang, kursi, method, customer, totalHarga }) {
+    return apiRequest("reservasi/pay", "POST", { idUser, idJadwal, penumpang, namaPenumpang, kursi, method, customer, totalHarga });
 }
 
 export default {

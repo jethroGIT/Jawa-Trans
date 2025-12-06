@@ -4,7 +4,9 @@ const Reservasi_Detail = db.Reservasi_Detail;
 const Kursi = db.Kursi;
 const User = db.User;
 const Jadwal = db.Jadwal;
+const Terminal = db.Terminal;
 const { sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 
 const findReservasiOrFail = async (id) => {
@@ -30,10 +32,40 @@ const findReservasiOrFail = async (id) => {
     return reservasi;
 };
 
-const checkDuplicateReservasi = async (idUser, idJadwal, id = null) => {
+const checkDuplicateReservasi = async (idUser, idJadwal, kursi = [], id = null) => {
+    // Jika diberikan array kursi, cek apakah ada kursi yang sudah dipesan (status pending)
+    if (Array.isArray(kursi) && kursi.length > 0) {
+        const kursiBooking = await Reservasi_Detail.findAll({
+            include: [
+                {
+                    model: Reservasi,
+                    as: 'reservasi',
+                    where: {
+                        idJadwal,
+                        status: {
+                            [Op.in]: ['pending', 'paid']
+                        }
+                    }
+                }
+            ],
+            where: { noKursi: kursi }
+        });
+
+        // Jika sedang melakukan update, abaikan detail reservasi milik reservasi yang sama
+        const filtered = id ? kursiBooking.filter(d => d.idReservasi != id) : kursiBooking;
+
+        if (filtered.length > 0) {
+            const kursiSudahDipesan = filtered.map(item => item.noKursi);
+            throw new Error(`Kursi ${kursiSudahDipesan.join(', ')} sudah dipesan`);
+        }
+
+        return true;
+    }
+
+    // Jika tidak ada kursi yang dikirim, fallback ke cek berdasarkan user + jadwal
     const whereCondition = {
         idUser,
-        idJadwal,
+        idJadwal
     };
 
     const existingReservasi = await Reservasi.findOne({
@@ -85,11 +117,11 @@ const getReservasiById = async (id) => {
     return await findReservasiOrFail(id);
 };
 
-const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kursi, status = 'pending' }) => {
+const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kursi }) => {
     if (!idUser || !idJadwal || !penumpang) {
         throw new Error('Field idUser, idJadwal, dan penumpang wajib diisi!');
     }
-    
+
     if (!Array.isArray(namaPenumpang) || namaPenumpang.length === 0) {
         throw new Error('Mohon masukan nama penumpang');
     }
@@ -110,7 +142,7 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kur
 
     await checkJadwalExist(idJadwal);
 
-    await checkDuplicateReservasi(idUser, idJadwal);
+    await checkDuplicateReservasi(idUser, idJadwal, kursi);
 
     const jadwal = await Jadwal.findByPk(idJadwal);
     if (!jadwal) {
@@ -146,7 +178,7 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kur
         const kursiSudahDipesan = kursiBooking.map(item => item.noKursi);
         let errorMessage = `Kursi ${kursiSudahDipesan.join(', ')} sudah dipesan`;
         throw new Error(errorMessage);
-    } 
+    }
 
     const transaction = await sequelize.transaction();
     try {
@@ -155,7 +187,7 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kur
             idUser,
             idJadwal,
             penumpang,
-            status
+            status: "pending"
         }, { transaction });
 
         // Buat data reservasi detail untuk setiap kursi
@@ -173,6 +205,8 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kur
 
         // Commit transaksi
         await transaction.commit();
+
+        return reservasi;
 
     } catch (error) {
         // Rollback transaksi jika ada error
@@ -193,7 +227,7 @@ const updateReservasi = async ({ id, idUser, idJadwal, penumpang, status }) => {
 
     await checkJadwalExist(idJadwal);
 
-    await checkDuplicateReservasi(idUser, idJadwal, id);
+    await checkDuplicateReservasi(idUser, idJadwal, [], id);
 
     return await existingReservasi.update({
         idUser,
@@ -211,15 +245,22 @@ const destroyReservasi = async (id) => {
 const getReservasiByUser = async (idUser) => {
     return await Reservasi.findAll({
         where: { idUser },
+        order: [['idReservasi', 'DESC']],
         include: [
             {
-                model: db.User,
-                as: 'user'
+                model: Jadwal,
+                as: 'jadwal',
+                include: [
+                    {
+                        model: Terminal,
+                        as: 'terminalNaik'
+                    },
+                    {
+                        model: Terminal,
+                        as: 'terminalTurun'
+                    }
+                ]
             },
-            {
-                model: db.Jadwal,
-                as: 'jadwal'
-            }
         ]
     });
 };

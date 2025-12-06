@@ -9,6 +9,7 @@ const Foto_Bus = db.Foto_Bus;
 const Mitra = db.Mitra;
 const ReservasiDetail = db.Reservasi_Detail;
 const Reservasi = db.Reservasi;
+const { Op } = require('sequelize');
 
 // Reusable Helper
 const findOrFail = async (id) => {
@@ -152,7 +153,9 @@ const getKursiTerjual = async (idJadwal) => {
                 as: 'reservasi',
                 where: {
                     idJadwal: idJadwal,
-                    status: 'pending' || 'confirmed' // atau status lain yang menandakan kursi sudah dibooking
+                    status: {
+                        [Op.in]: ['pending', 'paid']
+                    } // atau status lain yang menandakan kursi sudah dibooking
                 },
                 attributes: [] // Tidak perlu ambil data reservasi
             }

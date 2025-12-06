@@ -5,6 +5,25 @@ const Payment = db.Payment;
 const midtrans = require('../config/midtrans');
 const { where } = require('sequelize');
 
+function getMidtransTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+
+    // Ambil offset timezone dalam menit → ubah ke format +0700
+    const tzOffset = -now.getTimezoneOffset(); // WITA/WIB biasanya  -(-420) = +420
+    const sign = tzOffset >= 0 ? "+" : "-";
+    const tzHours = String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, "0");
+    const tzMinutes = String(Math.abs(tzOffset) % 60).padStart(2, "0");
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${sign}${tzHours}${tzMinutes}`;
+}
+
+
 // Recurring (opsional)
 const processRecurring = async (payload) => {
     console.log("Recurring notification:", payload);
@@ -17,12 +36,11 @@ const processPayAccount = async (payload) => {
     return true;
 };
 
-const createPayment = async (orderId, amount, customer) => {
-    console.log(midtrans);
-    console.log("Functions:", Object.keys(midtrans));
+const createPayment = async (orderId, amount, customer, method) => {
+    // console.log(midtrans);
+    // console.log("Functions:", Object.keys(midtrans));
 
-    const parameter = {
-        payment_type: "bank_transfer",
+    let parameter = {
         transaction_details: {
             order_id: orderId,
             gross_amount: amount
@@ -32,15 +50,34 @@ const createPayment = async (orderId, amount, customer) => {
             email: customer.email,
             phone: customer.phone
         },
-        bank_transfer: {
-            bank: "bca"
+        custom_expiry: {
+            order_time: getMidtransTime(),
+            expiry_duration: 5,
+            unit: "minute"
         }
     };
 
-    return await midtrans.charge(parameter);
+    if (method === "bca" || method === "bni" || method === "bri" || method === "mandiri") {
+        parameter.payment_type = "bank_transfer";
+        parameter.bank_transfer = { bank: method };
+    }
+
+    if (method === "qris") {
+        parameter.payment_type = "qris",
+            parameter.qris = { acquirer: "gopay" };
+    }
+
+    if (method === "gopay") {
+        parameter.payment_type = "gopay";
+        parameter.gopay = { enable_callback: true, callback_url: "https://bf3b27771188.ngrok-free.app/api/payment/finish" };
+    }
+    const response = await midtrans.charge(parameter);
+    console.log("Midtrans charge response:", response);
+    return response;
 };
 
 const updatePaymentStatus = async (callbackData) => {
+    console.log("Midtrans callback data:", callbackData);
     const {
         order_id,
         transaction_status,
@@ -88,7 +125,7 @@ const updatePaymentStatus = async (callbackData) => {
         { where: { idReservasi: reservasiId } }
     );
     await Reservasi_Detail.update(
-        { status: newStatus },            
+        { status: newStatus },
         { where: { idReservasi: reservasiId } }
     );
 
