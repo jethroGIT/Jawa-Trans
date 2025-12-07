@@ -5,8 +5,10 @@ async function fetchTiketUser(idUser) {
         const response = await apiRequest(`reservasi/user/${idUser}`, "GET");
         return response.data || [];
     } catch (error) {
-        console.error(error);
-        return [];
+        return {
+            success: false,
+            message: error.message
+        }
     }
 }
 
@@ -15,12 +17,27 @@ async function fethcTiketReservasi(idReservasi) {
         const response = await apiRequest(`reservasi/${idReservasi}`, "GET");
         return response.data;
     } catch (error) {
-        console.error(error);
-        return null;
+        return {
+            success: false,
+            message: error.message
+        }
+    }
+}
+
+async function fetchTiketById(idReservasi) {
+    try {
+        const response = await apiRequest(`reservasi/${idReservasi}`, "GET");
+        return response.data;
+    } catch (error) {
+        return {
+            success: false,
+            message: error.message
+        }
     }
 }
 
 export default {
     fetchTiketUser,
     fethcTiketReservasi,
+    fetchTiketById
 }

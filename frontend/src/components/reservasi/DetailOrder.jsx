@@ -15,6 +15,7 @@ export default function DetailOrder({ reservasiData }) {
             {/* Garis Pemisah */}
             <div className="border-t border-dashed border-gray-300 my-3 "></div>
 
+
             {/* Informasi Terminal - Grid Layout */}
             <div className="grid grid-cols-2 gap-4 mb-6">
                 {/* Terminal Asal */}
@@ -35,6 +36,27 @@ export default function DetailOrder({ reservasiData }) {
                     <p className="text-sm text-gray-600">
                         {reservasiData.jamKeberangkatan || 'Jam Keberangkatan'} WIB
                     </p>
+                </div>
+            </div>
+
+            <div className="border-t border-dashed border-gray-300 my-3 "></div>
+
+            {/* infromasi travel */}
+            <div className="mb-4">
+                <h3 className="font-bold text-gray-900 mb-1 text-base">
+                    Informasi Travel
+                </h3>
+                <div className="flex items-center gap-2 mb-2">
+                    <Bus className="w-5 h-5 text-gray-600" />
+                    <h3 className="text-gray-900"> {reservasiData.mitra} </h3>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                    <Phone className="w-5 h-5 text-gray-400" />
+                    <h3 className="text-gray-900">{reservasiData.tlpMitra}</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Mail className="w-5 h-5 text-gray-400" />
+                    <h3 className="text-gray-900">{reservasiData.emailMitra}</h3>
                 </div>
             </div>
 

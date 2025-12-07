@@ -73,6 +73,9 @@ export default function OrderCard({ jadwal }) {
             const reservasiData = {
                 // Data Jadwal
                 idJadwal: jadwal?.idJadwal,
+                mitra: jadwal?.bus?.mitra?.nama || "Mitra",
+                tlpMitra: jadwal?.bus?.mitra?.telephone || null,
+                emailMitra: jadwal?.bus?.mitra?.email || null,
                 terminalAsal: jadwal?.terminalNaik?.nama || "Terminal Asal",
                 terminalTujuan: jadwal?.terminalTurun?.nama || "Terminal Tujuan",
                 tanggal: new Date(jadwal?.tanggal_keberangkatan).toLocaleDateString('id-ID', {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import authService from "../../services/authService";
 import tiketService from "../../services/tiketService";
 import { Bus, CheckCircle, Clock, XCircle } from "lucide-react";
@@ -7,8 +8,9 @@ export default function TiketReservasi() {
     const [tiket, setTiket] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6;
+    const itemsPerPage = 5;
 
     const renderStatusBadge = (status) => {
         const statusConfig = {
@@ -74,6 +76,10 @@ export default function TiketReservasi() {
         setCurrentPage(page);
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
+
+    const handleDetailClick = (idReservasi) => {
+        navigate(`/detail-tiket/${idReservasi}`);
+    }
 
     if (loading) {
         return (
@@ -201,7 +207,7 @@ export default function TiketReservasi() {
                                             WIB
                                         </p>
 
-                                        <button className="bg-blue-600 text-white font-medium py-2 px-6 rounded border-2 border-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                                        <button onClick={() => handleDetailClick(item.idReservasi)} className="bg-blue-600 text-white font-medium py-2 px-6 rounded border-2 border-blue-600 hover:bg-blue-700 transition-colors duration-200">
                                             Detail Tiket
                                         </button>
                                     </div>

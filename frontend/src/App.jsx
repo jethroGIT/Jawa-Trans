@@ -22,7 +22,7 @@ export default function Root() {
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/transaction" element={<TransactionPage />} />
         <Route path="/list-tiket" element={<TiketPage />} />
-        <Route path="/detail-tiket" element={<DetailTiket />} />
+        <Route path="/detail-tiket/:idReservasi" element={<DetailTiket />} />
       </Routes>
     </BrowserRouter>
   )
