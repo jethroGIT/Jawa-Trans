@@ -9,7 +9,6 @@ const terminalController = require('../controllers/terminal.controller');
 const fasilitasController = require('../controllers/fasilitas.controller');
 const uploadFotoBus = require('../config/multerBus');
 const busController = require('../controllers/bus.controller');
-const methodPaymentController = require('../controllers/methodPayment.controller');
 const jadwalController = require('../controllers/jadwal.controller');
 const reservasiController = require('../controllers/reservasi.controller');
 const paymentController = require('../controllers/payment.controller');
@@ -67,11 +66,6 @@ router.post('/bus', uploadFotoBus.array('fotos', 5), busController.store);
 router.put('/bus/:id', uploadFotoBus.array('fotos', 5), busController.update);
 router.delete('/bus/:id', busController.destroy);
 
-router.get('/methodpayment', methodPaymentController.getAllMethodPayment);
-router.get('/methodpayment/:id', methodPaymentController.show);
-router.post('/methodpayment', methodPaymentController.store);
-router.put('/methodpayment/:id', methodPaymentController.update);
-router.delete('/methodpayment/:id', methodPaymentController.destroy);
 
 router.get('/jadwal', jadwalController.getAllJadwal);
 router.get('/jadwal/:id', jadwalController.show);

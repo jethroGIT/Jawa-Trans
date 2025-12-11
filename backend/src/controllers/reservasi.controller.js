@@ -137,7 +137,7 @@ const updateStatusReservasi = async (req, res) => {
 
 const storeAndPay = async (req, res) => {
     const { idUser, idJadwal, penumpang, namaPenumpang, kursi, method, customer, totalHarga } = req.body;
-
+    console.log("Received storeAndPay request:", totalHarga);
     try {
         // 1. Buat reservasi
         const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, namaPenumpang, kursi });
@@ -146,9 +146,9 @@ const storeAndPay = async (req, res) => {
         // 2. Buat log transaksi pembayaran
         const log = await Payment.create({
             idReservasi: reservasiId,
-            amount: totalHarga,
-            payment_method: method,
-            status: 'pending'
+            method: method,
+            status: 'pending',
+            totalBayar: totalHarga,
         });
 
         // 3. Buat transaksi Midtrans

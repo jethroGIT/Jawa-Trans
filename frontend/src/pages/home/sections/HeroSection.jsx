@@ -13,25 +13,6 @@ export default function HeroSection() {
 
     const handleSearch = async () => {
         navigate(`/jadwal?tripType=${tripType}&from=${from}&to=${to}&date=${date}&passengers=${passengers}`);
-
-        // console.log('Tombol diklik, memanggil API...');
-        // console.log({ tripType, from, to, date, passengers });
-
-        // try {
-        //     const response = await jadwalService.testSearchParams({
-        //         tripType: tripType,           // dari state
-        //         from: from,                   // dari input form
-        //         to: to,                       // dari input form
-        //         date: date,                   // dari input date
-        //         passengers: parseInt(passengers) // convert ke number
-        //     });
-        //     console.log(response);
-
-        //     alert('Berhasil! Lihat console untuk response data');
-        // } catch (err) {
-        //     console.error('Error:', err);
-        //     alert('Error! Lihat console untuk detail error');
-        // }
     };
 
     return (
@@ -59,28 +40,6 @@ export default function HeroSection() {
 
                     {/* Right Side - Search Form */}
                     <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md ml-auto">
-                        {/* Trip Type Tabs */}
-                        <div className="flex border-b mb-4">
-                            <button
-                                onClick={() => setTripType('sekali-jalan')}
-                                className={`flex-1 py-2 px-3 text-center text-sm font-semibold transition ${tripType === 'sekali-jalan'
-                                    ? 'text-blue-600 border-b-2 border-blue-600'
-                                    : 'text-gray-500'
-                                    }`}
-                            >
-                                Sekali jalan
-                            </button>
-                            <button
-                                onClick={() => setTripType('pulang-pergi')}
-                                className={`flex-1 py-2 px-3 text-center text-sm font-semibold transition ${tripType === 'pulang-pergi'
-                                    ? 'text-blue-600 border-b-2 border-blue-600'
-                                    : 'text-gray-500'
-                                    }`}
-                            >
-                                Pulang pergi
-                            </button>
-                        </div>
-
                         {/* Form Fields */}
                         <div className="space-y-3">
                             {/* From and To - Side by Side */}

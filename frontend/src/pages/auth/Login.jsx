@@ -5,6 +5,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { Link } from "react-router-dom";
 import { ChevronLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from "react-router-dom";
+import logo from '../../assets/BW/banner.png';
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -38,9 +39,9 @@ export default function LoginPage() {
             });
 
             if (data.data.role === 'admin') {
-                navigate('/');
+                navigate('/admin');
             } else if (data.data.role === 'mitra') {
-                navigate('/');
+                navigate('/mitra/dashboard');
             } else {
                 navigate('/');
             }
@@ -178,36 +179,50 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                {/* Right Side - Branding */}
-                <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 items-center justify-center relative overflow-hidden">
-                    {/* Grid Pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                        <div className="absolute inset-0" style={{
-                            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-                            backgroundSize: '50px 50px'
-                        }}></div>
-                    </div>
+                {/* Ganti bagian Right Side div dengan ini */}
+                <div className="hidden lg:flex w-1/2 bg-gray-900 relative overflow-hidden items-center justify-center h-screen">
+                    {/* Background Image dengan Overlay */}
+                    <div
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60 mix-blend-overlay"
+                        style={{
+                            backgroundImage: "url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=1920&auto=format&fit=crop')" // Ganti dengan foto Bus Jawa Trans atau Pemandangan
+                        }}
+                    ></div>
+
+                    {/* Gradient Overlay agar teks terbaca */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/60 to-transparent"></div>
 
                     {/* Content */}
-                    <div className="relative z-10 text-center max-w-md px-8">
-                        <div className="mb-6 flex justify-center">
-                            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl">
-                                <svg className="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                </svg>
+                    <div className="relative z-10 w-full max-w-lg px-10 flex flex-col items-center text-center justify-center h-full">
+                        {/* Logo dengan efek glass */}
+                        <div className="mb-20">
+                            <img src={logo} alt="Logo Jawa Trans" className="h-20 w-auto" />
+                        </div>
+
+                        <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
+                            Jelajahi Pulau Jawa dengan <span className="text-blue-300">Kenyamanan Ekstra</span>
+                        </h2>
+
+                        <p className="text-gray-200 text-lg mb-8">
+                            Nikmati perjalanan aman dengan armada terbaik dan kemudahan pemesanan dalam genggaman.
+                        </p>
+
+                        {/* Social Proof Stats */}
+                        <div className="grid grid-cols-3 gap-6 w-full pt-8 border-t border-white/20">
+                            <div>
+                                <p className="text-2xl font-bold text-white">50+</p>
+                                <p className="text-xs text-blue-200 uppercase tracking-wider">Kota Tujuan</p>
+                            </div>
+                            <div>
+                                <p className="text-2xl font-bold text-white">24/7</p>
+                                <p className="text-xs text-blue-200 uppercase tracking-wider">Layanan CS</p>
+                            </div>
+                            <div>
+                                <p className="text-2xl font-bold text-white">100%</p>
+                                <p className="text-xs text-blue-200 uppercase tracking-wider">Aman</p>
                             </div>
                         </div>
-                        <h2 className="text-4xl font-bold text-white mb-4">
-                            Jawa Trans
-                        </h2>
-                        <p className="text-blue-200 text-lg">
-                            Platform pemesanan tiket bus & travel terpercaya untuk perjalanan nyaman Anda
-                        </p>
                     </div>
-
-                    {/* Decorative Elements */}
-                    <div className="absolute top-10 right-10 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-10 left-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
                 </div>
             </div>
         </div>

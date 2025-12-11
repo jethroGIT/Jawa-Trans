@@ -10,6 +10,8 @@ const Mitra = db.Mitra;
 const ReservasiDetail = db.Reservasi_Detail;
 const Reservasi = db.Reservasi;
 const { Op } = require('sequelize');
+const { urlLogoMitra } = require('../services/mitra.service');
+
 
 // Reusable Helper
 const findOrFail = async (id) => {
@@ -83,7 +85,7 @@ const fieldValidation = ({ idBus, titik_naik, titik_turun, tanggal_keberangkatan
     }
 
     // Validasi waktu keberangkatan dan kedatangan
-    if (tanggal_keberangkatan >= tanggal_kedatangan) {
+    if (tanggal_keberangkatan > tanggal_kedatangan) {
         throw new Error('Waktu kedatangan harus setelah waktu keberangkatan!');
     }
 
@@ -140,6 +142,11 @@ const urlFotoBusJadwal = (req, jadwal) => {
     if (jadwalJSON.bus && jadwalJSON.bus.foto_bus) {
         jadwalJSON.bus.foto_bus = addUrlToFotoBus(req, jadwalJSON.bus.foto_bus);
     }
+
+    if (jadwalJSON.bus?.mitra) {
+        jadwalJSON.bus.mitra = urlLogoMitra(req, jadwalJSON.bus.mitra);
+    }
+
 
     return jadwalJSON;
 };
@@ -257,7 +264,7 @@ const createJadwal = async (jadwalData) => {
     });
 };
 
-const updateJadwal = async ({ id, idBus, tanggal, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga }) => {
+const updateJadwal = async ({ id, idBus, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga }) => {
     // Validasi field wajib
     fieldValidation({ idBus, titik_naik, titik_turun, tanggal_keberangkatan, jam_keberangkatan, tanggal_kedatangan, jam_kedatangan, harga });
 
@@ -275,12 +282,13 @@ const updateJadwal = async ({ id, idBus, tanggal, titik_naik, titik_turun, tangg
 
     return await existingJadwal.update({
         idBus: parseInt(idBus),
-        tanggal: new Date(tanggal),
         titik_naik: parseInt(titik_naik),
         titik_turun: parseInt(titik_turun),
+        tanggal_keberangkatan: new Date(tanggal_keberangkatan),
         jam_keberangkatan: new Date(jam_keberangkatan),
+        tanggal_kedatangan: new Date(tanggal_kedatangan),
         jam_kedatangan: new Date(jam_kedatangan),
-        harga: harga.toString()
+        harga: parseFloat(harga)
     });
 };
 

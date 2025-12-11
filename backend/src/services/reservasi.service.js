@@ -5,6 +5,8 @@ const Kursi = db.Kursi;
 const User = db.User;
 const Jadwal = db.Jadwal;
 const Terminal = db.Terminal;
+const Bus = db.Bus;
+const Mitra = db.Mitra;
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
@@ -18,7 +20,28 @@ const findReservasiOrFail = async (id) => {
             },
             {
                 model: Jadwal,
-                as: 'jadwal'
+                as: 'jadwal',
+                include: [
+                    {
+                        model: Terminal,
+                        as: 'terminalNaik'
+                    },
+                    {
+                        model: Terminal,
+                        as: 'terminalTurun'
+                    },
+                    {
+                        model: Bus,
+                        as: 'bus',
+                        include: [
+                            {
+                                model: Mitra,
+                                as: 'mitra'
+                            }
+                        ]
+                    }
+
+                ]
             },
             {
                 model: Reservasi_Detail,

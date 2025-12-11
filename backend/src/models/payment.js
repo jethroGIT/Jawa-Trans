@@ -14,9 +14,9 @@ const definePaymentModel = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        idmethodPayment: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
+        method: {
+            type: DataTypes.STRING(45),
+            allowNull: true,
         },
         status: {
             type: DataTypes.STRING(45),

@@ -69,7 +69,7 @@ const createPayment = async (orderId, amount, customer, method) => {
 
     if (method === "gopay") {
         parameter.payment_type = "gopay";
-        parameter.gopay = { enable_callback: true, callback_url: "https://bf3b27771188.ngrok-free.app/api/payment/finish" };
+        parameter.gopay = { enable_callback: true, callback_url: "https://9cccf62facd5.ngrok-free.app/api/payment/finish" };
     }
     const response = await midtrans.charge(parameter);
     console.log("Midtrans charge response:", response);
@@ -82,8 +82,7 @@ const updatePaymentStatus = async (callbackData) => {
         order_id,
         transaction_status,
         fraud_status,
-        payment_type,
-        gross_amount
+        transaction_time
     } = callbackData;
 
     // Cari reservasi berdasarkan order_id yg sudah dikonversi ke integer
@@ -126,6 +125,13 @@ const updatePaymentStatus = async (callbackData) => {
     );
     await Reservasi_Detail.update(
         { status: newStatus },
+        { where: { idReservasi: reservasiId } }
+    );
+    await Payment.update(
+        { 
+            status: newStatus,
+            waktuBayar: transaction_time 
+        },
         { where: { idReservasi: reservasiId } }
     );
 

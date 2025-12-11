@@ -44,22 +44,33 @@ const fieldValidation = ({ logo, nama, alamat, telephone, email }) => {
 
 const urlLogoMitra = (req, mitras) => {
     const baseURL = `${req.protocol}://${req.get('host')}`;
-    if (Array.isArray(mitras)) {
-        return mitras.map(mitra => ({
-            ...mitra.toJSON(),
-            logoURL: mitra.logo
-                ? `${baseURL}/uploads/mitra/${mitra.logo}`
-                : null
-        }));
-    } else {
+
+    // Function untuk memproses satu mitra (baik instance maupun plain object)
+    const processSingle = (mitra) => {
+        if (!mitra) return null;
+
+        // Jika instance Sequelize → pakai toJSON()
+        // Jika plain object → pakai apa adanya
+        const data = typeof mitra.toJSON === "function" ? mitra.toJSON() : mitra;
+
         return {
-            ...mitras.toJSON(),
-            logoURL: mitras.logo
-                ? `${baseURL}/uploads/mitra/${mitras.logo}`
+            ...data,
+            logoURL: data.logo 
+                ? `${baseURL}/uploads/mitra/${data.logo}` 
                 : null
         };
+    };
+
+    // Jika array → map tiap item
+    if (Array.isArray(mitras)) {
+        return mitras.map(item => processSingle(item));
     }
-}
+
+    // Jika single object
+    return processSingle(mitras);
+};
+
+
 
 const hapusFileStorage = (fileLogo) => {
     if (!fileLogo) return;
@@ -144,5 +155,6 @@ module.exports = {
     getMitraById,
     createMitra,
     updateMitra,
-    destroyMitra
+    destroyMitra,
+    urlLogoMitra
 };

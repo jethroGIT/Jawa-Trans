@@ -1,15 +1,10 @@
 const db = require('../models');
 const Payment = db.Payment;
-const methodPayment = db.methodPayment;
 const Reservasi = db.Reservasi;
 
 const findPaymentOrFail = async (id) => {
     const payment = await Payment.findByPk(id, {
         include: [
-            {
-                model: methodPayment,
-                as: 'methodPayment'
-            },
             {
                 model: Reservasi,
                 as: 'reservasi'
@@ -24,8 +19,8 @@ const findPaymentOrFail = async (id) => {
     return payment;
 };
 
-const fieldValidation = ({ idReservasi, idmethodPayment, status, totalBayar, waktuBayar }) => {
-    if (!idReservasi || !idmethodPayment || !status || !totalBayar || !waktuBayar ) {
+const fieldValidation = ({ idReservasi, method, status, totalBayar, waktuBayar }) => {
+    if (!idReservasi || !method || !status || !totalBayar || !waktuBayar ) {
         throw new Error('Semua field wajib diisi.')
     }
     return true;
@@ -34,10 +29,6 @@ const fieldValidation = ({ idReservasi, idmethodPayment, status, totalBayar, wak
 const getAllPayment = async () => {
     return await Payment.findAll({
         include: [
-            {
-                model: methodPayment,
-                as: 'methodPayment'
-            },
             {
                 model: Reservasi,
                 as: 'reservasi'
@@ -50,10 +41,6 @@ const getPaymentById = async (id) => {
     return await Payment.findByPk(id, {
         include: [
             {
-                model: methodPayment,
-                as: 'methodPayment'
-            },
-            {
                 model: Reservasi,
                 as: 'reservasi'
             }
@@ -61,26 +48,26 @@ const getPaymentById = async (id) => {
     });
 };
 
-const createPayment = async ({ idReservasi, idmethodPayment, status, totalBayar, waktuBayar }) => {
-    fieldValidation({ idReservasi, idmethodPayment, status, totalBayar, waktuBayar })
+const createPayment = async ({ idReservasi, method, status, totalBayar, waktuBayar }) => {
+    fieldValidation({ idReservasi, method, status, totalBayar, waktuBayar })
 
     return await Payment.create({
         idReservasi,
-        idmethodPayment,
+        method,
         status,
         totalBayar,
         waktuBayar
     });
 };
 
-const updatePayment = async ({ id, idReservasi, idmethodPayment, status, totalBayar, waktuBayar }) => {
-    fieldValidation({ idReservasi, idmethodPayment, status, totalBayar, waktuBayar })
+const updatePayment = async ({ id, idReservasi, method, status, totalBayar, waktuBayar }) => {
+    fieldValidation({ idReservasi, method, status, totalBayar, waktuBayar })
 
     const existingPayment = await findPaymentOrFail(id);
 
     return await existingPayment.update({
         idReservasi,
-        idmethodPayment,
+        method,
         status,
         totalBayar,
         waktuBayar

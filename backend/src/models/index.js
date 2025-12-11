@@ -13,7 +13,6 @@ db.Terminal = require('./terminal')(sequelize, DataTypes);
 db.Bus = require('./bus')(sequelize, DataTypes);
 db.Fasilitas = require('./fasilitas')(sequelize, DataTypes);
 db.Bus_Fasilitas = require('./bus_fasilitas')(sequelize, DataTypes);
-db.methodPayment = require('./methodPayment')(sequelize, DataTypes);
 db.Jadwal = require('./jadwal')(sequelize, DataTypes);
 db.Reservasi = require('./reservasi')(sequelize, DataTypes);
 db.Reservasi_Detail = require('./reservasi_detail')(sequelize, DataTypes);
@@ -21,15 +20,25 @@ db.Payment = require('./payment')(sequelize, DataTypes);
 db.Foto_Bus = require('./foto_bus')(sequelize, DataTypes);
 db.Kursi = require('./kursi')(sequelize, DataTypes);
 
-// User ->|---||- Role
-db.Role.hasMany(db.User, {
-    foreignKey: 'idRole',
+// Mitra -||---<- User ->|---||- Role
+db.Mitra.hasMany(db.User, {
+    foreignKey: 'idMitra',
     as: 'user'
 });
+
+db.User.belongsTo(db.Mitra, {
+    foreignKey: 'idMitra',
+    as: 'mitra'
+})
 
 db.User.belongsTo(db.Role, {
     foreignKey: 'idRole',
     as: 'role'
+});
+
+db.Role.hasMany(db.User, {
+    foreignKey: 'idRole',
+    as: 'user'
 });
 
 
@@ -113,17 +122,7 @@ db.Reservasi.belongsTo(db.Jadwal, {
 });
 
 
-// Method Payment -||---|<- Payment ->|---||- Reservasi
-db.methodPayment.hasMany(db.Payment, {
-    foreignKey: 'idmethodPayment',
-    as: 'payment'
-});
-
-db.Payment.belongsTo(db.methodPayment, {
-    foreignKey: 'idmethodPayment',
-    as: 'methodPayment'
-});
-
+// Payment ->|---||- Reservasi
 db.Reservasi.hasMany(db.Payment, {
     foreignKey: 'idReservasi',
     as: 'payment'

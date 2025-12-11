@@ -11,24 +11,28 @@ const defineUserModel = (sequelize) => {
       autoIncrement: true,
     },
     idRole: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    idMitra: {
+      type: DataTypes.INTEGER,
+      allowNull: true
     },
     nama: {
       type: DataTypes.STRING(100),
       allowNull: true
     },
     alamat: {
-        type: DataTypes.TEXT,
-        allowNull: true
+      type: DataTypes.TEXT,
+      allowNull: true
     },
     telephone: {
-        type: DataTypes.STRING(100),
-        allowNull: true
+      type: DataTypes.STRING(100),
+      allowNull: true
     },
     email: {
-        type: DataTypes.STRING(100),
-        allowNull: true
+      type: DataTypes.STRING(100),
+      allowNull: true
     },
     password: {
       type: DataTypes.STRING(100),

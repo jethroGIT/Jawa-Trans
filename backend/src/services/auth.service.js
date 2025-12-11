@@ -85,6 +85,7 @@ const login = async (email, password) => {
     return {
         user: {
             idUser: user.idUser,
+            idMitra: user.idMitra || null,
             idRole: user.idRole,
             role: user.role.nama,
             nama: user.nama,

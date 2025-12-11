@@ -32,9 +32,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { idReservasi, idmethodPayment, status, totalBayar, waktuBayar } = req.body;
+    const { idReservasi, method, status, totalBayar, waktuBayar } = req.body;
     try {
-        const payment = await paymentService.createPayment({ idReservasi, idmethodPayment, status, totalBayar, waktuBayar });
+        const payment = await paymentService.createPayment({ idReservasi, method, status, totalBayar, waktuBayar });
         return res.status(200).json({
             success: true,
             message:'Transaksi telah berhasil ditambahkan',
@@ -53,9 +53,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { idReservasi, idmethodPayment, status, totalBayar, waktuBayar } = req.body;
+    const { idReservasi, method, status, totalBayar, waktuBayar } = req.body;
     try {
-        const payment = await paymentService.updatePayment({ id, idReservasi, idmethodPayment, status, totalBayar, waktuBayar });
+        const payment = await paymentService.updatePayment({ id, idReservasi, method, status, totalBayar, waktuBayar });
         return res.status(200).json({
             success: true,
             message: 'Transaki berhasil diperbaharui'

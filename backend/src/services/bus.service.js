@@ -32,8 +32,8 @@ const findBusOrFail = async (id) => {
     return existingBus;
 };
 
-const fieldValidation = async ({ idMitra, kode_bus, type, kapasitas, status, fotos, isUpdate = false }) => {
-    if (!idMitra || !kode_bus || !type || !kapasitas || !status) {
+const fieldValidation = async ({ idMitra, kode_bus, type, kapasitas, fotos, isUpdate = false }) => {
+    if (!idMitra || !kode_bus || !type || !kapasitas) {
         throw new Error('Semua field wajib diisi');
     }
 
@@ -157,10 +157,10 @@ const getBusById = async (req, id) => {
     return urlFotoBus(req, bus);
 };
 
-const createBus = async ({ idMitra, kode_bus, type, kapasitas, status, fasilitas, fotos }) => {
+const createBus = async ({ idMitra, kode_bus, type, kapasitas, fasilitas, fotos }) => {
     const transaction = await sequelize.transaction();
     try {
-        fieldValidation({ idMitra, kode_bus, type, kapasitas, status, fotos });
+        await fieldValidation({ idMitra, kode_bus, type, kapasitas, fotos });
 
         await checkDuplicateBus(kode_bus);
 
@@ -172,7 +172,7 @@ const createBus = async ({ idMitra, kode_bus, type, kapasitas, status, fasilitas
             kode_bus,
             type,
             kapasitas,
-            status
+            status: "Aktif"
         }, { transaction });
 
         // Perulangan paralel untuk menyimpan foto
@@ -219,7 +219,7 @@ const updatebus = async ({ id, idMitra, kode_bus, type, kapasitas, status, fasil
     try {
         const existingBus = await findBusOrFail(id);
 
-        fieldValidation({ idMitra, kode_bus, type, kapasitas, status, fotos, isUpdate: true });
+        await fieldValidation({ idMitra, kode_bus, type, kapasitas, status, fotos, isUpdate: true });
         await checkDuplicateBus(kode_bus, id);
 
         const fasilitasArray = konversiStringToIntArray(fasilitas);

@@ -32,9 +32,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { nama } = req.body;
+    const { kota, nama } = req.body;
     try {
-        const terminal = await terminalService.createTerminal(nama);
+        const terminal = await terminalService.createTerminal(kota, nama);
         return res.status(200).json({
             success: true,
             message: 'Terminal berhasil ditambahkan.'
@@ -49,9 +49,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { nama } = req.body;
+    const { kota, nama } = req.body;
     try {
-        const updateTerminal = await terminalService.updateTerminal(id, nama);
+        const updateTerminal = await terminalService.updateTerminal(id, kota, nama);
         return res.status(200).json({
             success: true, 
             message: 'Terminal berhasil diperbarui!'
