@@ -1,56 +1,101 @@
 import StaffLayout from '../../../layouts/StaffLayout';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Pencil, Trash2, Plus, Search, AlertCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Pencil, Trash2, Search, List, BusFront } from 'lucide-react'; // 1. Tambah Icon BusFront
 import Swal from 'sweetalert2';
+import { createRoot } from 'react-dom/client';
+
+import DataTable from 'datatables.net-react';
+import DT from 'datatables.net-dt';
+import 'datatables.net-dt/css/dataTables.dataTables.min.css';
+
+DataTable.use(DT);
 
 import StatusBadge from '../../../components/staff/bus/StatusBadge';
-import Pagination from '../../../components/staff/bus/Pagination';
 import busService from '../../../services/mitra/busService';
 
-// Data Dummy
 const DUMMY_DATA = [
-    { idBus:1, kodeBus: 'BUS-001', tipe: 'Executive', kapasitas: 32, status: 'aktif' },
-    { idBus:2, kodeBus: 'BUS-002', tipe: 'Super Executive', kapasitas: 24, status: 'perbaikan' },
-    { idBus:3, kodeBus: 'BUS-003', tipe: 'Economy', kapasitas: 50, status: 'perbaikan' },
-    { idBus:4, kodeBus: 'BUS-004', tipe: 'Executive', kapasitas: 32, status: 'aktif' },
-    { idBus:5, kodeBus: 'BUS-005', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
-    { idBus:6, kodeBus: 'BUS-006', tipe: 'Economy', kapasitas: 50, status: 'tidak aktif' },
-    { idBus:7, kodeBus: 'BUS-007', tipe: 'Executive', kapasitas: 32, status: 'perbaikan' },
-    { idBus:8, kodeBus: 'BUS-008', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
-    { idBus:18, kodeBus: 'BUS-011', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
+    { idBus: 1, kodeBus: 'BUS-001', tipe: 'Executive', kapasitas: 32, status: 'aktif' },
+    { idBus: 2, kodeBus: 'BUS-002', tipe: 'Super Executive', kapasitas: 24, status: 'perbaikan' },
+    { idBus: 3, kodeBus: 'BUS-003', tipe: 'Economy', kapasitas: 50, status: 'perbaikan' },
+    { idBus: 4, kodeBus: 'BUS-004', tipe: 'Executive', kapasitas: 32, status: 'aktif' },
+    { idBus: 5, kodeBus: 'BUS-005', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
+    { idBus: 6, kodeBus: 'BUS-006', tipe: 'Economy', kapasitas: 50, status: 'tidak aktif' },
+    { idBus: 7, kodeBus: 'BUS-007', tipe: 'Executive', kapasitas: 32, status: 'perbaikan' },
+    { idBus: 8, kodeBus: 'BUS-008', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
+    { idBus: 17, kodeBus: 'BUS-011', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
 ];
 
 export default function IndexBus() {
-    // --- STATE ---
     const [buses, setBuses] = useState(DUMMY_DATA);
     const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const [selectedType, setSelectedType] = useState('');
 
-    // --- LOGIC ---
+    const navigate = useNavigate();
 
-    // 1. Filtering
-    const filteredBuses = buses.filter((bus) =>
-        bus.kodeBus.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        bus.tipe.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredBuses = useMemo(() => {
+        return buses.filter((bus) => {
+            const lowerSearch = searchTerm.toLowerCase();
+            const matchSearch =
+                bus.kodeBus.toLowerCase().includes(lowerSearch) ||
+                bus.tipe.toLowerCase().includes(lowerSearch);
+
+            const matchType = selectedType ? bus.tipe === selectedType : true;
+
+            return matchSearch && matchType;
+        });
+    }, [searchTerm, selectedType, buses]);
+
+    const ActionButtons = ({ id }) => (
+        <div className="flex items-center justify-center gap-2">
+            <button
+                onClick={() => navigate(`/mitra/bus/${id}`)}
+                className="group flex items-center justify-center w-8 h-8 rounded-lg transition-all bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:shadow-md"
+                title="Edit Data"
+            >
+                <Pencil className="w-4 h-4" />
+            </button>
+            <button
+                onClick={() => handleDelete(id)}
+                className="group flex items-center justify-center w-8 h-8 rounded-lg transition-all bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:shadow-md"
+                title="Hapus Data"
+            >
+                <Trash2 className="w-4 h-4" />
+            </button>
+        </div>
     );
 
-    // 2. Slicing (Memotong data untuk halaman saat ini)
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredBuses.slice(indexOfFirstItem, indexOfLastItem);
-
-    // --- HANDLERS ---
-
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1); // Reset ke hal 1 saat mencari
-    };
-
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
+    const columns = [
+        {
+            data: 'kodeBus',
+            title: 'Kode Bus',
+            render: (data) => `<span class="font-semibold text-slate-900">${data}</span>`
+        },
+        {
+            data: 'tipe',
+            title: 'Tipe Bus',
+            className: 'text-slate-600'
+        },
+        {
+            data: 'kapasitas',
+            title: 'Kapasitas',
+            className: 'text-center text-slate-600',
+            render: (data) => `${data} Kursi`
+        },
+        {
+            data: 'status',
+            title: 'Status',
+            className: 'text-center',
+            render: (data) => { return '<div class="status-cell"></div>'; }
+        },
+        {
+            data: null,
+            title: 'Aksi',
+            orderable: false,
+            className: 'text-center',
+            defaultContent: '<div class="action-cell"></div>'
+        }
+    ];
 
     const handleDelete = (id) => {
         Swal.fire({
@@ -60,27 +105,17 @@ export default function IndexBus() {
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Ya, Hapus'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                const updatedBuses = buses.filter(bus => bus.idBus !== id);
-                setBuses(updatedBuses);
-                
-                const deleteBus = await busService.fetchDeleteBus(id);
-                console.log(deleteBus);
-
-                // Cek jika halaman jadi kosong setelah hapus
-                const newFiltered = updatedBuses.filter(bus =>
-                    bus.kodeBus.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                const totalPages = Math.ceil(newFiltered.length / itemsPerPage);
-
-                if (currentPage > totalPages && currentPage > 1) {
-                    setCurrentPage(currentPage - 1);
+                try {
+                    const updatedBuses = buses.filter(bus => bus.idBus !== id);
+                    setBuses(updatedBuses);
+                    await busService.fetchDeleteBus(id);
+                    Swal.fire('Terhapus!', 'Data bus berhasil dihapus.', 'success');
+                } catch (error) {
+                    Swal.fire('Gagal', 'Terjadi kesalahan saat menghapus data.', 'error');
                 }
-
-                Swal.fire('Terhapus!', 'Data bus berhasil dihapus.', 'success');
             }
         });
     };
@@ -88,108 +123,108 @@ export default function IndexBus() {
     return (
         <StaffLayout>
             <div className="space-y-6">
-                {/* Header & Search */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-800">Manajemen Armada</h1>
-                        <p className="text-slate-500 text-sm">Kelola data bus dan status operasional</p>
-                    </div>
-                    <Link
-                        to="/mitra/bus/create"
-                        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm shadow-blue-200"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Tambah Bus
-                    </Link>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Cari kode bus atau tipe..."
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            onChange={handleSearch}
-                            value={searchTerm}
-                        />
-                    </div>
-                </div>
-
-                {/* Table Container */}
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider font-semibold">
+                    <div className="p-3 border-b border-slate-100 flex flex-col lg:flex-row lg:items-end justify-between gap-4 bg-white">
+                        <div className="flex flex-col md:flex-row md:items-end gap-4 w-full lg:w-auto">
+                            <div className="w-full md:w-64 group">
+                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Pencarian</label>
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                                        <Search className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        placeholder="Cari kode / tipe bus..."
+                                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent transition-all hover:bg-slate-100 hover:border-slate-300"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="w-full md:w-48 group">
+                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Tipe Bus</label>
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                                        <BusFront className="w-4 h-4" />
+                                    </div>
+                                    <select
+                                        value={selectedType}
+                                        onChange={(e) => setSelectedType(e.target.value)}
+                                        className="w-full pl-10 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent transition-all appearance-none cursor-pointer hover:bg-slate-100 hover:border-slate-300"
+                                    >
+                                        <option value="">Semua Tipe</option>
+                                        <option value="Economy">Economy</option>
+                                        <option value="Executive">Executive</option>
+                                        <option value="Super Executive">Super Executive</option>
+                                    </select>
+
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m1 1 4 4 4-4" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Link
+                            to="/mitra/bus/create"
+                            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all h-[42px] flex-shrink-0"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Tambah Bus
+                        </Link>
+
+                    </div>
+
+                    <div className="p-0">
+                        <DataTable
+                            data={filteredBuses}
+                            columns={columns}
+                            className="display w-full text-left border-collapse"
+                            options={{
+                                responsive: true,
+                                destroy: true,
+                                searching: false,
+                                paging: true,
+                                lengthMenu: [[5, 10, 20, 50, -1], [5, 10, 20, 50, "Semua"]],
+                                pageLength: 5,
+                                dom: 'tr<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4"lip>',
+                                language: {
+                                    lengthMenu: "_MENU_",
+                                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                                    infoEmpty: "Tidak ada data",
+                                    infoFiltered: "",
+                                    zeroRecords: "Pencarian tidak ditemukan",
+                                    paginate: {
+                                        next: "Next",
+                                        previous: "Prev"
+                                    }
+                                },
+                                createdRow: (row, data) => {
+                                    const actionCell = row.querySelector('.action-cell');
+                                    if (actionCell) {
+                                        const root = createRoot(actionCell);
+                                        root.render(<ActionButtons id={data.idBus} />);
+                                    }
+                                    const statusCell = row.querySelector('.status-cell');
+                                    if (statusCell) {
+                                        const rootStatus = createRoot(statusCell);
+                                        rootStatus.render(<StatusBadge status={data.status} />);
+                                    }
+                                }
+                            }}
+                        >
+                            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
                                 <tr>
-                                    <th className="px-6 py-4 border-b border-slate-200">Kode Bus</th>
-                                    <th className="px-6 py-4 border-b border-slate-200">Tipe Bus</th>
-                                    <th className="px-6 py-4 border-b border-slate-200 text-center">Kapasitas</th>
-                                    <th className="px-6 py-4 border-b border-slate-200 text-center">Status</th>
-                                    <th className="px-6 py-4 border-b border-slate-200 text-center">Aksi</th>
+                                    <th className="px-6 py-4 font-semibold text-slate-600">Kode Bus</th>
+                                    <th className="px-6 py-4 font-semibold text-slate-600">Tipe Bus</th>
+                                    <th className="px-6 py-4 font-semibold text-slate-600 text-center">Kapasitas</th>
+                                    <th className="px-6 py-4 font-semibold text-slate-600 text-center">Status</th>
+                                    <th className="px-6 py-4 font-semibold text-slate-600 text-center">Aksi</th>
                                 </tr>
                             </thead>
-
-                            <tbody className="divide-y divide-slate-100">
-                                {currentItems.length > 0 ? (
-                                    currentItems.map((bus) => (
-                                        <tr key={bus.idBus} className="hover:bg-slate-50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-sm font-semibold text-slate-900">{bus.kodeBus}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-slate-600">{bus.tipe}</td>
-                                            <td className="px-6 py-4 text-sm text-slate-600 text-center">{bus.kapasitas} Kursi</td>
-
-                                            {/* --- Menggunakan Komponen StatusBadge --- */}
-                                            <td className="px-6 py-4 text-center">
-                                                <StatusBadge status={bus.status} />
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Link
-                                                        to={`/mitra/bus/${bus.idBus}`}
-                                                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:shadow-md"
-                                                        title="Edit Data"
-                                                    >
-                                                        <Pencil className="w-4 h-4" />
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => handleDelete(bus.idBus)}
-                                                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:shadow-md"
-                                                        title="Hapus Data"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="6" className="px-6 py-12 text-center text-slate-400">
-                                            <div className="flex flex-col items-center justify-center gap-2">
-                                                <div className="p-3 bg-slate-100 rounded-full">
-                                                    <AlertCircle className="w-6 h-6 text-slate-400" />
-                                                </div>
-                                                <p className="text-sm">{searchTerm ? 'Data tidak ditemukan.' : 'Belum ada data armada.'}</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                        </DataTable>
                     </div>
-
-                    {/* --- Menggunakan Komponen Pagination --- */}
-                    <Pagination
-                        currentPage={currentPage}
-                        totalItems={filteredBuses.length}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={handlePageChange}
-                    />
                 </div>
             </div>
         </StaffLayout>

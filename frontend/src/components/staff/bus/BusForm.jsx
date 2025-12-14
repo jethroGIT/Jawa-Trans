@@ -166,7 +166,6 @@ export default function BusForm({
                             >
                                 <option value="">Pilih Tipe Bus</option>
                                 <option value="Economy">Economy</option>
-                                <option value="Patas">Patas</option>
                                 <option value="Executive">Executive</option>
                                 <option value="Super Executive">Super Executive (Sleeper)</option>
                             </select>
