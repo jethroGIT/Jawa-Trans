@@ -1,7 +1,7 @@
 // pages/DetailJadwalPage.jsx
 import { useLocation } from "react-router-dom";
 import { useJadwal } from "../../hooks/useJadwal";
-import GuestLayout from "../../layouts/GuestLayout";
+import CustomerLayout from '../../layouts/CustomerLayout';
 import LoadingState from '../../components/jadwal/LoadingState';
 import ErrorState from '../../components/jadwal/ErrorState';
 import EmptyState from '../../components/jadwal/EmptyState';
@@ -22,10 +22,10 @@ export default function DetailJadwalPage() {
     if (!jadwal) return <EmptyState />;
 
     return (
-        <GuestLayout>
+        <CustomerLayout>
             <div className="min-h-screen bg-blue-50 py-8 pt-20">
                 <div className="max-w-6xl mx-auto px-4">
-                    <FotoCard jadwal={jadwal} />
+                    {/* <FotoCard jadwal={jadwal} /> */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-1 space-y-6">
                             <MobilCard jadwal={jadwal} />
@@ -38,6 +38,6 @@ export default function DetailJadwalPage() {
                     </div>
                 </div>
             </div>
-        </GuestLayout>
+        </CustomerLayout>
     );
 }

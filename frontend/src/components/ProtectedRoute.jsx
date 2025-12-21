@@ -10,7 +10,6 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
         return <Navigate to="/login" replace />;
     }
 
-    // Check role if specified
     if (allowedRoles.length > 0 && user) {
         if (!allowedRoles.includes(user.role)) {
             return <Navigate to="/unauthorized" replace />;

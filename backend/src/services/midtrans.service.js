@@ -69,7 +69,7 @@ const createPayment = async (orderId, amount, customer, method) => {
 
     if (method === "gopay") {
         parameter.payment_type = "gopay";
-        parameter.gopay = { enable_callback: true, callback_url: "https://9cccf62facd5.ngrok-free.app/api/payment/finish" };
+        parameter.gopay = { enable_callback: true, callback_url: "https://00c271c1d796.ngrok-free.app/api/payment/finish" };
     }
     const response = await midtrans.charge(parameter);
     console.log("Midtrans charge response:", response);

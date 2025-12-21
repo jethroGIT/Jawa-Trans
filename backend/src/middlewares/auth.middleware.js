@@ -6,7 +6,7 @@ const authenticate = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1]; // format: Bearer <token>
 
     if (!token) {
-        return res.status(401).json({ message: 'Access token required' });
+        return res.status(401).json({ message: 'Silahkan Login Terlebih Dahulu' });
     }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {

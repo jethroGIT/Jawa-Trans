@@ -21,33 +21,45 @@ router.get('/', (req, res) => {
 });
 
 router.post('/register', authController.register);
-router.get('/login', (req, res) => {
-  res.render('login');
-});
 router.post('/login', authController.login);
 router.post('/logout', authController.logout);
 
 // versi menggunakan idRole
 // router.get('/roles', authenticate, authorize([1, 5]), roleController.getAllRoles);
 // versi menggunakan nama role
-router.get('/roles', authenticate, authorize(['admin', 'mitra']), roleController.getAllRoles);
-router.get('/roles/:id', roleController.show);
-router.post('/roles', roleController.store);
-router.put('/roles/:id', roleController.update);
-router.delete('/roles/:id', roleController.destroy);
+router.use('/roles', authenticate, authorize(['admin']));
+router.route('/roles')
+  .get(roleController.getAllRoles)
+  .post(roleController.store);
 
-router.get('/users', userController.allUsers);
-router.get('/users/:id', userController.show);
-router.post('/users', userController.store);
-router.put('/users/:id', userController.update);
-router.delete('/users/:id', userController.destroy);
+router.route('/roles/:id')
+  .get(roleController.show)
+  .put(roleController.update)
+  .delete(roleController.destroy);
 
-router.get('/mitra', mitraController.gettAllMitra);
-router.get('/mitra/:id', mitraController.show);
-router.post('/mitra', uploadLogoMitra.single('logo'), mitraController.store);
-router.put('/mitra/:id', uploadLogoMitra.single('logo'), mitraController.update);
-router.delete('/mitra/:id', mitraController.destroy);
+router.use('/users', authenticate);
+router.route('/users')
+  .all(authorize(['admin']))
+  .get(userController.allUsers)
+  .post(userController.store)
 
+router.route('/users/:id')
+  .get(authorize(['admin', 'customer']), userController.show)
+  .put(authorize(['admin', 'customer']), userController.update)
+  .delete(authorize(['admin']), userController.destroy)
+
+router.use('/mitra', authenticate);
+router.route('/mitra')
+  .all(authorize(['admin']))
+  .get(mitraController.gettAllMitra)
+  .post(uploadLogoMitra.single('logo'), mitraController.store)
+
+router.route('/mitra/:id')
+  .get(authorize(['admin', 'mitra']), mitraController.show)
+  .put(authorize(['admin', 'mitra']), uploadLogoMitra.single('logo'), mitraController.update)
+  .delete(authorize(['admin']), mitraController.destroy)
+
+// router.use('/terminal')
 router.get('/terminal', terminalController.getAllTerminal);
 router.get('/terminal/:id', terminalController.show);
 router.post('/terminal', terminalController.store);
@@ -65,7 +77,6 @@ router.get('/bus/:id', busController.show);
 router.post('/bus', uploadFotoBus.array('fotos', 5), busController.store);
 router.put('/bus/:id', uploadFotoBus.array('fotos', 5), busController.update);
 router.delete('/bus/:id', busController.destroy);
-
 
 router.get('/jadwal', jadwalController.getAllJadwal);
 router.get('/jadwal/:id', jadwalController.show);

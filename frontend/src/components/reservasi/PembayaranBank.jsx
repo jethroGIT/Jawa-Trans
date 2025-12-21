@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Tambahkan useRef
 import { useNavigate } from 'react-router-dom';
 import { Copy, ChevronDown, ChevronUp } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -8,11 +8,29 @@ import bni from "../../assets/Pembayaran/bni.png";
 import mandiri from "../../assets/Pembayaran/mandiri.png";
 import { io } from "socket.io-client";
 
-export default function TransaksiPembayaran({ paymentData }) {
+export default function PembayaranBank({ paymentData }) {
     const navigate = useNavigate();
     const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const [expandedSection, setExpandedSection] = useState(null);
     const [isPaymentChecking, setIsPaymentChecking] = useState(false);
+
+    const hasExpired = useRef(false);
+
+    const handlePaymentExpired = () => {
+        if (hasExpired.current) return;
+        hasExpired.current = true;
+
+        Swal.fire({
+            icon: "error",
+            title: "Waktu Pembayaran Habis",
+            text: "Batas waktu pembayaran telah berakhir. Silahkan melakukan pemesanan ulang.",
+            allowOutsideClick: false,
+            confirmButtonText: "Kembali ke Jadwal",
+            confirmButtonColor: "#3085d6",
+        }).then(() => {
+            navigate("/jadwal");
+        });
+    };
 
     useEffect(() => {
         if (!paymentData?.payment?.expiry_time) return;
@@ -30,6 +48,8 @@ export default function TransaksiPembayaran({ paymentData }) {
                 setTimeLeft({ hours, minutes, seconds });
             } else {
                 setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+                clearInterval(timer); // Hentikan timer
+                handlePaymentExpired(); // Trigger expire di frontend
             }
         };
 
@@ -39,18 +59,16 @@ export default function TransaksiPembayaran({ paymentData }) {
         return () => clearInterval(timer);
     }, [paymentData]);
 
-    // Polling untuk mengecek status pembayaran
     useEffect(() => {
         if (!paymentData?.payment?.order_id) return;
 
         const socket = io("http://localhost:8000");
-
         const eventName = `payment_status_${paymentData.payment.order_id}`;
 
         socket.on(eventName, (data) => {
             console.log("Realtime payment update:", data);
-
             if (data.status === "settlement") {
+                hasExpired.current = true; // Kunci agar timer expire tidak berjalan
                 Swal.fire({
                     icon: "success",
                     title: "Pembayaran Berhasil!",
@@ -58,7 +76,11 @@ export default function TransaksiPembayaran({ paymentData }) {
                     allowOutsideClick: false
                 }).then(() => {
                     navigate("/list-tiket");
-                });;
+                });
+            }
+
+            else if (data.status === "expire") {
+                handlePaymentExpired();
             }
         });
 
@@ -83,7 +105,8 @@ export default function TransaksiPembayaran({ paymentData }) {
     };
 
     const formatExpiryTime = (expiryTime) => {
-        const date = new Date(expiryTime);
+        if (!expiryTime) return "";
+        const date = new Date(expiryTime.replace(' ', 'T'));
         const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -108,8 +131,21 @@ export default function TransaksiPembayaran({ paymentData }) {
         return formatted;
     };
 
-    const vaNumber = paymentData?.payment?.va_numbers?.[0]?.va_number || '';
-    const bank = paymentData?.payment?.va_numbers?.[0]?.bank?.toUpperCase() || '';
+    // --- LOGIKA DETEKSI MANDIRI/PERMATA ---
+    const permataVaNumber = paymentData?.payment?.permata_va_number;
+    const isMandiri = !!permataVaNumber;
+
+    const bank = isMandiri
+        ? 'MANDIRI'
+        : (paymentData?.payment?.va_numbers?.[0]?.bank?.toUpperCase() || '');
+
+    const vaNumber = isMandiri
+        ? permataVaNumber
+        : (paymentData?.payment?.va_numbers?.[0]?.va_number || '');
+
+    const targetBank = isMandiri ? 'PERMATA' : bank;
+    // --------------------------------------
+
     const amount = paymentData?.payment?.gross_amount || '0';
 
     const toggleSection = (section) => {
@@ -117,11 +153,8 @@ export default function TransaksiPembayaran({ paymentData }) {
     };
 
     const formatVANumber = (number) => {
+        if (!number) return '';
         return number.replace(/(.{4})/g, '$1 ').trim();
-    };
-
-    const handleLihatTiket = () => {
-        navigate('/daftar-tiket');
     };
 
     return (
@@ -156,7 +189,7 @@ export default function TransaksiPembayaran({ paymentData }) {
             </div>
 
             {/* Instruksi Pembayaran */}
-            <div className="mb-6">
+            <div>
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold text-gray-800">Instruksi Pembayaran</h2>
 
@@ -181,11 +214,25 @@ export default function TransaksiPembayaran({ paymentData }) {
                             {bank === 'MANDIRI' && <img src={mandiri} alt="Mandiri" className="w-full h-full object-contain" />}
                         </div>
                         <div>
+                            {/* Menampilkan Nama Bank */}
                             <div className="text-lg font-bold text-gray-800">Bank {bank}</div>
                             <div className="text-sm text-gray-600">Bank Virtual Account</div>
                         </div>
                     </div>
                 </div>
+
+                {/* Alert Khusus MANDIRI */}
+                {isMandiri && (
+                    <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                        <div className="flex">
+                            <div className="ml-3">
+                                <p className="text-sm text-yellow-700">
+                                    <strong>PENTING:</strong> Untuk pengguna <strong>MANDIRI</strong>, pembayaran dilakukan dengan transfer antar bank ke <strong>Bank Permata</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* VA Number */}
                 <div className="mb-4">
@@ -237,11 +284,12 @@ export default function TransaksiPembayaran({ paymentData }) {
                         >
                             <div className="px-3 pb-3 text-sm text-gray-700 space-y-1">
                                 <p>1. Masukkan kartu ATM dan PIN Anda</p>
-                                <p>2. Pilih menu Transfer</p>
-                                <p>3. Pilih ke Rekening {bank}</p>
-                                <p>4. Masukkan nomor Virtual Account</p>
-                                <p>5. Masukkan jumlah yang akan dibayar</p>
-                                <p>6. Konfirmasi dan selesaikan transaksi</p>
+                                <p>2. Pilih menu <strong>Transaksi Lainnya</strong> {'>'} <strong>Transfer</strong></p>
+                                <p>3. Pilih ke <strong>{isMandiri ? 'Rekening Bank Lain' : `Rekening ${bank}`}</strong></p>
+                                {isMandiri && <p>4. Masukkan Kode Bank Permata <strong>(013)</strong></p>}
+                                <p>{isMandiri ? '5' : '4'}. Masukkan nomor Virtual Account: <strong>{formatVANumber(vaNumber)}</strong></p>
+                                <p>{isMandiri ? '6' : '5'}. Masukkan jumlah yang akan dibayar</p>
+                                <p>{isMandiri ? '7' : '6'}. Konfirmasi dan selesaikan transaksi</p>
                             </div>
                         </div>
                     </div>
@@ -266,16 +314,17 @@ export default function TransaksiPembayaran({ paymentData }) {
                             <div className="px-3 pb-3 text-sm text-gray-700 space-y-1">
                                 <p>1. Login ke Internet Banking Anda</p>
                                 <p>2. Pilih menu Transfer</p>
-                                <p>3. Pilih transfer ke {bank}</p>
-                                <p>4. Masukkan nomor Virtual Account</p>
-                                <p>5. Masukkan jumlah transfer</p>
-                                <p>6. Konfirmasi dan selesaikan transaksi</p>
+                                <p>3. Pilih transfer ke <strong>{isMandiri ? 'Bank Lain / Antar Bank' : `Rekening ${bank}`}</strong></p>
+                                {isMandiri && <p>4. Pilih Bank Tujuan: <strong>{targetBank}</strong></p>}
+                                <p>{isMandiri ? '5' : '4'}. Masukkan nomor Virtual Account</p>
+                                <p>{isMandiri ? '6' : '5'}. Masukkan jumlah transfer</p>
+                                <p>{isMandiri ? '7' : '6'}. Konfirmasi dan selesaikan transaksi</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Mobile Banking */}
-                    <div className="bg-gray-100 border-2 border-gray-300 rounded mb-1 overflow-hidden">
+                    <div className="bg-gray-100 border-2 border-gray-300 rounded overflow-hidden">
                         <button
                             onClick={() => toggleSection('mbanking')}
                             className="w-full flex items-center justify-between p-3 text-left hover:bg-white"
@@ -294,24 +343,15 @@ export default function TransaksiPembayaran({ paymentData }) {
                             <div className="px-3 pb-3 text-sm text-gray-700 space-y-1">
                                 <p>1. Buka aplikasi Mobile Banking</p>
                                 <p>2. Pilih menu Transfer</p>
-                                <p>3. Pilih transfer ke {bank}</p>
-                                <p>4. Masukkan nomor Virtual Account</p>
-                                <p>5. Masukkan jumlah transfer</p>
-                                <p>6. Konfirmasi dan selesaikan transaksi</p>
+                                <p>3. Pilih transfer <strong>{isMandiri ? 'Antar Bank / Bank Lain' : `Virtual Account ${bank}`}</strong></p>
+                                {isMandiri && <p>4. Pilih Bank Tujuan: <strong>{targetBank}</strong></p>}
+                                <p>{isMandiri ? '5' : '4'}. Masukkan nomor Virtual Account</p>
+                                <p>{isMandiri ? '6' : '5'}. Masukkan jumlah transfer</p>
+                                <p>{isMandiri ? '7' : '6'}. Konfirmasi dan selesaikan transaksi</p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Lihat Tiket Button */}
-            <div className="flex justify-end">
-                <button
-                    onClick={handleLihatTiket}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-2.5 rounded-lg transition-colors shadow-md"
-                >
-                    Lihat Tiket
-                </button>
             </div>
         </div>
     );

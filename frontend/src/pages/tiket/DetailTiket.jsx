@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import GuestLayout from "../../layouts/GuestLayout";
+import CustomerLayout from '../../layouts/CustomerLayout';
 import DetailOrder from "../../components/reservasi/DetailOrder";
 import TiketActions from "../../components/tiket/TiketAction";
 import tiketService from "../../services/tiketService";
@@ -31,31 +31,31 @@ export default function DetailTiket() {
 
     if (loading) {
         return (
-            <GuestLayout>
+            <CustomerLayout>
                 <div className="min-h-screen bg-blue-50 flex items-center justify-center pt-20">
                     <p className="text-center text-lg">Loading...</p>
                 </div>
-            </GuestLayout>
+            </CustomerLayout>
         );
     }
 
     if (error) {
         return (
-            <GuestLayout>
+            <CustomerLayout>
                 <div className="min-h-screen bg-blue-50 flex items-center justify-center pt-20">
                     <p className="text-center text-red-500 text-lg">{error}</p>
                 </div>
-            </GuestLayout>
+            </CustomerLayout>
         );
     }
 
     if (!dataTiket) {
         return (
-            <GuestLayout>
+            <CustomerLayout>
                 <div className="min-h-screen bg-blue-50 flex items-center justify-center pt-20">
                     <p className="text-center text-lg">Tidak ada data.</p>
                 </div>
-            </GuestLayout>
+            </CustomerLayout>
         );
     }
 
@@ -94,7 +94,7 @@ export default function DetailTiket() {
     };
 
     return (
-        <GuestLayout>
+        <CustomerLayout>
             <div className="min-h-screen bg-blue-50 py-8 pt-20">
                 <div className="max-w-4xl mx-auto px-4">
                     {/* TiketActions kini menangani Back button & Print button */}
@@ -103,6 +103,6 @@ export default function DetailTiket() {
                     </TiketActions>
                 </div>
             </div>
-        </GuestLayout>
+        </CustomerLayout>
     );
 }

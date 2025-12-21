@@ -1,5 +1,5 @@
 // pages/JadwalPage.jsx
-import GuestLayout from '../../layouts/GuestLayout';
+import CustomerLayout from '../../layouts/CustomerLayout';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { useJadwal } from '../../hooks/useJadwal';
@@ -33,7 +33,7 @@ export default function JadwalPage() {
     if (!jadwal || jadwal.length === 0) return <EmptyState />;
 
     return (
-        <GuestLayout>
+        <CustomerLayout>
             <div className="min-h-screen bg-blue-50 py-8 pt-20">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header with Route Info */}
@@ -53,6 +53,6 @@ export default function JadwalPage() {
                     </div>
                 </div>
             </div>
-        </GuestLayout>
+        </CustomerLayout>
     );
 }

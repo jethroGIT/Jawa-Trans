@@ -1,4 +1,4 @@
-import Navbar from "../components/NavbarSolid";
+import Navbar from "../components/customer/NavbarSolid";
 import Footer from "../components/Footer";
 
 export default function JadwalLayout({ children }) {

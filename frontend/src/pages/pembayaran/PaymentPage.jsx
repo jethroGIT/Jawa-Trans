@@ -1,7 +1,7 @@
 // components/payment/PaymentPage.jsx
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import GuestLayout from "../../layouts/GuestLayout";
+import CustomerLayout from '../../layouts/CustomerLayout';
 import DetailPesananCard from "../../components/reservasi/DetailOrder";
 import MetodePembayaranCard from "../../components/reservasi/MetodePembayaran";
 import reservasiService from "../../services/reservasiService";
@@ -10,7 +10,6 @@ export default function PaymentPage() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    // Ambil data reservasi & metode pembayaran dari state navigasi
     const reservasiData = location.state?.reservasiData;
 
     const [metodePembayaran, setMetodePembayaran] = useState({
@@ -75,7 +74,7 @@ export default function PaymentPage() {
     };
 
     return (
-        <GuestLayout>
+        <CustomerLayout>
             <div className="min-h-screen bg-blue-50 py-8 pt-20">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -101,6 +100,6 @@ export default function PaymentPage() {
                     </div>
                 </div>
             </div>
-        </GuestLayout>
+        </CustomerLayout>
     );
 }
