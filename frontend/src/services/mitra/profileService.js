@@ -1,8 +1,8 @@
-import { apiRequest } from "../api";
+import { apiRequest, apiRequestWithAuth } from "../api";
 
 async function fetchMitraData(id) {
     try {
-        const response = await apiRequest(`mitra/${id}`, "GET")
+        const response = await apiRequestWithAuth(`mitra/${id}`, "GET", null)
         return response.data;
     } catch (error) {
         return error.message;
@@ -11,7 +11,7 @@ async function fetchMitraData(id) {
 
 async function fetchUpdateProfile(id, payload) {
     try {
-        const response = await apiRequest(`mitra/${id}`, "PUT", payload);
+        const response = await apiRequestWithAuth(`mitra/${id}`, "PUT", payload);
         return response.message
     } catch (error) {
         return error.message

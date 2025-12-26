@@ -1,6 +1,8 @@
 const app = require('./src/app');
 const http = require('http');
 const { Server } = require('socket.io');
+const dotenv = require('dotenv');
+dotenv.config();
 
 const PORT = 8000;
 
@@ -27,3 +29,8 @@ io.on("connection", (socket) => {
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
+console.log("JWT:", process.env.JWT_SECRET);
+console.log("MIDTRANS:", process.env.MIDTRANS_SERVER_KEY);
+console.log("MIDTRANS:", process.env.MIDTRANS_CLIENT_KEY);
+

@@ -31,8 +31,9 @@ export async function apiRequest(endpoint, method = "GET", body = null, headers 
     return data;
 }
 
-export async function apiRequestWithAuth(endpoint, method = "GET", body = null, headers = {}) {
+export async function apiRequestWithAuth(endpoint, method, body, headers = {}) {
     const token = localStorage.getItem('token');
+    console.log('token:', token);
 
     if (!token) {
         throw new Error('Token tidak ditemukan. Silakan login kembali.');
