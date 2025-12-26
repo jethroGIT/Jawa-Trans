@@ -140,7 +140,7 @@ const getReservasiById = async (id) => {
     return await findReservasiOrFail(id);
 };
 
-const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kursi }) => {
+const createReservasi = async ({ idUser, idJadwal, penumpang, method, hargaSatuan, totalHarga, namaPenumpang, kursi }) => {
     if (!idUser || !idJadwal || !penumpang) {
         throw new Error('Field idUser, idJadwal, dan penumpang wajib diisi!');
     }
@@ -210,7 +210,10 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kur
             idUser,
             idJadwal,
             penumpang,
-            status: "pending"
+            method,
+            hargaSatuan,
+            totalHarga,
+            waktuBayar: null,
         }, { transaction });
 
         // Buat data reservasi detail untuk setiap kursi
@@ -220,7 +223,6 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, namaPenumpang, kur
                 idReservasi: reservasi.idReservasi,
                 namaPenumpang: namaPenumpang[i],
                 noKursi: kursi[i],
-                status: "pending"
             }, { transaction });
 
             reservasiDetails.push(detail);

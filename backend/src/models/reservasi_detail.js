@@ -22,10 +22,6 @@ const defineReservasiDetailModel = (sequelize) => {
             type: DataTypes.STRING(10),
             allowNull: true,
         },
-        status: {
-            type: DataTypes.STRING(45),
-            allowNull: true
-        }
     }, {
         tableName: 'ReservasiDetail',
         timestamps: true,

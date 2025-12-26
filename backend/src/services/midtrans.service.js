@@ -123,18 +123,13 @@ const updatePaymentStatus = async (callbackData) => {
         { status: newStatus },
         { where: { idReservasi: reservasiId } }
     );
-    await Reservasi_Detail.update(
-        { status: newStatus },
-        { where: { idReservasi: reservasiId } }
-    );
-    await Payment.update(
-        { 
-            status: newStatus,
-            waktuBayar: transaction_time 
-        },
-        { where: { idReservasi: reservasiId } }
-    );
 
+    if (newStatus === 'paid') {
+        await Reservasi.update(
+            { waktuBayar: transaction_time },
+            { where: { idReservasi: reservasiId } }
+        );
+    }
 
     return {
         order_id,

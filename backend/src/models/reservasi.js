@@ -22,9 +22,25 @@ const defineReservasiModel = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        status: {
+        method: {
             type: DataTypes.STRING(45),
             allowNull: false
+        },
+        hargaSatuan: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        totalHarga: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        waktuBayar: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
+        status: {
+            type: DataTypes.STRING(45),
+            allowNull: true
         }
     }, {
         tableName: 'Reservasi',

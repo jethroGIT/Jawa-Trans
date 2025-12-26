@@ -16,7 +16,6 @@ db.Bus_Fasilitas = require('./bus_fasilitas')(sequelize, DataTypes);
 db.Jadwal = require('./jadwal')(sequelize, DataTypes);
 db.Reservasi = require('./reservasi')(sequelize, DataTypes);
 db.Reservasi_Detail = require('./reservasi_detail')(sequelize, DataTypes);
-db.Payment = require('./payment')(sequelize, DataTypes);
 db.Foto_Bus = require('./foto_bus')(sequelize, DataTypes);
 db.Kursi = require('./kursi')(sequelize, DataTypes);
 
@@ -119,18 +118,6 @@ db.Jadwal.hasMany(db.Reservasi, {
 db.Reservasi.belongsTo(db.Jadwal, {
     foreignKey: 'idJadwal',
     as: 'jadwal'
-});
-
-
-// Payment ->|---||- Reservasi
-db.Reservasi.hasMany(db.Payment, {
-    foreignKey: 'idReservasi',
-    as: 'payment'
-});
-
-db.Payment.belongsTo(db.Reservasi, {
-    foreignKey: 'idReservasi',
-    as: 'reservasi'
 });
 
 
