@@ -23,7 +23,7 @@ const defineReservasiDetailModel = (sequelize) => {
             allowNull: true,
         },
     }, {
-        tableName: 'ReservasiDetail',
+        tableName: 'reservasidetail',
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at'

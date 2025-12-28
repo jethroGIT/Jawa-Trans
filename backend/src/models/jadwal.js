@@ -43,7 +43,7 @@ const defineJadwalModel = (sequelize) => {
             allowNull: false
         }
     }, {
-        tableName: 'Jadwal',
+        tableName: 'jadwal',
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at'

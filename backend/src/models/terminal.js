@@ -19,7 +19,7 @@ const defineTerminalModel = (sequelize) => {
             allowNull: true
         }
     }, {
-        tableName: 'Terminal',
+        tableName: 'terminal',
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at'

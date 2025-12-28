@@ -54,8 +54,8 @@ router.route('/mitra')
   .post(uploadLogoMitra.single('logo'), mitraController.store)
 
 router.route('/mitra/:id')
-  .get(authorize(['admin', 'mitra']), mitraController.show)
-  .put(authorize(['admin', 'mitra']), uploadLogoMitra.single('logo'), mitraController.update)
+  .get(authorize(['admin', 'staff']), mitraController.show)
+  .put(authorize(['admin', 'staff']), uploadLogoMitra.single('logo'), mitraController.update)
   .delete(authorize(['admin']), mitraController.destroy)
 
 // router.use('/terminal')

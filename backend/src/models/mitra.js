@@ -11,27 +11,27 @@ const defineMitraModel = (sequelize) => {
       autoIncrement: true
     },
     logo: {
-        type: DataTypes.STRING(255),
-        allowNull: true
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
     nama: {
       type: DataTypes.STRING(100),
       allowNull: true
     },
     alamat: {
-        type: DataTypes.TEXT,
-        allowNull: true
+      type: DataTypes.TEXT,
+      allowNull: true
     },
     telephone: {
-        type: DataTypes.INTEGER,
-        allowNull: true
+      type: DataTypes.INTEGER,
+      allowNull: true
     },
     email: {
-        type: DataTypes.STRING(100),
-        allowNull: true
+      type: DataTypes.STRING(100),
+      allowNull: true
     }
   }, {
-    tableName: 'Mitra',
+    tableName: 'mitra',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'

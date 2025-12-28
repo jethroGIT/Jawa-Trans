@@ -164,9 +164,17 @@ const logout = async (token) => {
 const register = async ({ nama, alamat, telephone, email, password }) => {
     registerValidation({ nama, alamat, telephone, email, password });
     
+    const existingPhone = await User.findOne({
+        where: { telephone }
+    });
+
     const existingUser = await User.findOne({
         where: { email }
     });
+
+    if (existingPhone) {
+        throw new Error('Nomor telepon sudah digunakan!');
+    }
     
     if (existingUser) {
         throw new Error('Email sudah digunakan!');

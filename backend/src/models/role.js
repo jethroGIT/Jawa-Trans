@@ -15,7 +15,7 @@ const defineRoleModel = (sequelize) => {
       allowNull: true
     }
   }, {
-    tableName: 'Role',
+    tableName: 'role',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'

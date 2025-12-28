@@ -15,7 +15,7 @@ const defineFasilitasModel = (sequelize) => {
         allowNull: true
     }
   }, {
-    tableName: 'Fasilitas',
+    tableName: 'fasilitas',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'

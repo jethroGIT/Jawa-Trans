@@ -20,7 +20,7 @@ const defineFotoBusModel = (sequelize) => {
         allowNull: false
     }
   }, {
-    tableName: 'Foto_Bus',
+    tableName: 'foto_bus',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'

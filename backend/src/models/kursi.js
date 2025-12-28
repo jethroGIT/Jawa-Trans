@@ -23,7 +23,7 @@ const defineKursiModel = (sequelize) => {
             allowNull: true
         }
     }, {
-        tableName: 'Kursi',
+        tableName: 'kursi',
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at'

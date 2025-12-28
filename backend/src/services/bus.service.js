@@ -77,9 +77,9 @@ const validateFasilitas = async (fasilitasId) => {
     return existingFasilitas;
 };
 
-const checkDuplicateBus = async (kode_bus, id = null) => {
+const checkDuplicateBus = async (kode_bus, idMitra, id = null) => {
     const existingBus = await Bus.findOne({
-        where: { kode_bus }
+        where: { kode_bus, idMitra }
     });
 
     if (existingBus && existingBus.idBus != id) {
@@ -162,7 +162,7 @@ const createBus = async ({ idMitra, kode_bus, type, kapasitas, fasilitas, fotos 
     try {
         await fieldValidation({ idMitra, kode_bus, type, kapasitas, fotos });
 
-        await checkDuplicateBus(kode_bus);
+        await checkDuplicateBus(kode_bus, idMitra);
 
         const fasilitasArray = konversiStringToIntArray(fasilitas);
         const validFasilitas = await validateFasilitas(fasilitasArray);
@@ -220,7 +220,7 @@ const updatebus = async ({ id, idMitra, kode_bus, type, kapasitas, status, fasil
         const existingBus = await findBusOrFail(id);
 
         await fieldValidation({ idMitra, kode_bus, type, kapasitas, status, fotos, isUpdate: true });
-        await checkDuplicateBus(kode_bus, id);
+        await checkDuplicateBus(kode_bus, idMitra, id);
 
         const fasilitasArray = konversiStringToIntArray(fasilitas);
         const validFasilitas = await validateFasilitas(fasilitasArray);
@@ -302,6 +302,18 @@ const updatebus = async ({ id, idMitra, kode_bus, type, kapasitas, status, fasil
 
 const destroyBus = async (id) => {
     const existingBus = await findBusOrFail(id);
+
+    const oldFotoRecords = await Foto_Bus.findAll({
+        where: { idBus: existingBus.idBus },
+    });
+
+    const oldFotoNames = oldFotoRecords.map(foto => foto.nama);
+
+    await Promise.all(
+        oldFotoNames.map(async foto => {
+            hapusFileStorage(foto);
+        })
+    );
 
     return existingBus.destroy();
 };
