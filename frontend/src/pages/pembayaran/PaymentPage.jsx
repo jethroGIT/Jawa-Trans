@@ -37,6 +37,7 @@ export default function PaymentPage() {
             ? metodePembayaran.virtualAccount
             : metodePembayaran.pembayaranInstan,
 
+        hargaSatuan: reservasiData.hargaSatuan,
         totalHarga: reservasiData.totalHarga
     };
 

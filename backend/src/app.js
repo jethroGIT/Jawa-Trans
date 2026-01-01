@@ -9,11 +9,12 @@ app.set('views', path.resolve(__dirname, '../public/views'));
 
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', apiRoutes);
 
 app.use((req, res, next) => {
-  res.status(404).render('404'); 
+  res.status(404).render('404');
 });
 
 module.exports = app;

@@ -43,10 +43,10 @@ export default function JadwalCard({ item }) {
             {/* Row 1 - Bus Info */}
             <div className="mb-1">
                 <h3 className="text-lg font-bold text-gray-900">
-                    {item.bus?.mitra.nama}
+                    {item.bus?.mitra?.nama}
                 </h3>
                 <p className="text-sm text-gray-500">
-                    {item.bus?.type}
+                    {item.bus?.tipe_bus?.tipe}
                 </p>
             </div>
 
@@ -98,7 +98,7 @@ export default function JadwalCard({ item }) {
 
                 {/* Facilities Icons */}
                 <div className="flex items-center gap-2">
-                    {item.bus?.fasilitas.slice(0, 3).map((fasilitas, index) => {
+                    {item.bus?.tipe_bus?.fasilitas?.slice(0, 3).map((fasilitas, index) => {
                         let IconComponent;
 
                         switch (fasilitas.nama.toLowerCase()) {
@@ -130,9 +130,9 @@ export default function JadwalCard({ item }) {
                     })}
 
                     {/* Jika fasilitas lebih dari 3, tampilkan +n */}
-                    {item.bus?.fasilitas.length > 3 && (
+                    {item.bus?.tipe_bus?.fasilitas?.length > 3 && (
                         <div className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center text-gray-600 text-sm">
-                            +{item.bus.fasilitas.length - 3}
+                            +{item.bus?.tipe_bus?.fasilitas.length - 3}
                         </div>
                     )}
                 </div>

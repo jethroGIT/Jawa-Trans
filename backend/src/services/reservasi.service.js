@@ -10,6 +10,29 @@ const Mitra = db.Mitra;
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
+const fieldValidation = ({ idUser, idJadwal, penumpang, method, hargaSatuan, totalHarga, namaPenumpang, kursi }) => {
+    if (!idUser || !idJadwal || !penumpang || !method || !hargaSatuan || !totalHarga) {
+        throw new Error('Field idUser, idJadwal, method, hargaSatuan, totalHarga dan penumpang wajib diisi!');
+    }
+
+    if (!Array.isArray(namaPenumpang) || namaPenumpang.length === 0) {
+        throw new Error('Mohon masukan nama penumpang');
+    }
+
+    if (!Array.isArray(kursi) || kursi.length === 0) {
+        throw new Error('Mohon masukan nomor kursi');
+    }
+
+    if (namaPenumpang.length !== penumpang) {
+        throw new Error(`Jumlah nama penumpang (${namaPenumpang.length}) harus sama dengan jumlah penumpang (${penumpang})!`);
+    }
+
+    if (kursi.length !== penumpang) {
+        throw new Error(`Jumlah kursi (${kursi.length}) harus sama dengan jumlah penumpang (${penumpang})!`);
+    }
+    
+    return true;
+}
 
 const findReservasiOrFail = async (id) => {
     const reservasi = await Reservasi.findByPk(id, {
@@ -141,25 +164,7 @@ const getReservasiById = async (id) => {
 };
 
 const createReservasi = async ({ idUser, idJadwal, penumpang, method, hargaSatuan, totalHarga, namaPenumpang, kursi }) => {
-    if (!idUser || !idJadwal || !penumpang) {
-        throw new Error('Field idUser, idJadwal, dan penumpang wajib diisi!');
-    }
-
-    if (!Array.isArray(namaPenumpang) || namaPenumpang.length === 0) {
-        throw new Error('Mohon masukan nama penumpang');
-    }
-
-    if (!Array.isArray(kursi) || kursi.length === 0) {
-        throw new Error('Mohon masukan nomor kursi');
-    }
-
-    if (namaPenumpang.length !== penumpang) {
-        throw new Error(`Jumlah nama penumpang (${namaPenumpang.length}) harus sama dengan jumlah penumpang (${penumpang})!`);
-    }
-
-    if (kursi.length !== penumpang) {
-        throw new Error(`Jumlah kursi (${kursi.length}) harus sama dengan jumlah penumpang (${penumpang})!`);
-    }
+    fieldValidation({ idUser, idJadwal, penumpang, method, hargaSatuan, totalHarga, namaPenumpang, kursi });
 
     await checkUserExist(idUser);
 

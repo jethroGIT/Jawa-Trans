@@ -11,6 +11,7 @@ db.User = require('./user')(sequelize, DataTypes);
 db.Mitra = require('./mitra')(sequelize, DataTypes);
 db.Terminal = require('./terminal')(sequelize, DataTypes);
 db.Bus = require('./bus')(sequelize, DataTypes);
+db.Tipe_Bus = require('./tipe_bus')(sequelize, DataTypes);
 db.Fasilitas = require('./fasilitas')(sequelize, DataTypes);
 db.Bus_Fasilitas = require('./bus_fasilitas')(sequelize, DataTypes);
 db.Jadwal = require('./jadwal')(sequelize, DataTypes);
@@ -41,19 +42,19 @@ db.Role.hasMany(db.User, {
 });
 
 
-// Bus -||---|<- Bus_Fasilitas ->|---||- Fasilitas
-db.Bus.belongsToMany(db.Fasilitas, {
+// Tipe Bus -||---|<- Bus_Fasilitas ->|---||- Fasilitas
+db.Tipe_Bus.belongsToMany(db.Fasilitas, {
     through: db.Bus_Fasilitas,
-    foreignKey: 'idBus',
+    foreignKey: 'idTipe',
     otherKey: 'idFasilitas',
     as: 'fasilitas'
 });
 
-db.Fasilitas.belongsToMany(db.Bus, {
+db.Fasilitas.belongsToMany(db.Tipe_Bus, {
     through: db.Bus_Fasilitas,
     foreignKey: 'idFasilitas',
-    otherKey: 'idBus',
-    as: 'bus'
+    otherKey: 'idTipe',
+    as: 'tipe_bus'
 });
 
 // Bus ->|---||- Mitra
@@ -65,6 +66,17 @@ db.Mitra.hasMany(db.Bus, {
 db.Bus.belongsTo(db.Mitra, {
     foreignKey: 'idMitra',
     as: 'mitra'
+});
+
+// Bus ->|---||- Tipe_Bus
+db.Tipe_Bus.hasMany(db.Bus, {
+    foreignKey: 'idTipe',
+    as: 'bus'
+});
+
+db.Bus.belongsTo(db.Tipe_Bus, {
+    foreignKey: 'idTipe',
+    as: 'tipe_bus'
 });
 
 
@@ -121,15 +133,25 @@ db.Reservasi.belongsTo(db.Jadwal, {
 });
 
 
-// Bus -||---<- Foto_Bus
-db.Bus.hasMany(db.Foto_Bus, {
-    foreignKey: 'idBus',
+// Mitra -||---|<- Tipe Bus -||---|<- Foto_Bus
+db.Mitra.hasMany(db.Tipe_Bus, {
+    foreignKey: 'idMitra',
+    as: 'tipe_bus'
+});
+
+db.Tipe_Bus.belongsTo(db.Mitra, {
+    foreignKey: 'idMitra',
+    as: 'mitra'
+});
+
+db.Tipe_Bus.hasMany(db.Foto_Bus, {
+    foreignKey: 'idTipe',
     as: 'foto_bus'
 });
 
-db.Foto_Bus.belongsTo(db.Bus, {
-    foreignKey: 'idBus',
-    as: 'bus'
+db.Foto_Bus.belongsTo(db.Tipe_Bus, {
+    foreignKey: 'idTipe',
+    as: 'tipe_bus'
 });
 
 

@@ -10,10 +10,9 @@ const storage = multer.diskStorage({
         cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
-        const busId = req.params.id || 'temp';
-        const namaFile = path.parse(file.originalname).name;
+        const tipeBus = req.body.tipe || 'temp';
         const formatFile = path.extname(file.originalname);
-        cb(null, `bus_${busId}_${namaFile}${formatFile}`);
+        cb(null, `${tipeBus}_${Date.now()}${formatFile}`);
     }
 });
 

@@ -8,14 +8,14 @@ export default function MobilCard({ jadwal }) {
                 <h2 className="ext-lg font-semibold text-gray-900">
                     {jadwal?.bus?.mitra?.nama || "Nama Travel"}
                 </h2>
-                <p className="text-gray-500 text-sm mt-1">{jadwal?.bus?.type || "Jenis Mobil"}</p>
+                <p className="text-gray-500 text-sm mt-1">{jadwal?.bus?.tipe_bus?.tipe || "Jenis Mobil"}</p>
             </div>
 
             {/* Info Compact */}
             <div className="flex items-center justify-between text-sm mb-3">
                 <div className="flex items-center gap-1">
                     <Users className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">{jadwal?.bus?.kapasitas || "0"} Kursi</span>
+                    <span className="text-gray-600">{jadwal?.bus?.tipe_bus?.kapasitas || "0"} Kursi</span>
                 </div>
             </div>
 
@@ -24,10 +24,10 @@ export default function MobilCard({ jadwal }) {
                 <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                     Fasilitas
                 </h3>
-                
-                {jadwal?.bus?.fasilitas && jadwal.bus.fasilitas.length > 0 ? (
+
+                {jadwal?.bus?.tipe_bus?.fasilitas && jadwal.bus.tipe_bus.fasilitas.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                        {jadwal.bus.fasilitas.map((fasilitas, index) => {
+                        {jadwal.bus.tipe_bus.fasilitas.map((fasilitas, index) => {
                             let IconComponent;
 
                             switch (fasilitas.nama.toLowerCase()) {

@@ -5,7 +5,7 @@ import reservasiService from "../../services/reservasiService";
 import authService from "../../services/authService";
 import Swal from "sweetalert2";
 
-export default function OrderCard({ jadwal }) {
+export default function OrderCard({ jadwal: wrapper }) {
     const query = new URLSearchParams(useLocation().search);
     const navigate = useNavigate();
     const jumlahPenumpang = parseInt(query.get("penumpang")) || 1;
@@ -14,11 +14,14 @@ export default function OrderCard({ jadwal }) {
     const [kursiTerpilih, setKursiTerpilih] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Destructure wrapper
+    const jadwal = wrapper?.jadwal;
+    const kursiTerjual = wrapper?.kursiTerjual || [];
+    const kursiTersedia = wrapper?.kursiTersedia || 0;
+
     // Data kursi dengan kapasitas dari jadwal
-    const totalKursi = jadwal?.bus?.kapasitas || 20;
+    const totalKursi = jadwal?.bus?.tipe_bus?.kapasitas || 20;
     const semuaKursi = Array.from({ length: totalKursi }, (_, i) => i + 1);
-    const kursiTerjual = jadwal?.kursiTerjual || []; // Dari API backend
-    const kursiTersedia = jadwal?.kursiTersedia || totalKursi;
 
     const handlePilihKursi = (nomorKursi) => {
         // Cek apakah kursi sudah terjual (handle string dan number)
@@ -31,12 +34,33 @@ export default function OrderCard({ jadwal }) {
         if (isTerjual) return;
 
         setKursiTerpilih(prev => {
+            // Jika kursi sudah dipilih, batalkan pilihan (deselect)
             if (prev.includes(nomorKursi)) {
                 return prev.filter(k => k !== nomorKursi);
-            } else if (prev.length < jumlahPenumpang) {
-                return [...prev, nomorKursi];
             }
-            return prev;
+
+            // Jika belum dipilih
+            if (prev.length < jumlahPenumpang) {
+                // Masih ada slot, tambahkan
+                return [...prev, nomorKursi];
+            } else {
+                // Slot penuh
+                if (jumlahPenumpang === 1) {
+                    // Jika cuma 1 penumpang, langsung ganti pilihan
+                    return [nomorKursi];
+                } else {
+                    // Jika lebih dari 1, beri alert untuk deselect dulu (atau bisa auto-replace first, tapi mungkin membingungkan)
+                    // Opsi user friendly: Hapus yang paling awal dipilih, masukkan yang baru (FIFO)
+                    // return [...prev.slice(1), nomorKursi]; 
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Slot Kursi Penuh',
+                        text: `Anda hanya memesan untuk ${jumlahPenumpang} penumpang. Silakan batalkan salah satu kursi jika ingin mengganti.`
+                    });
+                    return prev;
+                }
+            }
         });
     };
 
@@ -64,7 +88,10 @@ export default function OrderCard({ jadwal }) {
             // Validasi nama penumpang
             const namaKosong = penumpang.some(nama => !nama.trim());
             if (namaKosong) {
-                alert("Mohon isi semua nama penumpang");
+                Swal.fire({
+                    icon: 'warning',
+                    text: 'Nama Penumpang Tidak Boleh Kosong'
+                });
                 return;
             }
 
@@ -106,12 +133,13 @@ export default function OrderCard({ jadwal }) {
                 // Data Harga
                 hargaTiket: jadwal?.harga || 0,
                 jumlahPenumpang: jumlahPenumpang,
+                hargaSatuan: jadwal?.harga || 0,
                 totalHarga: (jadwal?.harga || 0) * jumlahPenumpang
             };
 
             // Navigate ke halaman payment dengan data
-            navigate('/payment', { 
-                state: { reservasiData } 
+            navigate('/payment', {
+                state: { reservasiData }
             });
         }
     };

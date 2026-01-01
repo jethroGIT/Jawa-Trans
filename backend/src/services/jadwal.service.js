@@ -7,6 +7,7 @@ const Fasilitas = db.Fasilitas;
 const Terminal = db.Terminal;
 const Foto_Bus = db.Foto_Bus;
 const Mitra = db.Mitra;
+const Tipe_Bus = db.Tipe_Bus;
 const ReservasiDetail = db.Reservasi_Detail;
 const Reservasi = db.Reservasi;
 const { Op } = require('sequelize');
@@ -23,17 +24,21 @@ const findOrFail = async (id) => {
                 include:
                     [{
                         model: Mitra,
-                        as: 'mitra',
+                        as: 'mitra'
                     },
                     {
-                        model: Fasilitas,
-                        as: 'fasilitas',
-                        through: { attributes: [] }
-                    },
-                    {
-                        model: Foto_Bus,
-                        as: 'foto_bus'
-                    }]
+                        model: Tipe_Bus,
+                        as: 'tipe_bus',
+                        include:
+                            [
+                                {
+                                    model: Fasilitas,
+                                    as: 'fasilitas',
+                                    through: { attributes: [] }
+                                }
+                            ]
+                    }
+                    ],
             },
             {
                 model: Terminal,
@@ -185,9 +190,18 @@ const getAllJadwal = async () => {
                         as: 'mitra'
                     },
                     {
-                        model: Fasilitas,
-                        as: 'fasilitas'
-                    }]
+                        model: Tipe_Bus,
+                        as: 'tipe_bus',
+                        include:
+                            [
+                                {
+                                    model: Fasilitas,
+                                    as: 'fasilitas',
+                                    through: { attributes: [] }
+                                }
+                            ]
+                    }
+                    ],
             },
             {
                 model: Terminal,
@@ -202,16 +216,26 @@ const getAllJadwal = async () => {
     });
 };
 
-const getJadwalById = async (req, id) => {
+const getJadwalById = async (id) => {
     const jadwal = await findOrFail(id);
-    const jadwalWithUrl = urlFotoBusJadwal(req, jadwal);
     const kursiTerjual = await getKursiTerjual(id);
     return {
-        ...jadwalWithUrl,
+        jadwal,
         kursiTerjual,
-        kursiTersedia: jadwalWithUrl.bus.kapasitas - kursiTerjual.length
-    };
+        kursiTersedia: jadwal.bus.tipe_bus.kapasitas - kursiTerjual.length
+    }
 };
+
+// const getJadwalById = async (req, id) => {
+//     const jadwal = await findOrFail(id);
+//     const jadwalWithUrl = urlFotoBusJadwal(req, jadwal);
+//     const kursiTerjual = await getKursiTerjual(id);
+//     return {
+//         ...jadwalWithUrl,
+//         kursiTerjual,
+//         kursiTersedia: jadwalWithUrl.bus.kapasitas - kursiTerjual.length
+//     };
+// };
 
 const createJadwal = async (jadwalData) => {
     const {

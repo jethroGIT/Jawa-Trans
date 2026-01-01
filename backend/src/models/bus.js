@@ -14,16 +14,16 @@ const defineBusModel = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    idTipe: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    plat_nomor: {
+      type: DataTypes.STRING(10),
+      allowNull: false
+    },
     kode_bus: {
       type: DataTypes.STRING(10),
-      allowNull: true
-    },
-    type: {
-      type: DataTypes.STRING(100),
-      allowNull: true
-    },
-    kapasitas: {
-      type: DataTypes.INTEGER,
       allowNull: true
     },
     status: {

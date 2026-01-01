@@ -1,105 +1,108 @@
-const busService = require('../services/bus.service');
+const tipeBusServices = require('../services/tipeBus.services');
 
-const getAllBus = async (req, res) => {
+const getAllTipe = async (req, res) => {
     try {
-        const bus = await busService.getAllBus(req);
+        const data = await tipeBusServices.getAllTipe();
         return res.status(200).json({
             success: true,
-            data: bus
+            data: data
         });
+
     } catch (error) {
         return res.status(500).json({
             success: false,
             message: error.message
         });
-    };
+    }
 };
 
-const getBusByMitra = async (req, res) => {
+const getTipeByMitra = async (req, res) => {
     const { idMitra } = req.params;
     try {
-        const bus = await busService.getBusByMitra(idMitra);
+        const data = await tipeBusServices.getTipeByMitra(idMitra);
         return res.status(200).json({
             success: true,
-            data: bus
+            data: data
         });
     } catch (error) {
         return res.status(500).json({
             success: false,
             message: error.message
         });
-    };
+    }
 };
 
 const show = async (req, res) => {
     const { id } = req.params;
     try {
-        const bus = await busService.getBusById(req, id);
+        const data = await tipeBusServices.getTipeBusById(id);
         return res.status(200).json({
             success: true,
-            data: bus
+            data: data
         });
     } catch (error) {
-        return res.status(404).json({
+        return res.status(500).json({
             success: false,
             message: error.message
         });
-    };
+    }
 };
 
 const store = async (req, res) => {
-    const { idMitra, idTipe, plat_nomor, kode_bus } = req.body;
+    const { idMitra, tipe, kapasitas, fasilitas } = req.body;
+    const fotos = req.files ? req.files.map(file => file.filename) : [];
     try {
-        const createBus = await busService.createBus({ idMitra, idTipe, plat_nomor, kode_bus });
+        const data = await tipeBusServices.storeTipeBus({ idMitra, tipe, kapasitas, fasilitas, fotos });
         return res.status(200).json({
             success: true,
-            message: 'Bus berhasil ditambahkan.'
+            message: 'Tipe bus berhasil ditambahkan'
         });
     } catch (error) {
-        return res.status(400).json({
+        return res.status(500).json({
             success: false,
             message: error.message
         });
-    };
+    }
 };
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { idMitra, idTipe, plat_nomor, kode_bus } = req.body;
+    const { idMitra, tipe, kapasitas, fasilitas } = req.body;
+    const fotos = req.files ? req.files.map(file => file.filename) : [];
     try {
-        const updateBus = await busService.updatebus({ id, idMitra, idTipe, plat_nomor, kode_bus });
+        const data = await tipeBusServices.updateTipeBus({ id, idMitra, tipe,kapasitas, fasilitas, fotos });
         return res.status(200).json({
             success: true,
-            message: 'Bus berhasil diperbarui.'
+            message: 'Tipe bus berhasil diupdate'
         });
     } catch (error) {
-        return res.status(400).json({
+        return res.status(500).json({
             success: false,
             message: error.message
         });
-    };
+    }
 };
 
 const destroy = async (req, res) => {
     const { id } = req.params;
     try {
-        const deleteBus = await busService.destroyBus(id);
+        const data = await tipeBusServices.destroyTipeBus(id);
         return res.status(200).json({
             success: true,
-            message: 'Bus berhasil dihapus'
+            message: 'Tipe bus berhasil dihapus'
         });
     } catch (error) {
-        return res.status(400).json({
+        return res.status(500).json({
             success: false,
             message: error.message
         });
-    };
+    }
 };
 
 module.exports = {
-    getAllBus,
-    getBusByMitra,
-    show, 
+    getAllTipe,
+    getTipeByMitra,
+    show,
     store,
     update,
     destroy

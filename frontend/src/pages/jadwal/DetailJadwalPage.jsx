@@ -28,8 +28,8 @@ export default function DetailJadwalPage() {
                     {/* <FotoCard jadwal={jadwal} /> */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-1 space-y-6">
-                            <MobilCard jadwal={jadwal} />
-                            <RuteCard jadwal={jadwal} />
+                            <MobilCard jadwal={jadwal.jadwal} />
+                            <RuteCard jadwal={jadwal.jadwal} />
                         </div>
 
                         <div className="lg:col-span-2">

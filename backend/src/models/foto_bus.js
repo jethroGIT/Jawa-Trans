@@ -11,13 +11,13 @@ const defineFotoBusModel = (sequelize) => {
       allowNull: false,
       autoIncrement: true
     },
-    idBus: {
-        type: DataTypes.INTEGER,
-        allowNull: true
+    idTipe: {
+      type: DataTypes.INTEGER,
+      allowNull: true
     },
     nama: {
-        type: DataTypes.STRING(100),
-        allowNull: false
+      type: DataTypes.STRING(100),
+      allowNull: false
     }
   }, {
     tableName: 'foto_bus',

@@ -7,12 +7,14 @@ const uploadLogoMitra = require('../config/multerMitra');
 const mitraController = require('../controllers/mitra.controller');
 const terminalController = require('../controllers/terminal.controller');
 const fasilitasController = require('../controllers/fasilitas.controller');
+const multerErrorHandler = require('../middlewares/multerErrorHandler');
 const uploadFotoBus = require('../config/multerBus');
 const busController = require('../controllers/bus.controller');
 const jadwalController = require('../controllers/jadwal.controller');
 const reservasiController = require('../controllers/reservasi.controller');
 const kursiController = require('../controllers/kursi.controller');
 const midtransController = require('../controllers/midtrans.controller');
+const tipeBusController = require('../controllers/tipeBus.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
 router.get('/', (req, res) => {
@@ -54,9 +56,10 @@ router.route('/mitra')
   .post(uploadLogoMitra.single('logo'), mitraController.store)
 
 router.route('/mitra/:id')
-  .get(authorize(['admin', 'staff']), mitraController.show)
-  .put(authorize(['admin', 'staff']), uploadLogoMitra.single('logo'), mitraController.update)
-  .delete(authorize(['admin']), mitraController.destroy)
+  .all(authorize(['staff']))
+  .get(mitraController.show)
+  .put(uploadLogoMitra.single('logo'), mitraController.update)
+  .delete(mitraController.destroy)
 
 // router.use('/terminal')
 router.get('/terminal', terminalController.getAllTerminal);
@@ -73,9 +76,16 @@ router.delete('/fasilitas/:id', fasilitasController.destroy);
 
 router.get('/bus', busController.getAllBus);
 router.get('/bus/:id', busController.show);
-router.post('/bus', uploadFotoBus.array('fotos', 5), busController.store);
-router.put('/bus/:id', uploadFotoBus.array('fotos', 5), busController.update);
+router.post('/bus', busController.store);
+router.put('/bus/:id', busController.update);
 router.delete('/bus/:id', busController.destroy);
+
+router.get('/mitra/:idMitra/tipebus', tipeBusController.getTipeByMitra);
+router.get('/tipebus', tipeBusController.getAllTipe);
+router.get('/tipeBus/:id', tipeBusController.show);
+router.post('/tipeBus', uploadFotoBus.array('fotos', 5), multerErrorHandler, tipeBusController.store);
+router.put('/tipeBus/:id', uploadFotoBus.array('fotos', 5), multerErrorHandler, tipeBusController.update);
+router.delete('/tipeBus/:id', tipeBusController.destroy);
 
 router.get('/jadwal', jadwalController.getAllJadwal);
 router.get('/jadwal/:id', jadwalController.show);
@@ -90,6 +100,7 @@ router.put('/reservasi/:id', reservasiController.update);
 router.delete('/reservasi/:id', reservasiController.destroy);
 router.get('/reservasi/user/:id', reservasiController.getReservasiByUser);
 
+router.get('/mitra/:idMitra/bus', busController.getBusByMitra);
 router.get('/bus/:idBus/kursi', kursiController.getKursiByIdBus);
 router.get('/bus/:idBus/kursi/:idKursi', kursiController.show);
 router.post('/bus/:idBus/kursi', kursiController.store);
