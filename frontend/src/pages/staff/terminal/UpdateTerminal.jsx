@@ -43,12 +43,23 @@ export default function UpdateTerminal() {
         loadTerminal();
     }, [id, navigate]);
 
-    // 2. Handler Submit Update
+    // Handler Submit Update
     const handleUpdateSubmit = async (formData) => {
         setIsLoading(true);
+        
+        Swal.fire({
+            title: 'Memproses...',
+            text: 'Mohon tunggu sedang menyimpan perubahan',
+            icon: 'info',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         try {
             // Panggil fungsi update di service
-            // Note: Pastikan nama fungsi di service Anda 'updateTerminal' atau 'fetchUpdateTerminal'
             await terminalService.fetchUpdateTerminal(id, formData);
 
             Swal.fire({
@@ -65,7 +76,8 @@ export default function UpdateTerminal() {
             Swal.fire({
                 title: 'Gagal!',
                 text: error.message || 'Terjadi kesalahan saat mengupdate data.',
-                icon: 'error'
+                icon: 'error',
+                confirmButtonColor: '#DC2626'
             });
         } finally {
             setIsLoading(false);

@@ -61,9 +61,9 @@ export default function DetailTiket() {
 
     const reservasiData = {
         idJadwal: dataTiket.jadwal.idJadwal,
-        mitra: dataTiket.jadwal.bus.mitra.nama,
-        tlpMitra: dataTiket.jadwal.bus.mitra.telephone,
-        emailMitra: dataTiket.jadwal.bus.mitra.email,
+        mitra: dataTiket.jadwal.bus.tipe_bus?.mitra?.nama || '-',
+        tlpMitra: dataTiket.jadwal.bus.tipe_bus?.mitra?.telephone || '-',
+        emailMitra: dataTiket.jadwal.bus.tipe_bus?.mitra?.email || '-',
         terminalAsal: dataTiket.jadwal.terminalNaik.nama,
         terminalTujuan: dataTiket.jadwal.terminalTurun.nama,
         tanggal: new Date(dataTiket.jadwal.tanggal_keberangkatan).toLocaleDateString('id-ID', {
@@ -84,10 +84,10 @@ export default function DetailTiket() {
         teleponPemesan: dataTiket.user.telephone,
         penumpang: dataTiket.reservasi_detail.map(detail => ({
             nama: detail.namaPenumpang,
-            kursi: detail.noKursi
+            kursi: detail.kursi?.noKursi || detail.idKursi
         })),
         namaPenumpang: dataTiket.reservasi_detail.map(detail => detail.namaPenumpang),
-        kursi: dataTiket.reservasi_detail.map(detail => detail.noKursi),
+        kursi: dataTiket.reservasi_detail.map(detail => detail.kursi?.noKursi || detail.idKursi),
         hargaTiket: dataTiket.jadwal.harga,
         jumlahPenumpang: dataTiket.penumpang,
         totalHarga: dataTiket.jadwal.harga * dataTiket.penumpang

@@ -1,14 +1,11 @@
-import { apiRequest } from "../api";
+import { apiRequest, apiRequestWithAuth } from "../api";
 
-async function fetchBusMitra(idMitra) {
+async function fetchAllBus() {
     try {
-        const response = await apiRequest("bus", "GET");
-        return response.data;
+        const response = await apiRequestWithAuth(`bus`, "GET");
+        return response.data || [];
     } catch (error) {
-        return {
-            success: false,
-            message: error.message
-        }
+        throw new Error(error.message || 'Terjadi kesalahan saat mengambil data bus');
     }
 }
 
@@ -26,34 +23,20 @@ async function fetchFasilitas() {
 
 async function fetchCreateBus(payload) {
     try {
-        const formData = new FormData();
-        formData.append('idMitra', payload.idMitra);
-        formData.append('kode_bus', payload.kode_bus);
-        formData.append('type', payload.type);
-        formData.append('kapasitas', payload.kapasitas);
+        const response = await apiRequest("bus", "POST", {
+            idTipe: payload.idTipe,
+            plat_nomor: payload.plat_nomor,
+            kode_bus: payload.kode_bus,
+        });
 
-        if (Array.isArray(payload.fasilitas)) {
-            payload.fasilitas.forEach((id) => {
-                formData.append('fasilitas[]', id);
-            });
+        if (response.success === false) {
+            throw new Error(response.message || 'Gagal membuat bus');
         }
 
-        if (Array.isArray(payload.fotos)) {
-            payload.fotos.forEach((file) => {
-                formData.append('fotos', file);
-            });
-        }
-
-        const response = await apiRequest("bus", "POST", formData);
-
-        return response.data;
+        return response.data || response;
 
     } catch (error) {
-        console.log("Pesan error:", error.message);
-        return {
-            success: false,
-            message: error.message
-        }
+        throw new Error(error.message || 'Terjadi kesalahan saat membuat bus');
     }
 }
 
@@ -71,55 +54,35 @@ async function fetchBusById(id) {
 
 async function fetchUpdateBus(id, payload) {
     try {
-        const formData = new FormData();
-        formData.append('idMitra', payload.idMitra);
-        formData.append('kode_bus', payload.kode_bus);
-        formData.append('type', payload.type);
-        formData.append('kapasitas', payload.kapasitas);
-        formData.append('status', payload.status);
+        const response = await apiRequest(`bus/${id}`, "PUT", {
+            idTipe: payload.idTipe,
+            plat_nomor: payload.plat_nomor,
+            kode_bus: payload.kode_bus,
+            status: payload.status
+        });
 
-        if (Array.isArray(payload.fasilitas)) {
-            payload.fasilitas.forEach((id) => {
-                formData.append('fasilitas[]', id);
-            });
+        if (response.success === false) {
+            throw new Error(response.message || 'Gagal memperbarui bus');
         }
 
-        if (Array.isArray(payload.fotos) && payload.fotos.length > 0) {
-            payload.fotos.forEach((file) => {
-                formData.append('fotos', file);
-            });
-        }
-
-        // Optional: Kirim list foto LAMA yang dipertahankan (agar backend tahu mana yg dihapus)
-        // Tergantung logika backend Anda, ini bisa dikirim sebagai JSON string
-        if (Array.isArray(payload.existingPhotos)) {
-            // Contoh: Mengirim nama file/ID foto lama yang user TIDAK hapus
-            // formData.append('existing_photos', JSON.stringify(payload.existingPhotos));
-        }
-
-        const response = await apiRequest(`bus/${id}`, "PUT", formData);
-
-        return response.data;
+        return response.data || response;
 
     } catch (error) {
-        return(error.message);
+        throw new Error(error.message || 'Terjadi kesalahan saat memperbarui bus');
     }
 }
 
-async function fetchDeleteBus(id){
+async function fetchDeleteBus(id) {
     try {
         const response = await apiRequest(`bus/${id}`, "DELETE");
-        return response.message;
+        return response.message || response.data;
     } catch (error) {
-        return {
-            success: false,
-            message: error.message
-        }
+        throw new Error(error.message || 'Gagal menghapus bus');
     }
 }
 
 export default {
-    fetchBusMitra,
+    fetchAllBus,
     fetchFasilitas,
     fetchCreateBus,
     fetchBusById,

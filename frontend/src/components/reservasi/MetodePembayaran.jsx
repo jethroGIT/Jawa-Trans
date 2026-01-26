@@ -17,6 +17,7 @@ export default function MetodePembayaranCard({
     onBatal,
     totalHarga
 }) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
     // Data metode pembayaran dengan logo
     const metodeVA = [
         { id: "bca", nama: "Bank BCA VA", kode: "bca", logo: bca },
@@ -138,9 +139,13 @@ export default function MetodePembayaranCard({
                     />
                     <span className="ml-2 text-sm text-gray-700">
                         Saya telah membaca dan menyetujui{" "}
-                        <a href="#" className="text-blue-600 hover:underline">
+                        <button 
+                            type="button"
+                            onClick={() => setIsModalOpen(true)}
+                            className="text-blue-600 hover:underline font-semibold"
+                        >
                             Syarat & Ketentuan
-                        </a>
+                        </button>
                     </span>
                 </label>
             </div>
@@ -165,6 +170,111 @@ export default function MetodePembayaranCard({
                     Konfirmasi Pembayaran
                 </button>
             </div>
+
+            {/* MODAL: SYARAT & KETENTUAN RESERVASI */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+                        {/* Modal Header */}
+                        <div className="bg-blue-700 px-6 md:px-8 py-6 text-white flex items-center justify-between">
+                            <h2 className="text-2xl md:text-3xl font-bold">Syarat & Ketentuan Reservasi</h2>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-white hover:bg-blue-600 p-2 rounded-lg transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="overflow-y-auto flex-1 px-6 md:px-8 py-6 text-gray-700 text-sm md:text-base">
+                            <div className="space-y-4">
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">1. Pemesanan Tiket</h3>
+                                    <p className="leading-relaxed">Pemesanan tiket dilakukan melalui platform Jawa Trans. Data penumpang harus sesuai dengan identitas asli. Perubahan data penumpang dapat dilakukan maksimal 24 jam sebelum keberangkatan dengan menghubungi layanan pelanggan kami.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">2. Pembayaran</h3>
+                                    <p className="leading-relaxed">Pembayaran harus dilakukan penuh sebelum tiket dicetak atau dikirim. Kami menerima transfer bank, e-wallet, dan QRIS. Bukti pembayaran akan dikirim via email yang terdaftar. Pembayaran tidak dapat dikembalikan setelah konfirmasi transaksi berhasil.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">3. Kebijakan Pembatalan</h3>
+                                    <p className="leading-relaxed">
+                                        • Pembatalan minimal 24 jam sebelum keberangkatan: Refund 80% dari harga tiket<br/>
+                                        • Pembatalan 12-24 jam sebelum keberangkatan: Refund 50% dari harga tiket<br/>
+                                        • Pembatalan kurang dari 12 jam sebelum keberangkatan: Tidak dapat dibatalkan (tiket hangus)
+                                    </p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">4. Kehadiran Penumpang</h3>
+                                    <p className="leading-relaxed">Penumpang harus tiba di terminal minimal 30 menit sebelum keberangkatan. Penumpang yang tidak hadir 15 menit sebelum keberangkatan dianggap membatalkan perjalanan dan tiket dinyatakan hangus. Tidak ada refund untuk penumpang yang tidak hadir.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">5. Persyaratan Identitas</h3>
+                                    <p className="leading-relaxed">Penumpang wajib membawa identitas asli yang sesuai dengan data reservasi (KTP, Paspor, atau SIM). Penumpang tanpa identitas yang sesuai tidak diizinkan naik dan tiket dinyatakan hangus tanpa refund.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">6. Barang Bawaan</h3>
+                                    <p className="leading-relaxed">Setiap penumpang diizinkan membawa 1 tas tangan dan 1 koper berukuran standar (maksimal 20 kg per item). Barang-barang berbahaya, cairan mudah terbakar, dan barang terlarang lainnya dilarang. Jawa Trans tidak bertanggung jawab atas kehilangan atau kerusakan barang bawaan.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">7. Perjalanan dan Keselamatan</h3>
+                                    <p className="leading-relaxed">Penumpang harus mematuhi peraturan keselamatan selama perjalanan. Dilarang merokok, minum alkohol, dan memainkan musik keras di dalam bus. Pelanggaran dapat mengakibatkan penumpang diturunkan tanpa refund dan pelaporan ke aparat kepolisian.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">8. Keterlambatan</h3>
+                                    <p className="leading-relaxed">Jawa Trans berkomitmen untuk ketepatan waktu. Namun, keterlambatan dapat terjadi karena kondisi lalu lintas, cuaca buruk, atau keadaan force majeure. Jika terlambat lebih dari 2 jam, penumpang dapat meminta kompensasi atau pembatalan tanpa denda pembatalan.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">9. Pembatalan oleh Jawa Trans</h3>
+                                    <p className="leading-relaxed">Jawa Trans berhak membatalkan perjalanan jika jumlah penumpang kurang dari 50% kapasitas atau karena alasan teknis/keselamatan. Penumpang akan menerima notifikasi cancellation dan full refund atau penawaran alternatif perjalanan lain.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">10. Perlindungan Data</h3>
+                                    <p className="leading-relaxed">Data pribadi penumpang dilindungi sesuai dengan undang-undang perlindungan data. Kami tidak akan membagikan data Anda kepada pihak ketiga tanpa persetujuan. Untuk informasi lebih lanjut, silakan baca kebijakan privasi kami.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">11. Hak Penumpang</h3>
+                                    <p className="leading-relaxed">Penumpang berhak mendapat pelayanan yang aman, nyaman, dan profesional. Penumpang berhak mengajukan keluhan jika ada ketidaksesuaian layanan dan akan ditangani dalam waktu 7 hari kerja.</p>
+                                </section>
+
+                                <section>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">12. Perubahan dan Penerimaan</h3>
+                                    <p className="leading-relaxed">Jawa Trans berhak mengubah syarat dan ketentuan kapan saja. Perubahan akan berlaku efektif setelah diumumkan. Penggunaan layanan lebih lanjut berarti Anda menerima perubahan tersebut. Dengan menyetujui syarat ini, Anda telah membaca dan memahami seluruh ketentuan.</p>
+                                </section>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="border-t border-gray-200 px-6 md:px-8 py-4 flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-6 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                            >
+                                Tutup
+                            </button>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-6 py-2.5 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors text-sm"
+                            >
+                                Mengerti
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

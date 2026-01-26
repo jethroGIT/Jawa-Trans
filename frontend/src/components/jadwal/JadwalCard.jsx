@@ -43,7 +43,7 @@ export default function JadwalCard({ item }) {
             {/* Row 1 - Bus Info */}
             <div className="mb-1">
                 <h3 className="text-lg font-bold text-gray-900">
-                    {item.bus?.mitra?.nama}
+                    {item.bus?.tipe_bus?.mitra?.nama}
                 </h3>
                 <p className="text-sm text-gray-500">
                     {item.bus?.tipe_bus?.tipe}

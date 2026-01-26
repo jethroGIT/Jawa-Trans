@@ -1,9 +1,11 @@
 import StaffLayout from '../../../layouts/StaffLayout';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Calendar, CalendarDays, Search, Filter } from 'lucide-react';
+import { Plus, Pencil, Trash2, Calendar, CalendarDays, Search, Filter, Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { createRoot } from 'react-dom/client';
+import jadwalService from '../../../services/mitra/jadwalService';
+import authService from '../../../services/authService';
 
 // --- DATATABLES IMPORTS ---
 import DataTable from 'datatables.net-react';
@@ -12,21 +14,9 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 
 DataTable.use(DT);
 
-const DUMMY_JADWAL = [
-    { idJadwal: 1, kodeBus: 'BUS-019', terminalNaik: 'Terminal Bungurasih', terminalTurun: 'Terminal Tirtonadi', tanggal: '2023-12-09T09:48:21' },
-    { idJadwal: 2, kodeBus: 'BUS-017', terminalNaik: 'Terminal Terboyo', terminalTurun: 'Terminal Purbaya', tanggal: '2024-01-18T17:41:42' },
-    { idJadwal: 3, kodeBus: 'BUS-018', terminalNaik: 'Terminal Purbaya', terminalTurun: 'Terminal Ubung', tanggal: '2024-01-16T15:07:09' },
-    { idJadwal: 4, kodeBus: 'BUS-011', terminalNaik: 'Terminal Leuwi Panjang', terminalTurun: 'Terminal Terboyo', tanggal: '2024-01-09T12:41:34' },
-    { idJadwal: 5, kodeBus: 'BUS-004', terminalNaik: 'Terminal Leuwi Panjang', terminalTurun: 'Terminal Cicaheum', tanggal: '2023-12-16T04:29:03' },
-    { idJadwal: 6, kodeBus: 'BUS-008', terminalNaik: 'Terminal Leuwi Panjang', terminalTurun: 'Terminal Mengwi', tanggal: '2023-12-17T22:07:47' },
-    { idJadwal: 7, kodeBus: 'BUS-008', terminalNaik: 'Terminal Kampung Rambutan', terminalTurun: 'Terminal Ubung', tanggal: '2024-01-08T12:32:13' },
-    { idJadwal: 8, kodeBus: 'BUS-015', terminalNaik: 'Terminal Giwangan', terminalTurun: 'Terminal Mengwi', tanggal: '2024-01-13T10:47:10' },
-    { idJadwal: 9, kodeBus: 'BUS-007', terminalNaik: 'Terminal Giwangan', terminalTurun: 'Terminal Ubung', tanggal: '2023-12-13T05:00:12' },
-    { idJadwal: 10, kodeBus: 'BUS-015', terminalNaik: 'Terminal Purbaya', terminalTurun: 'Terminal Tirtonadi', tanggal: '2024-01-18T15:08:54' },
-];
-
 export default function IndexJadwal() {
-    const [jadwals, setJadwals] = useState(DUMMY_JADWAL);
+    const [jadwals, setJadwals] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     // --- STATE FILTER & SEARCH ---
     const [selectedMonth, setSelectedMonth] = useState('');
@@ -34,6 +24,41 @@ export default function IndexJadwal() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const navigate = useNavigate();
+
+    // Fetch Jadwal by Mitra on mount
+    useEffect(() => {
+        const loadJadwal = async () => {
+            try {
+                setIsLoading(true);
+                const user = authService.getUser();
+                
+                if (!user?.idMitra) {
+                    throw new Error('ID Mitra tidak ditemukan');
+                }
+
+                const data = await jadwalService.fetchJadwalByMitra(user.idMitra);
+                
+                // Transform data to match table format
+                const transformedData = data.map(jadwal => ({
+                    idJadwal: jadwal.idJadwal,
+                    kodeBus: jadwal.bus?.kode_bus || '-',
+                    terminalNaik: jadwal.terminalNaik?.nama || '-',
+                    terminalTurun: jadwal.terminalTurun?.nama || '-',
+                    tanggal: jadwal.tanggal_keberangkatan
+                }));
+                
+                setJadwals(transformedData);
+            } catch (error) {
+                console.error('Error loading jadwal:', error);
+                Swal.fire('Error', 'Gagal memuat data jadwal', 'error');
+                setJadwals([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadJadwal();
+    }, []);
 
     const months = [
         { value: '1', label: 'Januari' }, { value: '2', label: 'Februari' },
@@ -211,48 +236,59 @@ export default function IndexJadwal() {
                     </div>
 
                     <div className="p-0">
-                        <DataTable
-                            data={filteredData}
-                            columns={columns}
-                            className="display w-full text-left border-collapse"
-                            options={{
-                                responsive: true,
-                                destroy: true,
-                                searching: false, 
-                                paging: true,
-                                lengthMenu: [ [5, 10, 20, 50, -1], [5, 10, 20, 50, "Semua"] ],
-                                pageLength: 5,
-                                dom: 'tr<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4"lip>',
-                                 language: {
-                                    lengthMenu: "_MENU_",
-                                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                                    infoEmpty: "Tidak ada data",
-                                    infoFiltered: "",
-                                    zeroRecords: "Pencarian tidak ditemukan",
-                                    paginate: {
-                                        next: "Next",
-                                        previous: "Prev"
+                        {isLoading ? (
+                            <div className="flex flex-col items-center justify-center p-12 text-slate-500">
+                                <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
+                                <p>Memuat data jadwal...</p>
+                            </div>
+                        ) : jadwals.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-12 text-slate-500">
+                                <p>Tidak ada data jadwal</p>
+                            </div>
+                        ) : (
+                            <DataTable
+                                data={filteredData}
+                                columns={columns}
+                                className="display w-full text-left border-collapse"
+                                options={{
+                                    responsive: true,
+                                    destroy: true,
+                                    searching: false, 
+                                    paging: true,
+                                    lengthMenu: [ [5, 10, 20, 50, -1], [5, 10, 20, 50, "Semua"] ],
+                                    pageLength: 5,
+                                    dom: 'tr<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4"lip>',
+                                     language: {
+                                        lengthMenu: "_MENU_",
+                                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                                        infoEmpty: "Tidak ada data",
+                                        infoFiltered: "",
+                                        zeroRecords: "Pencarian tidak ditemukan",
+                                        paginate: {
+                                            next: "Next",
+                                            previous: "Prev"
+                                        }
+                                    },
+                                    createdRow: (row, data) => {
+                                        const actionCell = row.querySelector('.action-cell');
+                                        if (actionCell) {
+                                            const root = createRoot(actionCell);
+                                            root.render(<ActionButtons id={data.idJadwal} />);
+                                        }
                                     }
-                                },
-                                createdRow: (row, data) => {
-                                    const actionCell = row.querySelector('.action-cell');
-                                    if (actionCell) {
-                                        const root = createRoot(actionCell);
-                                        root.render(<ActionButtons id={data.idJadwal} />);
-                                    }
-                                }
-                            }}
-                        >
-                            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
-                                <tr>
-                                    <th className="px-6 py-4 font-semibold text-slate-600">Kode Bus</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-600">Terminal Naik</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-600">Terminal Turun</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-600">Waktu Keberangkatan</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-600 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                        </DataTable>
+                                }}
+                            >
+                                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
+                                    <tr>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Kode Bus</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Terminal Naik</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Terminal Turun</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Waktu Keberangkatan</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                            </DataTable>
+                        )}
                     </div>
                 </div>
             </div>

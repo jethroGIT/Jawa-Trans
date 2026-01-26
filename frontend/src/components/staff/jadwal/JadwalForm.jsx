@@ -138,7 +138,7 @@ export default function JadwalForm({
 
                 {/* SECTION 1: ARMADA & RUTE */}
                 <div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-2 flex items-center gap-2">
                         <Bus className="w-5 h-5 text-blue-600" />
                         Armada & Rute
                     </h3>
@@ -156,7 +156,7 @@ export default function JadwalForm({
                                 <option value="">-- Pilih Armada --</option>
                                 {listBus.map(bus => (
                                     <option key={bus.idBus} value={bus.idBus}>
-                                        {bus.kode_bus} - {bus.type} ({bus.kapasitas} Seat)
+                                        {bus.kode_bus} - {bus.tipe_bus?.tipe}
                                     </option>
                                 ))}
                             </select>
@@ -202,11 +202,10 @@ export default function JadwalForm({
                     </div>
                 </div>
 
-                <hr className="border-slate-100" />
 
                 {/* SECTION 2: WAKTU */}
                 <div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-blue-600" />
                         Waktu Perjalanan
                     </h3>
@@ -275,11 +274,9 @@ export default function JadwalForm({
                     </div>
                 </div>
 
-                <hr className="border-slate-100" />
-
                 {/* SECTION 3: HARGA */}
                 <div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-2 flex items-center gap-2">
                         <Banknote className="w-5 h-5 text-blue-600" />
                         Harga Tiket
                     </h3>

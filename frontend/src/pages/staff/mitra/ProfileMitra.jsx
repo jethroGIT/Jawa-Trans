@@ -54,12 +54,7 @@ export default function ProfileMitra() {
             
             Swal.fire('Berhasil!', 'Profil mitra telah diperbarui.', 'success');
             
-            // Opsional: Refresh data agar tampilan sinkron (jika backend return data baru)
-            // const updated = await profileService.fetchMitraData(mitraId);
-            // setProfileData(updated.data);
-            
-            return true; // Return true agar form menutup mode edit
-
+            return true;
         } catch (error) {
             console.error("Gagal update profil:", error);
             Swal.fire('Gagal!', error.message || 'Terjadi kesalahan.', 'error');

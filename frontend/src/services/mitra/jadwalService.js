@@ -1,4 +1,4 @@
-import { apiRequest } from "../api";
+import { apiRequest, apiRequestWithAuth } from "../api";
 
 async function fetchCallBusTerminal() {
     try {
@@ -16,6 +16,15 @@ async function fetchCallBusTerminal() {
             message: error.message
         }
     }
+}
+
+async function fetchJadwalByMitra(idMitra) {
+    try {
+        const response = await apiRequestWithAuth(`mitra/${idMitra}/jadwal`, "GET");
+        return response.data || [];
+    } catch (error) {
+        throw new Error(error.message || 'Gagal memuat jadwal');
+    } 
 }
 
 async function fetchCreateJadwal(payload) {
@@ -56,9 +65,9 @@ async function fetchDeleteJadwal(id) {
 
 export default {
     fetchCallBusTerminal,
+    fetchJadwalByMitra,
     fetchCreateJadwal,
     fetchJadwalById,
     fetchUpdateJadwal,
     fetchDeleteJadwal
-
 }

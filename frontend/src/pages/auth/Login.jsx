@@ -39,9 +39,11 @@ export default function LoginPage() {
             });
 
             if (data.data.role === 'admin') {
-                navigate('/admin');
-            } else if (data.data.role === 'mitra') {
-                navigate('/mitra/dashboard');
+                navigate('/admin/user-mitra');
+            } else if (data.data.role === 'staff') {
+                navigate('/mitra/bus');
+            } else if (data.data.role === 'keuangan') {
+                navigate('/keuangan/laporan');
             } else {
                 navigate('/');
             }

@@ -25,7 +25,7 @@ export default function PembayaranInstan({ paymentData }) {
             confirmButtonText: "Kembali ke Jadwal",
             confirmButtonColor: "#3085d6",
         }).then(() => {
-            navigate("/jadwal"); 
+            navigate("/jadwal");
         });
     };
 
@@ -61,7 +61,7 @@ export default function PembayaranInstan({ paymentData }) {
     useEffect(() => {
         if (!paymentData?.payment?.order_id) return;
 
-        const socket = io("http://localhost:8000");
+        const socket = io(import.meta.env.VITE_API_URL || "http://localhost:8000");
         const eventName = `payment_status_${paymentData.payment.order_id}`;
 
         socket.on(eventName, (data) => {

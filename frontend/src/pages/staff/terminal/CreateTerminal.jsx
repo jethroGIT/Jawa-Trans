@@ -12,6 +12,18 @@ export default function CreateTerminal() {
     // Handler Submit (Khusus Create)
     const handleCreateSubmit = async (formData) => {
         setIsLoading(true);
+        
+        Swal.fire({
+            title: 'Memproses...',
+            text: 'Mohon tunggu sedang menyimpan data terminal',
+            icon: 'info',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         try {
             // Panggil Service API
             await terminalService.fetchCreateTerminal(formData);
@@ -30,7 +42,8 @@ export default function CreateTerminal() {
             Swal.fire({
                 title: 'Gagal!',
                 text: error.message || 'Terjadi kesalahan saat menyimpan data.',
-                icon: 'error'
+                icon: 'error',
+                confirmButtonColor: '#DC2626'
             });
         } finally {
             setIsLoading(false);

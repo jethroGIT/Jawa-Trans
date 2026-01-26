@@ -30,9 +30,21 @@ export default function CreateJadwal() {
         fetchMasterData();
     }, []);
 
-    // 2. Handler Submit (Khusus Create)
+    // Handler Submit (Khusus Create)
     const handleCreateSubmit = async (payload) => {
         setIsLoading(true);
+        
+        Swal.fire({
+            title: 'Memproses...',
+            text: 'Mohon tunggu sedang menyimpan jadwal perjalanan',
+            icon: 'info',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         try {
             await jadwalService.fetchCreateJadwal(payload);
 
@@ -47,7 +59,12 @@ export default function CreateJadwal() {
 
         } catch (error) {
             console.error(error);
-            Swal.fire('Gagal', error.message, 'error');
+            Swal.fire({
+                title: 'Gagal!',
+                text: error.message || 'Terjadi kesalahan saat menyimpan jadwal.',
+                icon: 'error',
+                confirmButtonColor: '#DC2626'
+            });
         } finally {
             setIsLoading(false);
         }

@@ -1,53 +1,38 @@
 import StaffLayout from '../../../layouts/StaffLayout';
 import busService from '../../../services/mitra/busService';
-import authService from '../../../services/authService';
-import BusForm from '../../../components/staff/bus/BusForm'; // Import Komponen Form
-import { useState, useEffect } from 'react';
+import BusForm from '../../../components/staff/bus/BusForm';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 export default function CreateBus() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const [fasilitasOptions, setFasilitasOptions] = useState([]);
-    const [isFetchingFasilitas, setIsFetchingFasilitas] = useState(true);
 
-    useEffect(() => {
-        const loadFasilitas = async () => {
-            try {
-                const response = await busService.fetchFasilitas();
-                if (response && Array.isArray(response)) {
-                    setFasilitasOptions(response);
-                } else if (response.success && Array.isArray(response.data)) {
-                    setFasilitasOptions(response.data);
-                }
-            } catch (error) {
-                console.error("Gagal memuat fasilitas:", error);
-            } finally {
-                setIsFetchingFasilitas(false);
-            }
-        };
-        loadFasilitas();
-    }, []);
-
-    // 2. Handler Submit khusus untuk CREATE
+    // Handler Submit untuk CREATE
     const handleCreateSubmit = async (formData) => {
         setIsLoading(true);
+
+        // Tampilkan loading alert
+        Swal.fire({
+            title: 'Memproses...',
+            text: 'Mohon tunggu sedang menyimpan data armada',
+            icon: 'info',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         try {
-            const user = authService.getUser();
-            
-            // Siapkan payload
-            // Note: formData dari BusForm sudah berisi data yang valid
             const payload = {
-                idMitra: user.idMitra,
+                plat_nomor: formData.plat_nomor,
                 kode_bus: formData.kode_bus,
-                type: formData.type,
-                kapasitas: formData.kapasitas,
-                fasilitas: formData.fasilitas,
-                fotos: formData.fotos // Array File baru
+                idTipe: formData.idTipe
             };
 
-            await busService.fetchCreateBus(payload);
+            const result = await busService.fetchCreateBus(payload);
 
             Swal.fire({
                 title: 'Berhasil!',
@@ -59,11 +44,12 @@ export default function CreateBus() {
             });
 
         } catch (error) {
-            console.error(error);
+            console.error('Error:', error);
             Swal.fire({
                 title: 'Gagal!',
                 text: error.message || 'Terjadi kesalahan saat menyimpan data.',
-                icon: 'error'
+                icon: 'error',
+                confirmButtonColor: '#DC2626'
             });
         } finally {
             setIsLoading(false);
@@ -80,12 +66,10 @@ export default function CreateBus() {
                     </div>
                 </div>
 
-                <BusForm 
-                    initialData={{}} 
+                <BusForm
+                    initialData={{}}
                     onSubmit={handleCreateSubmit}
                     isLoading={isLoading}
-                    fasilitasOptions={fasilitasOptions}
-                    isFetchingFasilitas={isFetchingFasilitas}
                 />
             </div>
         </StaffLayout>

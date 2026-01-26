@@ -14,10 +14,10 @@ export default function OrderCard({ jadwal: wrapper }) {
     const [kursiTerpilih, setKursiTerpilih] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Destructure wrapper
-    const jadwal = wrapper?.jadwal;
-    const kursiTerjual = wrapper?.kursiTerjual || [];
-    const kursiTersedia = wrapper?.kursiTersedia || 0;
+    // Struktur data jadwal terbaru: wrapper sudah langsung adalah jadwal lengkap
+    const jadwal = wrapper;
+    const kursiTerjual = jadwal?.kursiTerjual || [];
+    const kursiTersedia = jadwal?.kursiTersedia || 0;
 
     // Data kursi dengan kapasitas dari jadwal
     const totalKursi = jadwal?.bus?.tipe_bus?.kapasitas || 20;
@@ -100,9 +100,9 @@ export default function OrderCard({ jadwal: wrapper }) {
             const reservasiData = {
                 // Data Jadwal
                 idJadwal: jadwal?.idJadwal,
-                mitra: jadwal?.bus?.mitra?.nama || "Mitra",
-                tlpMitra: jadwal?.bus?.mitra?.telephone || null,
-                emailMitra: jadwal?.bus?.mitra?.email || null,
+                mitra: jadwal?.bus?.tipe_bus?.mitra?.nama || "Mitra",
+                tlpMitra: jadwal?.bus?.tipe_bus?.mitra?.telephone || null,
+                emailMitra: jadwal?.bus?.tipe_bus?.mitra?.email || null,
                 terminalAsal: jadwal?.terminalNaik?.nama || "Terminal Asal",
                 terminalTujuan: jadwal?.terminalTurun?.nama || "Terminal Tujuan",
                 tanggal: new Date(jadwal?.tanggal_keberangkatan).toLocaleDateString('id-ID', {

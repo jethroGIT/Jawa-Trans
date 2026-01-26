@@ -25,11 +25,10 @@ export default function DetailJadwalPage() {
         <CustomerLayout>
             <div className="min-h-screen bg-blue-50 py-8 pt-20">
                 <div className="max-w-6xl mx-auto px-4">
-                    {/* <FotoCard jadwal={jadwal} /> */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-1 space-y-6">
-                            <MobilCard jadwal={jadwal.jadwal} />
-                            <RuteCard jadwal={jadwal.jadwal} />
+                            <MobilCard jadwal={jadwal} />
+                            <RuteCard jadwal={jadwal} />
                         </div>
 
                         <div className="lg:col-span-2">

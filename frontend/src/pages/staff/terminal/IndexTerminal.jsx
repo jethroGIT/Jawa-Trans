@@ -1,9 +1,10 @@
 import StaffLayout from '../../../layouts/StaffLayout';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Filter, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Filter, Search, Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { createRoot } from 'react-dom/client';
+import terminalService from '../../../services/mitra/terminalService';
 
 import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
@@ -11,34 +12,37 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 
 DataTable.use(DT);
 
-const DUMMY_TERMINAL = [
-    { idTerminal: 1, kota: 'Yogyakarta', nama: 'Terminal Giwangan' },
-    { idTerminal: 2, kota: 'Surakarta', nama: 'Terminal Tirtonadi' },
-    { idTerminal: 3, kota: 'Surabaya', nama: 'Terminal Bungurasih' },
-    { idTerminal: 4, kota: 'Jakarta Timur', nama: 'Terminal Pulo Gebang' },
-    { idTerminal: 5, kota: 'Bandung', nama: 'Terminal Cicaheum' },
-    { idTerminal: 6, kota: 'Malang', nama: 'Terminal Arjosari' },
-    { idTerminal: 7, kota: 'Semarang', nama: 'Terminal Terboyo' },
-    { idTerminal: 8, kota: 'Denpasar', nama: 'Terminal Mengwi' },
-    { idTerminal: 9, kota: 'Yogyakarta', nama: 'Terminal Jombor' },
-    { idTerminal: 1, kota: 'Yogyakarta', nama: 'Terminal Giwangan' },
-    { idTerminal: 2, kota: 'Surakarta', nama: 'Terminal Tirtonadi' },
-    { idTerminal: 3, kota: 'Surabaya', nama: 'Terminal Bungurasih' },
-    { idTerminal: 4, kota: 'Jakarta Timur', nama: 'Terminal Pulo Gebang' },
-    { idTerminal: 5, kota: 'Bandung', nama: 'Terminal Cicaheum' },
-    { idTerminal: 6, kota: 'Malang', nama: 'Terminal Arjosari' },
-    { idTerminal: 7, kota: 'Semarang', nama: 'Terminal Terboyo' },
-    { idTerminal: 8, kota: 'Denpasar', nama: 'Terminal Mengwi' },
-    { idTerminal: 9, kota: 'Yogyakarta', nama: 'Terminal Jombor' },
-    
-];
-
 export default function IndexTerminal() {
-    const [terminals, setTerminals] = useState(DUMMY_TERMINAL);
+    const [terminals, setTerminals] = useState([]);
     const [selectedKota, setSelectedKota] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const navigate = useNavigate();
+
+    // Fetch Terminal Data
+    useEffect(() => {
+        const loadTerminals = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const data = await terminalService.fetchTerminal();
+                setTerminals(data || []);
+            } catch (err) {
+                setError(err.message);
+                Swal.fire({
+                    title: 'Error',
+                    text: err.message || 'Gagal mengambil data terminal',
+                    icon: 'error'
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadTerminals();
+    }, []);
 
     // List Kota Unik
     const uniqueCities = useMemo(() => {
@@ -114,6 +118,14 @@ export default function IndexTerminal() {
     return (
         <StaffLayout>
             <div className="space-y-6">
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="text-center">
+                            <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
+                            <p className="text-slate-600">Memuat data terminal...</p>
+                        </div>
+                    </div>
+                ) : (
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                     <div className="p-3 border-b border-slate-100 flex flex-col lg:flex-row lg:items-end justify-between gap-4 bg-white">
                         <div className="flex flex-col md:flex-row md:items-end gap-4 w-full lg:w-auto">
@@ -210,6 +222,7 @@ export default function IndexTerminal() {
                         </DataTable>
                     </div>
                 </div>
+                )}
             </div>
         </StaffLayout>
     );

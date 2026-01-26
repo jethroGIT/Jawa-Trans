@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 export default function FotoCard({ jadwal }) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    const fotos = jadwal?.bus?.foto_bus || [];
+    // Akses foto dari struktur data terbaru: jadwal.bus.tipe_bus.foto_bus
+    const fotos = jadwal?.bus?.tipe_bus?.foto_bus || [];
 
     const nextSlide = () => {
         setCurrentIndex((prevIndex) => 
@@ -63,11 +64,7 @@ export default function FotoCard({ jadwal }) {
                                 key={foto.idFoto_Bus} 
                                 className="w-full flex-shrink-0"
                             >
-                                {/* UBAH aspect-video menjadi aspect ratio yang lebih kecil */}
-                                <div className="w-full h-96 bg-gray-100">
-                                    {/* ATAU gunakan tinggi tetap: */}
-                                    {/* <div className="w-full h-96 bg-gray-100"> */}
-                                    
+                                <div className="w-full h-52 bg-gray-100">
                                     <img
                                         src={foto.url}
                                         alt={`Bus ${index + 1}`}
@@ -84,17 +81,17 @@ export default function FotoCard({ jadwal }) {
                     <>
                         <button
                             onClick={prevSlide}
-                            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110"
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110"
                         >
-                            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                         <button
                             onClick={nextSlide}
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110"
                         >
-                            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </button>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import jadwalService from '../services/jadwalService';
 
-export function useJadwal(idJadwal = null) {
+export function useJadwal(idJadwal = null, searchParams = null) {
     const [jadwal, setJadwal] = useState(idJadwal ? null : []);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -10,14 +10,15 @@ export function useJadwal(idJadwal = null) {
         try {
             setLoading(true);
             setError(null);
-            const response = await jadwalService.getAllJadwal();
+            let response;
+            response = await jadwalService.getAllJadwal();
             setJadwal(response.data || []);
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [JSON.stringify(searchParams)]);
 
     const fetchJadwalById = useCallback(async (id) => {
         try {

@@ -1,57 +1,35 @@
 import StaffLayout from '../../../layouts/StaffLayout';
 import busService from '../../../services/mitra/busService';
-import authService from '../../../services/authService';
-import BusForm from '../../../components/staff/bus/BusForm'; // Komponen Reusable
+import BusForm from '../../../components/staff/bus/BusForm';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { Loader2 } from 'lucide-react';
 
 export default function EditBus() {
-    const { id } = useParams(); // Ambil ID Bus dari URL
+    const { id } = useParams();
     const navigate = useNavigate();
 
-    // State
-    const [isLoading, setIsLoading] = useState(false); // Loading saat submit
-    const [isFetching, setIsFetching] = useState(true); // Loading saat ambil data awal
-    const [fasilitasOptions, setFasilitasOptions] = useState([]);
-    const [busData, setBusData] = useState(null); // Data untuk props initialData
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
+    const [busData, setBusData] = useState(null);
 
-    // 1. Fetch Data Master & Data Bus (Concurrent Fetching)
+    // Fetch Data Bus
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Jalankan kedua request secara paralel agar lebih cepat
-                const [fasilitasRes, busRes] = await Promise.all([
-                    busService.fetchFasilitas(),
-                    busService.fetchBusById(id)
-                ]);
+                const busRes = await busService.fetchBusById(id);
 
-                // Set Fasilitas Options
-                if (fasilitasRes && Array.isArray(fasilitasRes)) {
-                    setFasilitasOptions(fasilitasRes);
-                } else if (fasilitasRes.success && Array.isArray(fasilitasRes.data)) {
-                    setFasilitasOptions(fasilitasRes.data);
-                }
-
-                // Set Initial Data Bus
-                // Kita perlu memformat data dari API agar sesuai struktur BusForm
                 if (busRes) {
-                    // Asumsi busRes.data berisi detail bus
-                    // Sesuaikan 'busRes' atau 'busRes.data' tergantung struktur response backend Anda
                     const data = busRes;
 
                     setBusData({
-                        idMitra: data.idMitra,
+                        idBus: data.idBus,
+                        plat_nomor: data.plat_nomor,
                         kode_bus: data.kode_bus,
-                        type: data.type,
-                        kapasitas: data.kapasitas,
-                        status: data.status,
-                        // Pastikan fasilitas dari API diubah jadi array ID: [1, 2]
-                        // Jika API mengembalikan array object [{id:1, name:'AC'}], map dulu ke id
-                        fasilitas: data.fasilitas ? data.fasilitas.map(f => typeof f === 'object' ? f.idFasilitas : f) : [],
-                        // Foto lama (URL string)
-                        fotos: data.foto_bus ? data.foto_bus.map(f => f.url) : []
+                        idTipe: data.idTipe,
+                        kapasitas: data.kapasitas || '',
+                        status: data.status
                     });
                 }
 
@@ -62,7 +40,7 @@ export default function EditBus() {
                     text: "Gagal mengambil data bus. Data mungkin tidak ditemukan.",
                     icon: "error"
                 }).then(() => {
-                    navigate('/mitra/bus'); // Kembali jika error
+                    navigate('/mitra/bus');
                 });
             } finally {
                 setIsFetching(false);
@@ -72,21 +50,27 @@ export default function EditBus() {
         loadData();
     }, [id, navigate]);
 
-    // 2. Handler Submit Update
+    // Handler Submit Update
     const handleUpdateSubmit = async (formData) => {
         setIsLoading(true);
-        try {
-            const user = authService.getUser();
 
-            // Payload
+        Swal.fire({
+            title: 'Memproses...',
+            text: 'Mohon tunggu sedang menyimpan perubahan',
+            icon: 'info',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        try {
             const payload = {
-                idMitra: user.idMitra,
+                idTipe: formData.idTipe,
+                plat_nomor: formData.plat_nomor,
                 kode_bus: formData.kode_bus,
-                type: formData.type,
-                kapasitas: formData.kapasitas,
-                fasilitas: formData.fasilitas,
-                fotos: formData.fotos, // Array File Baru
-                existingPhotos: formData.existingPhotos // Array URL Foto Lama
+                status: formData.status
             };
 
             await busService.fetchUpdateBus(id, payload);
@@ -105,7 +89,8 @@ export default function EditBus() {
             Swal.fire({
                 title: 'Gagal!',
                 text: error.message || 'Terjadi kesalahan saat mengupdate data.',
-                icon: 'error'
+                icon: 'error',
+                confirmButtonColor: '#DC2626'
             });
         } finally {
             setIsLoading(false);
@@ -131,11 +116,9 @@ export default function EditBus() {
                 ) : (
                     // Tampilkan Form jika data sudah siap
                     <BusForm
-                        initialData={busData} // Kirim data bus yg diambil dari API
+                        initialData={busData}
                         onSubmit={handleUpdateSubmit}
                         isLoading={isLoading}
-                        fasilitasOptions={fasilitasOptions}
-                        isFetchingFasilitas={false} // Sudah diload di useEffect parent
                     />
                 )}
             </div>

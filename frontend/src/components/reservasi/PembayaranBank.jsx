@@ -62,7 +62,7 @@ export default function PembayaranBank({ paymentData }) {
     useEffect(() => {
         if (!paymentData?.payment?.order_id) return;
 
-        const socket = io("http://localhost:8000");
+        const socket = io(import.meta.env.VITE_API_URL || "http://localhost:8000");
         const eventName = `payment_status_${paymentData.payment.order_id}`;
 
         socket.on(eventName, (data) => {

@@ -5,7 +5,9 @@ import {
     MapPin,
     CalendarClock,
     Building2,
-    LogOut
+    Layers,
+    LogOut,
+    Users
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
@@ -18,19 +20,24 @@ export default function Sidebar() {
     // Menu khusus untuk Staff Mitra
     const menuItems = [
         {
-            name: 'Dashboard',
-            path: '/mitra/dashboard',
-            icon: LayoutDashboard
-        },
-        {
             name: 'Manajemen Bus',
             path: '/mitra/bus',
             icon: Bus
         },
         {
+            name: 'Tipe Bus',
+            path: '/mitra/tipe-bus',
+            icon: Layers
+        },
+        {
             name: 'Jadwal',
             path: '/mitra/jadwal',
             icon: CalendarClock
+        },
+        {
+            name: 'Daftar Penumpang',
+            path: '/mitra/daftar-penumpang',
+            icon: Users
         },
         {
             name: 'Data Terminal',
@@ -86,8 +93,8 @@ export default function Sidebar() {
                             key={item.path}
                             to={item.path}
                             className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-slate-800 text-blue-400'
-                                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                                ? 'bg-slate-800 text-blue-400'
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                                 }`}
                         >
                             <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />

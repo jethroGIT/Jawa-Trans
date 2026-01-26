@@ -1,7 +1,7 @@
 import StaffLayout from '../../../layouts/StaffLayout';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Search, List, BusFront } from 'lucide-react'; // 1. Tambah Icon BusFront
+import { Plus, Pencil, Trash2, Search, List, BusFront, CreditCard, Loader2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { createRoot } from 'react-dom/client';
 
@@ -14,29 +14,50 @@ DataTable.use(DT);
 import StatusBadge from '../../../components/staff/bus/StatusBadge';
 import busService from '../../../services/mitra/busService';
 
-const DUMMY_DATA = [
-    { idBus: 1, kodeBus: 'BUS-001', tipe: 'Executive', kapasitas: 32, status: 'aktif' },
-    { idBus: 2, kodeBus: 'BUS-002', tipe: 'Super Executive', kapasitas: 24, status: 'perbaikan' },
-    { idBus: 3, kodeBus: 'BUS-003', tipe: 'Economy', kapasitas: 50, status: 'perbaikan' },
-    { idBus: 4, kodeBus: 'BUS-004', tipe: 'Executive', kapasitas: 32, status: 'aktif' },
-    { idBus: 5, kodeBus: 'BUS-005', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
-    { idBus: 6, kodeBus: 'BUS-006', tipe: 'Economy', kapasitas: 50, status: 'tidak aktif' },
-    { idBus: 7, kodeBus: 'BUS-007', tipe: 'Executive', kapasitas: 32, status: 'perbaikan' },
-    { idBus: 8, kodeBus: 'BUS-008', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
-    { idBus: 17, kodeBus: 'BUS-011', tipe: 'Super Executive', kapasitas: 24, status: 'aktif' },
-];
-
 export default function IndexBus() {
-    const [buses, setBuses] = useState(DUMMY_DATA);
+    const [buses, setBuses] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedType, setSelectedType] = useState('');
 
     const navigate = useNavigate();
 
+    // Fetch Data Bus on mount
+    useEffect(() => {
+        const loadBuses = async () => {
+            try {
+                setIsLoading(true);
+
+                const data = await busService.fetchAllBus();
+
+                // Transform data to match table format
+                const transformedData = data.map(bus => ({
+                    idBus: bus.idBus,
+                    platNomor: bus.plat_nomor || '-',
+                    kodeBus: bus.kode_bus || '-',
+                    tipe: bus.tipe_bus?.tipe || '-',
+                    status: bus.status
+                }));
+
+                setBuses(transformedData);
+            } catch (error) {
+                console.error('Error loading buses:', error);
+                Swal.fire('Error', error.message, 'error');
+                setBuses([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadBuses();
+    }, []);
+
+    // 2. Update Filter agar mendukung pencarian Plat Nomor
     const filteredBuses = useMemo(() => {
         return buses.filter((bus) => {
             const lowerSearch = searchTerm.toLowerCase();
             const matchSearch =
+                bus.platNomor.toLowerCase().includes(lowerSearch) ||
                 bus.kodeBus.toLowerCase().includes(lowerSearch) ||
                 bus.tipe.toLowerCase().includes(lowerSearch);
 
@@ -65,22 +86,22 @@ export default function IndexBus() {
         </div>
     );
 
+    // 3. Update Konfigurasi Kolom DataTable
     const columns = [
+        {
+            data: 'platNomor',
+            title: 'Plat Nomor',
+            render: (data) => `<span class="font-bold text-slate-900 tracking-wide">${data}</span>`
+        },
         {
             data: 'kodeBus',
             title: 'Kode Bus',
-            render: (data) => `<span class="font-semibold text-slate-900">${data}</span>`
+            className: 'text-slate-600 font-medium'
         },
         {
             data: 'tipe',
             title: 'Tipe Bus',
             className: 'text-slate-600'
-        },
-        {
-            data: 'kapasitas',
-            title: 'Kapasitas',
-            className: 'text-center text-slate-600',
-            render: (data) => `${data} Kursi`
         },
         {
             data: 'status',
@@ -136,7 +157,7 @@ export default function IndexBus() {
                                         type="text"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        placeholder="Cari kode / tipe bus..."
+                                        placeholder="Cari plat / kode / tipe..."
                                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent transition-all hover:bg-slate-100 hover:border-slate-300"
                                     />
                                 </div>
@@ -158,7 +179,6 @@ export default function IndexBus() {
                                         <option value="Executive">Executive</option>
                                         <option value="Super Executive">Super Executive</option>
                                     </select>
-
                                     <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                                         <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m1 1 4 4 4-4" /></svg>
                                     </div>
@@ -173,57 +193,67 @@ export default function IndexBus() {
                             <Plus className="w-4 h-4" />
                             Tambah Bus
                         </Link>
-
                     </div>
 
                     <div className="p-0">
-                        <DataTable
-                            data={filteredBuses}
-                            columns={columns}
-                            className="display w-full text-left border-collapse"
-                            options={{
-                                responsive: true,
-                                destroy: true,
-                                searching: false,
-                                paging: true,
-                                lengthMenu: [[5, 10, 20, 50, -1], [5, 10, 20, 50, "Semua"]],
-                                pageLength: 5,
-                                dom: 'tr<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4"lip>',
-                                language: {
-                                    lengthMenu: "_MENU_",
-                                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                                    infoEmpty: "Tidak ada data",
-                                    infoFiltered: "",
-                                    zeroRecords: "Pencarian tidak ditemukan",
-                                    paginate: {
-                                        next: "Next",
-                                        previous: "Prev"
+                        {isLoading ? (
+                            <div className="flex flex-col items-center justify-center p-12 text-slate-500">
+                                <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
+                                <p>Memuat data bus...</p>
+                            </div>
+                        ) : buses.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-12 text-slate-500">
+                                <p>Tidak ada data bus</p>
+                            </div>
+                        ) : (
+                            <DataTable
+                                data={filteredBuses}
+                                columns={columns}
+                                className="display w-full text-left border-collapse"
+                                options={{
+                                    responsive: true,
+                                    destroy: true,
+                                    searching: false,
+                                    paging: true,
+                                    lengthMenu: [[5, 10, 20, 50, -1], [5, 10, 20, 50, "Semua"]],
+                                    pageLength: 5,
+                                    dom: 'tr<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4"lip>',
+                                    language: {
+                                        lengthMenu: "_MENU_",
+                                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                                        infoEmpty: "Tidak ada data",
+                                        zeroRecords: "Pencarian tidak ditemukan",
+                                        paginate: {
+                                            next: "Next",
+                                            previous: "Prev"
+                                        }
+                                    },
+                                    createdRow: (row, data) => {
+                                        const actionCell = row.querySelector('.action-cell');
+                                        if (actionCell) {
+                                            const root = createRoot(actionCell);
+                                            root.render(<ActionButtons id={data.idBus} />);
+                                        }
+                                        const statusCell = row.querySelector('.status-cell');
+                                        if (statusCell) {
+                                            const rootStatus = createRoot(statusCell);
+                                            rootStatus.render(<StatusBadge status={data.status} />);
+                                        }
                                     }
-                                },
-                                createdRow: (row, data) => {
-                                    const actionCell = row.querySelector('.action-cell');
-                                    if (actionCell) {
-                                        const root = createRoot(actionCell);
-                                        root.render(<ActionButtons id={data.idBus} />);
-                                    }
-                                    const statusCell = row.querySelector('.status-cell');
-                                    if (statusCell) {
-                                        const rootStatus = createRoot(statusCell);
-                                        rootStatus.render(<StatusBadge status={data.status} />);
-                                    }
-                                }
-                            }}
-                        >
-                            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
-                                <tr>
-                                    <th className="px-6 py-4 font-semibold text-slate-600">Kode Bus</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-600">Tipe Bus</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-600 text-center">Kapasitas</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-600 text-center">Status</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-600 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                        </DataTable>
+                                }}
+                            >
+                                {/* 4. Update Header Table (thead) */}
+                                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
+                                    <tr>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Plat Nomor</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Kode Bus</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Tipe Bus</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600 text-center">Status</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                            </DataTable>
+                        )}
                     </div>
                 </div>
             </div>

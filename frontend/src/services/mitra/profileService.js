@@ -2,7 +2,7 @@ import { apiRequest, apiRequestWithAuth } from "../api";
 
 async function fetchMitraData(id) {
     try {
-        const response = await apiRequestWithAuth(`mitra/${id}`, "GET", null)
+        const response = await apiRequestWithAuth(`mitra/${id}`, "GET")
         return response.data;
     } catch (error) {
         return error.message;

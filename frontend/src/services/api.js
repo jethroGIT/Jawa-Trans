@@ -21,14 +21,34 @@ export async function apiRequest(endpoint, method = "GET", body = null, headers 
         config.headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(`${API_BASE}/${endpoint}`, config);
-    const data = await response.json();
+    try {
+        const response = await fetch(`${API_BASE}/${endpoint}`, config);
+        
+        // Cek content-type dari response
+        const contentType = response.headers.get('content-type');
+        let data;
+        
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            // Jika bukan JSON, ambil text
+            const text = await response.text();
+            console.error('Response bukan JSON:', text.substring(0, 200));
+            throw new Error('Server mengembalikan response yang tidak valid. Periksa backend Anda.');
+        }
 
-    if (!response.ok) {
-        throw new Error(data.message || 'Something went wrong');
+        if (!response.ok) {
+            throw new Error(data.message || `Error: ${response.status} ${response.statusText}`);
+        }
+
+        return data;
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            console.error('JSON Parse Error:', error);
+            throw new Error('Server mengembalikan response yang tidak valid. Periksa backend Anda.');
+        }
+        throw error;
     }
-
-    return data;
 }
 
 export async function apiRequestWithAuth(endpoint, method, body, headers = {}) {
