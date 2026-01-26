@@ -10,10 +10,6 @@ const defineBusModel = (sequelize) => {
       allowNull: false,
       autoIncrement: true
     },
-    idMitra: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
     idTipe: {
       type: DataTypes.INTEGER,
       allowNull: false

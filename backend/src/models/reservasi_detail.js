@@ -18,8 +18,8 @@ const defineReservasiDetailModel = (sequelize) => {
             type: DataTypes.STRING(100),
             allowNull: true,
         },
-        noKursi: {
-            type: DataTypes.STRING(10),
+        idKursi: {
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
     }, {

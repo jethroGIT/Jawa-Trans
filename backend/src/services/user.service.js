@@ -16,6 +16,7 @@
 
 const db = require('../models');
 const Role = db.Role;
+const Mitra = db.Mitra;
 const User = db.User;
 const bcrypt = require('bcrypt');
 const { notify } = require('../routes/api');
@@ -36,10 +37,16 @@ const { notify } = require('../routes/api');
  */
 const findUserOrFail = async (id) => {
     const user = await User.findByPk(id, {
-        include: {
-            model: Role,
-            as: 'role'
-        }
+        include: [
+            {
+                model: Role,
+                as: 'role'
+            },
+            {
+                model: Mitra,
+                as: 'mitra'
+            }
+        ]
     });
     if (!user) {
         throw new Error('User tidak ditemukan!');
@@ -70,7 +77,7 @@ const checkDuplicateUser = async (email, userId = null) => {
     const existingUser = await User.findOne({
         where: { email }
     });
-    
+
     // Menggunakan loose comparison untuk mendukung type coercion
     // userId bisa berupa string (dari request params) atau number (dari database)
     if (existingUser && existingUser.idUser != userId) {
@@ -94,8 +101,16 @@ const checkDuplicateUser = async (email, userId = null) => {
  * @returns {boolean} True jika semua validasi passed
  * @throws {Error} Jika ada field yang kosong atau password terlalu pendek
  */
-const userValidation = async ({ id = null, idRole, nama, alamat, telephone, email, password }) => {
+const userValidation = async ({ id = null, idRole, idMitra, nama, alamat, telephone, email, password, isUpdate = false }) => {
     const role = await Role.findByPk(idRole);
+
+    if (isUpdate = true && idMitra) {
+        const mitra = await Mitra.findByPk(idMitra);
+        if (!mitra) {
+            throw new Error('Mitra tidak ditemukan');
+        }
+    }
+
     const userTlp = await User.findOne({
         where: { telephone }
     });
@@ -133,6 +148,26 @@ const getAllUsers = async () => {
             model: Role,
             as: 'role'
         }
+    });
+};
+
+const getAllUserMitra = async () => {
+    return await User.findAll({
+        where: {
+            idMitra: {
+                [db.Sequelize.Op.ne]: null
+            }
+        },
+        include: [
+            {
+                model: Role,
+                as: 'role'
+            },
+            {
+                model: Mitra,
+                as: 'mitra'
+            }
+        ]
     });
 };
 
@@ -181,10 +216,10 @@ const getUserById = async (id) => {
  *   password: 'securepassword'
  * });
  */
-const createUser = async ({ idRole, nama, alamat, telephone, email, password }) => {
+const createUser = async ({ idRole, idMitra, nama, alamat, telephone, email, password }) => {
     // Validasi input
-    await userValidation({ idRole, nama, alamat, telephone, email, password });
-    
+    userValidation({ idRole, idMitra, nama, alamat, telephone, email, password, isUpdate: true });
+
     // Cek duplikasi email
     await checkDuplicateUser(email);
 
@@ -230,13 +265,13 @@ const createUser = async ({ idRole, nama, alamat, telephone, email, password }) 
  *   password: 'newpassword'
  * });
  */
-const updateUser = async ({ id, idRole, nama, alamat, telephone, email, password }) => {
+const updateUser = async ({ id, idRole, idMitra, nama, alamat, telephone, email, password }) => {
     // Cari user yang akan diupdate
     const user = await findUserOrFail(id);
-    
+
     // Validasi input
-    await userValidation({ id, idRole, nama, alamat, telephone, email, password });
-    
+    userValidation({ id, idRole, idMitra, nama, alamat, telephone, email, password, isUpdate: true });
+
     // Cek duplikasi email (kecuali untuk user ini sendiri)
     await checkDuplicateUser(email, id);
 
@@ -277,5 +312,6 @@ module.exports = {
     getUserById,
     createUser,
     updateUser,
-    destroyUser
+    destroyUser,
+    getAllUserMitra
 };

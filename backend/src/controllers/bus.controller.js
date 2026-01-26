@@ -15,10 +15,10 @@ const getAllBus = async (req, res) => {
     };
 };
 
-const getBusByMitra = async (req, res) => {
-    const { idMitra } = req.params;
+const getBusByTipe = async (req, res) => {
+    const { idTipe } = req.params;
     try {
-        const bus = await busService.getBusByMitra(idMitra);
+        const bus = await busService.getBusByTipe(idTipe);
         return res.status(200).json({
             success: true,
             data: bus
@@ -48,9 +48,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { idMitra, idTipe, plat_nomor, kode_bus } = req.body;
+    const { idTipe, plat_nomor, kode_bus } = req.body;
     try {
-        const createBus = await busService.createBus({ idMitra, idTipe, plat_nomor, kode_bus });
+        const createBus = await busService.createBus({ idTipe, plat_nomor, kode_bus });
         return res.status(200).json({
             success: true,
             message: 'Bus berhasil ditambahkan.'
@@ -65,9 +65,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { idMitra, idTipe, plat_nomor, kode_bus } = req.body;
+    const { idTipe, plat_nomor, kode_bus, status } = req.body;
     try {
-        const updateBus = await busService.updatebus({ id, idMitra, idTipe, plat_nomor, kode_bus });
+        const updateBus = await busService.updatebus({ id, idTipe, plat_nomor, kode_bus, status });
         return res.status(200).json({
             success: true,
             message: 'Bus berhasil diperbarui.'
@@ -98,8 +98,8 @@ const destroy = async (req, res) => {
 
 module.exports = {
     getAllBus,
-    getBusByMitra,
-    show, 
+    getBusByTipe,
+    show,
     store,
     update,
     destroy

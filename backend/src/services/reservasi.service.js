@@ -6,6 +6,7 @@ const User = db.User;
 const Jadwal = db.Jadwal;
 const Terminal = db.Terminal;
 const Bus = db.Bus;
+const Tipe_Bus = db.Tipe_Bus;
 const Mitra = db.Mitra;
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
@@ -30,7 +31,7 @@ const fieldValidation = ({ idUser, idJadwal, penumpang, method, hargaSatuan, tot
     if (kursi.length !== penumpang) {
         throw new Error(`Jumlah kursi (${kursi.length}) harus sama dengan jumlah penumpang (${penumpang})!`);
     }
-    
+
     return true;
 }
 
@@ -58,8 +59,14 @@ const findReservasiOrFail = async (id) => {
                         as: 'bus',
                         include: [
                             {
-                                model: Mitra,
-                                as: 'mitra'
+                                model: Tipe_Bus,
+                                as: 'tipe_bus',
+                                include: [
+                                    {
+                                        model: Mitra,
+                                        as: 'mitra'
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -68,7 +75,13 @@ const findReservasiOrFail = async (id) => {
             },
             {
                 model: Reservasi_Detail,
-                as: 'reservasi_detail'
+                as: 'reservasi_detail',
+                include: [
+                    {
+                        model: Kursi,
+                        as: 'kursi'
+                    }
+                ]
             }
         ]
     });
@@ -94,14 +107,14 @@ const checkDuplicateReservasi = async (idUser, idJadwal, kursi = [], id = null) 
                     }
                 }
             ],
-            where: { noKursi: kursi }
+            where: { idKursi: kursi }
         });
 
         // Jika sedang melakukan update, abaikan detail reservasi milik reservasi yang sama
         const filtered = id ? kursiBooking.filter(d => d.idReservasi != id) : kursiBooking;
 
         if (filtered.length > 0) {
-            const kursiSudahDipesan = filtered.map(item => item.noKursi);
+            const kursiSudahDipesan = filtered.map(item => item.idKursi);
             throw new Error(`Kursi ${kursiSudahDipesan.join(', ')} sudah dipesan`);
         }
 
@@ -148,16 +161,49 @@ const getAllReservasi = async () => {
     return await Reservasi.findAll({
         include: [
             {
-                model: db.User,
+                model: User,
                 as: 'user'
             },
             {
-                model: db.Jadwal,
+                model: Jadwal,
                 as: 'jadwal'
             }
         ]
     });
 };
+
+const getReservasiByMitra = async (idMitra) => {
+    return await Reservasi.findAll({
+        include: [
+            {
+                model: Jadwal,
+                as: 'jadwal',
+                required: true,
+                include: [
+                    {
+                        model: Bus,
+                        as: 'bus',
+                        required: true,
+                        include: [
+                            {
+                                model: Tipe_Bus,
+                                as: 'tipe_bus',
+                                where: { idMitra: idMitra },
+                                required: true,
+                                include: [
+                                    {
+                                        model: Mitra,
+                                        as: 'mitra'
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+        ]
+    });
+}
 
 const getReservasiById = async (id) => {
     return await findReservasiOrFail(id);
@@ -180,7 +226,7 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, method, hargaSatua
     const kursiValid = await Kursi.findAll({
         where: {
             idBus: jadwal.idBus,
-            noKursi: kursi
+            idKursi: kursi
         }
     });
     if (kursiValid.length !== kursi.length) {
@@ -198,12 +244,12 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, method, hargaSatua
                 }
             }
         ],
-        where: { noKursi: kursi }
+        where: { idKursi: kursi }
     });
 
     if (kursiBooking.length > 0) {
         // Ambil nomor kursi yang sudah dipesan
-        const kursiSudahDipesan = kursiBooking.map(item => item.noKursi);
+        const kursiSudahDipesan = kursiBooking.map(item => item.idKursi);
         let errorMessage = `Kursi ${kursiSudahDipesan.join(', ')} sudah dipesan`;
         throw new Error(errorMessage);
     }
@@ -227,7 +273,7 @@ const createReservasi = async ({ idUser, idJadwal, penumpang, method, hargaSatua
             const detail = await Reservasi_Detail.create({
                 idReservasi: reservasi.idReservasi,
                 namaPenumpang: namaPenumpang[i],
-                noKursi: kursi[i],
+                idKursi: kursi[i],
             }, { transaction });
 
             reservasiDetails.push(detail);
@@ -300,12 +346,18 @@ const getReservasiByJadwal = async (idJadwal) => {
         where: { idJadwal },
         include: [
             {
-                model: db.User,
+                model: User,
                 as: 'user'
             },
             {
-                model: db.Jadwal,
-                as: 'jadwal'
+                model: Reservasi_Detail,
+                as: 'reservasi_detail',
+                include: [
+                    {
+                        model: Kursi,
+                        as: 'kursi'
+                    }
+                ]
             }
         ]
     });
@@ -323,6 +375,7 @@ const updateStatusReservasi = async (id, status) => {
 
 module.exports = {
     getAllReservasi,
+    getReservasiByMitra,
     getReservasiById,
     createReservasi,
     updateReservasi,

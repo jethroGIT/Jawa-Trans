@@ -57,16 +57,6 @@ db.Fasilitas.belongsToMany(db.Tipe_Bus, {
     as: 'tipe_bus'
 });
 
-// Bus ->|---||- Mitra
-db.Mitra.hasMany(db.Bus, {
-    foreignKey: 'idMitra',
-    as: 'bus'
-});
-
-db.Bus.belongsTo(db.Mitra, {
-    foreignKey: 'idMitra',
-    as: 'mitra'
-});
 
 // Bus ->|---||- Tipe_Bus
 db.Tipe_Bus.hasMany(db.Bus, {
@@ -97,7 +87,7 @@ db.Jadwal.belongsTo(db.Terminal, {
 });
 
 db.Jadwal.belongsTo(db.Terminal, {
-    foreignKey: 'titik_turun', 
+    foreignKey: 'titik_turun',
     as: 'terminalTurun'
 });
 
@@ -176,6 +166,17 @@ db.Bus.hasMany(db.Kursi, {
 db.Kursi.belongsTo(db.Bus, {
     foreignKey: 'idBus',
     as: 'bus'
+});
+
+// Kursi --||---|<- Reservasi_Detail
+db.Kursi.hasMany(db.Reservasi_Detail, {
+    foreignKey: 'idKursi',
+    as: 'reservasi_detail'
+});
+
+db.Reservasi_Detail.belongsTo(db.Kursi, {
+    foreignKey: 'idKursi',
+    as: 'kursi'
 });
 
 

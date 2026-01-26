@@ -19,7 +19,7 @@ const getAllTipe = async (req, res) => {
 const getTipeByMitra = async (req, res) => {
     const { idMitra } = req.params;
     try {
-        const data = await tipeBusServices.getTipeByMitra(idMitra);
+        const data = await tipeBusServices.getTipeBusByMitra(idMitra);
         return res.status(200).json({
             success: true,
             data: data
@@ -35,7 +35,7 @@ const getTipeByMitra = async (req, res) => {
 const show = async (req, res) => {
     const { id } = req.params;
     try {
-        const data = await tipeBusServices.getTipeBusById(id);
+        const data = await tipeBusServices.getTipeBusById(req, id);
         return res.status(200).json({
             success: true,
             data: data
@@ -67,10 +67,30 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { idMitra, tipe, kapasitas, fasilitas } = req.body;
+    const { idMitra, tipe, kapasitas, fasilitas, existingPhotos } = req.body;
     const fotos = req.files ? req.files.map(file => file.filename) : [];
+
+    // existingPhotos bisa berupa string (jika cuma 1) atau array (jika > 1), atau undefined (jika 0)
+    // Kita standarisasi menjadi array
+    let existingPhotosArray = [];
+    if (existingPhotos) {
+        if (Array.isArray(existingPhotos)) {
+            existingPhotosArray = existingPhotos;
+        } else {
+            existingPhotosArray = [existingPhotos];
+        }
+    }
+
     try {
-        const data = await tipeBusServices.updateTipeBus({ id, idMitra, tipe,kapasitas, fasilitas, fotos });
+        const data = await tipeBusServices.updateTipeBus({
+            id,
+            idMitra,
+            tipe,
+            kapasitas,
+            fasilitas,
+            fotos,
+            existingPhotos: existingPhotosArray
+        });
         return res.status(200).json({
             success: true,
             message: 'Tipe bus berhasil diupdate'

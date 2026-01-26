@@ -15,6 +15,22 @@ const getAllTerminal = async (req, res) => {
     };
 };
 
+const getTerminalByMitra = async (req, res) => {
+    const { idMitra } = req.params;
+    try {
+        const terminal = await terminalService.getTerminalByMitra(idMitra);
+        return res.status(200).json({
+            success: true,
+            data: terminal
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    };
+};
+
 const show = async (req, res) => {
     const { id } = req.params;
     try {

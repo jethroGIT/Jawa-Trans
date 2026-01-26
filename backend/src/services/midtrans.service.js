@@ -2,8 +2,9 @@ const db = require('../models');
 const Reservasi = db.Reservasi;
 const Reservasi_Detail = db.Reservasi_Detail;
 const Payment = db.Payment;
+const dotenv = require('dotenv');
+dotenv.config();
 const midtrans = require('../config/midtrans');
-const { where } = require('sequelize');
 
 function getMidtransTime() {
     const now = new Date();
@@ -63,13 +64,16 @@ const createPayment = async (orderId, amount, customer, method) => {
     }
 
     if (method === "qris") {
-        parameter.payment_type = "qris",
-            parameter.qris = { acquirer: "gopay" };
+        parameter.payment_type = "qris";
+        parameter.qris = { acquirer: "gopay" };
     }
 
     if (method === "gopay") {
         parameter.payment_type = "gopay";
-        parameter.gopay = { enable_callback: true, callback_url: "https://7ab7653bc11d.ngrok-free.app/api/payment/finish" };
+        parameter.gopay = {
+            enable_callback: true,
+            callback_url: `${process.env.CALLBACK_BASE_URL}/api/payment/finish`
+        };
     }
     const response = await midtrans.charge(parameter);
     console.log("Midtrans charge response:", response);

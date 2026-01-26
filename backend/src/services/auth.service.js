@@ -28,7 +28,7 @@ const registerValidation = ({ nama, alamat, telephone, email, password }) => {
         throw new Error('Format email tidak valid!')
     }
 
-    if (password.length <= 8) {
+    if (password.length < 8) {
         throw new Error('Password kurang dari 8 karakter')
     }
     return true;
@@ -183,7 +183,7 @@ const register = async ({ nama, alamat, telephone, email, password }) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     return await User.create({
-        idRole: 2,
+        idRole: 4,
         nama,
         alamat,
         telephone,

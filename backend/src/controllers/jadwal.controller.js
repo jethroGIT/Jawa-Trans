@@ -15,10 +15,26 @@ const getAllJadwal = async (req, res) => {
     };
 };
 
+const getJadwalByMitra = async (req, res) => {
+    const { idMitra } = req.params;
+    try {
+        const jadwal = await jadwalService.getJadwalByMitra(idMitra);
+        return res.status(200).json({
+            success: true,
+            data: jadwal
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 const show = async (req, res) => {
     const { id } = req.params;
     try {
-        const jadwal = await jadwalService.getJadwalById(id);
+        const jadwal = await jadwalService.getJadwalById(req, id);
         return res.status(200).json({
             success: true,
             data: jadwal
@@ -82,6 +98,7 @@ const destroy = async (req, res) => {
 
 module.exports = {
     getAllJadwal,
+    getJadwalByMitra,
     show,
     store,
     update,

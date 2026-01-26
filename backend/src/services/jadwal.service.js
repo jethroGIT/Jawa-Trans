@@ -22,22 +22,27 @@ const findOrFail = async (id) => {
                 model: Bus,
                 as: 'bus',
                 include:
-                    [{
-                        model: Mitra,
-                        as: 'mitra'
-                    },
-                    {
-                        model: Tipe_Bus,
-                        as: 'tipe_bus',
-                        include:
-                            [
-                                {
-                                    model: Fasilitas,
-                                    as: 'fasilitas',
-                                    through: { attributes: [] }
-                                }
-                            ]
-                    }
+                    [
+                        {
+                            model: Tipe_Bus,
+                            as: 'tipe_bus',
+                            include:
+                                [
+                                    {
+                                        model: Mitra,
+                                        as: 'mitra'
+                                    },
+                                    {
+                                        model: Fasilitas,
+                                        as: 'fasilitas',
+                                        through: { attributes: [] }
+                                    },
+                                    {
+                                        model: Foto_Bus,
+                                        as: 'foto_bus'
+                                    }
+                                ]
+                        }
                     ],
             },
             {
@@ -144,21 +149,16 @@ const urlFotoBusJadwal = (req, jadwal) => {
 
     const jadwalJSON = jadwal.toJSON();
 
-    if (jadwalJSON.bus && jadwalJSON.bus.foto_bus) {
-        jadwalJSON.bus.foto_bus = addUrlToFotoBus(req, jadwalJSON.bus.foto_bus);
+    if (jadwalJSON.bus && jadwalJSON.bus.tipe_bus && jadwalJSON.bus.tipe_bus.foto_bus) {
+        jadwalJSON.bus.tipe_bus.foto_bus = addUrlToFotoBus(req, jadwalJSON.bus.tipe_bus.foto_bus);
     }
-
-    if (jadwalJSON.bus?.mitra) {
-        jadwalJSON.bus.mitra = urlLogoMitra(req, jadwalJSON.bus.mitra);
-    }
-
 
     return jadwalJSON;
 };
 
 const getKursiTerjual = async (idJadwal) => {
     const kursiTerjual = await ReservasiDetail.findAll({
-        attributes: ['noKursi'],
+        attributes: ['idKursi'],
         include: [
             {
                 model: Reservasi,
@@ -175,8 +175,10 @@ const getKursiTerjual = async (idJadwal) => {
         raw: true
     });
 
-    return kursiTerjual.map(k => k.noKursi).sort((a, b) => a - b);
+    return kursiTerjual.map(k => k.idKursi).sort((a, b) => a - b);
 };
+
+
 
 const getAllJadwal = async () => {
     return await Jadwal.findAll({
@@ -185,22 +187,23 @@ const getAllJadwal = async () => {
                 model: Bus,
                 as: 'bus',
                 include:
-                    [{
-                        model: Mitra,
-                        as: 'mitra'
-                    },
-                    {
-                        model: Tipe_Bus,
-                        as: 'tipe_bus',
-                        include:
-                            [
-                                {
-                                    model: Fasilitas,
-                                    as: 'fasilitas',
-                                    through: { attributes: [] }
-                                }
-                            ]
-                    }
+                    [
+                        {
+                            model: Tipe_Bus,
+                            as: 'tipe_bus',
+                            include:
+                                [
+                                    {
+                                        model: Mitra,
+                                        as: 'mitra'
+                                    },
+                                    {
+                                        model: Fasilitas,
+                                        as: 'fasilitas',
+                                        through: { attributes: [] }
+                                    }
+                                ]
+                        }
                     ],
             },
             {
@@ -216,26 +219,58 @@ const getAllJadwal = async () => {
     });
 };
 
-const getJadwalById = async (id) => {
+const getJadwalById = async (req, id) => {
     const jadwal = await findOrFail(id);
+    const jadwalWithUrl = urlFotoBusJadwal(req, jadwal);
     const kursiTerjual = await getKursiTerjual(id);
     return {
-        jadwal,
+        ...jadwalWithUrl,
         kursiTerjual,
         kursiTersedia: jadwal.bus.tipe_bus.kapasitas - kursiTerjual.length
     }
 };
 
-// const getJadwalById = async (req, id) => {
-//     const jadwal = await findOrFail(id);
-//     const jadwalWithUrl = urlFotoBusJadwal(req, jadwal);
-//     const kursiTerjual = await getKursiTerjual(id);
-//     return {
-//         ...jadwalWithUrl,
-//         kursiTerjual,
-//         kursiTersedia: jadwalWithUrl.bus.kapasitas - kursiTerjual.length
-//     };
-// };
+const getJadwalByMitra = async (idMitra) => {
+    const jadwal = await Jadwal.findAll({
+        include: [
+            {
+                model: Bus,
+                as: 'bus',
+                required: true,
+                include: [
+                    {
+                        model: Tipe_Bus,
+                        as: 'tipe_bus',
+                        where: { idMitra: idMitra },
+                        required: true,
+                        include: [
+                            {
+                                model: Mitra,
+                                as: 'mitra'
+                            },
+                            {
+                                model: Fasilitas,
+                                as: 'fasilitas',
+                                through: { attributes: [] }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                model: Terminal,
+                as: 'terminalNaik'
+            },
+            {
+                model: Terminal,
+                as: 'terminalTurun'
+            },
+        ],
+    });
+
+    return jadwal;
+};
+
 
 const createJadwal = async (jadwalData) => {
     const {
@@ -381,6 +416,7 @@ const getJadwalByBus = async (idBus, tanggal = null) => {
 
 module.exports = {
     getAllJadwal,
+    getJadwalByMitra,
     getJadwalById,
     createJadwal,
     updateJadwal,

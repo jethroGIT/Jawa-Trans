@@ -16,6 +16,21 @@ const allUsers = async (req, res) => {
     };
 };
 
+const userMitra = async (req, res) => {
+    try {
+        const users = await userService.getAllUserMitra();
+        return res.status(200).json({
+            success: true,
+            data: users
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Terjadi kesalahan saat mengambil data user!'
+        });
+    };
+};
+
 const show = async (req, res) => {
     const { id } = req.params;
     try {
@@ -33,9 +48,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { idRole, nama, alamat, telephone, email, password } = req.body;
+    const { idRole, idMitra, nama, alamat, telephone, email, password } = req.body;
     try {
-        const user = await userService.createUser({ idRole, nama, alamat, telephone, email, password });
+        const user = await userService.createUser({ idRole, idMitra, nama, alamat, telephone, email, password });
         return res.status(201).json({
             success: true,
             message: 'User telah berhasil ditambahkan.'
@@ -50,9 +65,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { idRole, nama, alamat, telephone, email, password } = req.body;
+    const { idRole, idMitra, nama, alamat, telephone, email, password } = req.body;
     try {
-        const updateUser = await userService.updateUser({ id, idRole, nama, alamat, telephone, email, password })
+        const updateUser = await userService.updateUser({ id, idRole, idMitra, nama, alamat, telephone, email, password })
         return res.status(200).json({
             success: true,
             message: "User berhasil diperbarui!",
@@ -88,5 +103,6 @@ module.exports = {
     show,
     store,
     update,
-    destroy
+    destroy,
+    userMitra
 }

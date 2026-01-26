@@ -96,6 +96,18 @@ const validateFasilitas = async (fasilitasId) => {
     return existingFasilitas;
 };
 
+const addUrlToFotoBus = (req, fotoBusArray) => {
+    if (!fotoBusArray || !Array.isArray(fotoBusArray)) {
+        return [];
+    }
+
+    return fotoBusArray.map(foto => ({
+        ...foto,
+        url: `${req.protocol}://${req.get('host')}/uploads/foto_bus/${foto.nama}`
+    }));
+};
+
+
 const urlFotoBus = (req, data) => {
     if (Array.isArray(data)) {
         return data.map(item => ({
@@ -144,48 +156,19 @@ const getAllTipe = async (req) => {
     return data;
 };
 
-const getTipeByMitra = async (idMitra) => {
-    const data = await Tipe_Bus.findAll({
-        where: { idMitra },
-        include: [
-            {
-                model: Foto_Bus,
-                as: 'foto_bus'
-            },
-            {
-                model: Fasilitas,
-                as: 'fasilitas',
-                through: { attributes: [] }
-            }
-        ]
-    });
-
-    return data;
-};
-
 const getTipeBusByMitra = async (idMitra) => {
     const data = await Tipe_Bus.findAll({
         where: { idMitra },
-        include: [
-            {
-                model: Foto_Bus,
-                as: 'foto_bus'
-            },
-            {
-                model: Fasilitas,
-                as: 'fasilitas',
-                through: { attributes: [] }
-            }
-        ]
     });
 
     return data;
 };
+
 
 const getTipeBusById = async (req, id) => {
     const data = await findTipeOrFail(id);
 
-    return data;
+    return urlFotoBus(req, data);
 };
 
 const storeTipeBus = async ({ idMitra, tipe, kapasitas, fasilitas, fotos }) => {
@@ -227,10 +210,17 @@ const storeTipeBus = async ({ idMitra, tipe, kapasitas, fasilitas, fotos }) => {
     return data;
 };
 
-const updateTipeBus = async ({ id, idMitra, tipe, kapasitas, fasilitas, fotos }) => {
+const updateTipeBus = async ({ id, idMitra, tipe, kapasitas, fasilitas, fotos, existingPhotos = [] }) => {
     const transaction = await sequelize.transaction();
     try {
-        await fieldValidation({ idMitra, tipe, kapasitas, fotos, isUpdate: true });
+        // Validasi field, note: kita perlu sesuaikan validasi foto karena sekarang kombinasi fotos (baru) + existingPhotos
+        const totalPhotos = (fotos ? fotos.length : 0) + (existingPhotos ? existingPhotos.length : 0);
+
+        await fieldValidation({ idMitra, tipe, kapasitas, fotos: [], isUpdate: true }); // Skip validasi array foto default dulu
+
+        if (totalPhotos < 1 || totalPhotos > 5) {
+            throw new Error('Total foto harus antara 1 sampai 5!');
+        }
 
         const existingTipe = await findTipeOrFail(id);
 
@@ -244,75 +234,73 @@ const updateTipeBus = async ({ id, idMitra, tipe, kapasitas, fasilitas, fotos })
         await existingTipe.setFasilitas(validFasilitas, { transaction });
         console.log(`Linked ${validFasilitas.length} fasilitas to tipe bus ${existingTipe.idTipe}`);
 
-        if (fotos && fotos.length > 0) {
-            const oldFotoRecords = await Foto_Bus.findAll({
-                where: { idTipe: id },
+        // MANAJEMEN FOTO
+        const oldFotoRecords = await Foto_Bus.findAll({
+            where: { idTipe: id },
+            transaction
+        });
+
+        // 1. Identifikasi Foto yang harus DIHAPUS from DB
+        // Foto di DB yang TIDAK ada di list 'existingPhotos' berarti user menghapusnya dari UI
+        const existingPhotosSet = new Set(existingPhotos);
+        const fotosToDelete = oldFotoRecords.filter(record => !existingPhotosSet.has(record.nama));
+
+        // 2. Identifikasi Foto BARU yang harus DIINSERT (dari parameter fotos)
+        // Parameter 'fotos' berisi array filename yang baru diupload -> insert semua
+        const fotosToInsert = fotos || [];
+
+        console.log('Existing Photos kept by user:', existingPhotos);
+        console.log('Foto to DELETE from DB:', fotosToDelete.map(f => f.nama));
+        console.log('Foto to INSERT to DB:', fotosToInsert);
+
+        // EKSEKUSI DELETE
+        if (fotosToDelete.length > 0) {
+            await Foto_Bus.destroy({
+                where: {
+                    idTipe: id,
+                    nama: fotosToDelete.map(f => f.nama)
+                },
                 transaction
             });
-            const oldFotoNames = oldFotoRecords.map(foto => foto.nama);
 
-            const fotosSet = new Set(fotos);
-            const oldFotosSet = new Set(oldFotoNames);
-
-            // Cari foto yang perlu DIHAPUS (ada di old, tidak ada di new)
-            const fotosToDelete = oldFotoRecords.filter(
-                oldFoto => !fotosSet.has(oldFoto.nama)
+            // Hapus file fisik
+            await Promise.all(
+                fotosToDelete.map(async foto => {
+                    hapusFileStorage(foto.nama);
+                })
             );
-
-            // Cari foto yang perlu DITAMBAH (ada di new, tidak ada di old)
-            const fotosToInsert = fotos.filter(
-                foto => !oldFotosSet.has(foto)
-            );
-
-            console.log('Foto to DELETE:', fotosToDelete.map(f => f.nama));
-            console.log('Foto to INSERT:', fotosToInsert);
-
-            // DELETE hanya yang perlu dihapus
-            if (fotosToDelete.length > 0) {
-                await Foto_Bus.destroy({
-                    where: {
-                        idTipe: id,
-                        nama: fotosToDelete.map(foto => foto.nama)
-                    },
-                    transaction
-                });
-            }
-
-            // INSERT hanya yang baru
-            if (fotosToInsert.length > 0) {
-                await Promise.all(
-                    fotosToInsert.map(foto =>
-                        Foto_Bus.create({
-                            idTipe: id,
-                            nama: foto
-                        }, { transaction })
-                    )
-                );
-            }
-
-            // Hapus file dari storage (hanya yang dihapus dari DB)
-            if (fotosToDelete.length > 0) {
-                await Promise.all(
-                    fotosToDelete.map(async foto => {
-                        hapusFileStorage(foto.nama);
-                    })
-                );
-            }
         }
+
+        // EKSEKUSI INSERT
+        if (fotosToInsert.length > 0) {
+            await Promise.all(
+                fotosToInsert.map(foto =>
+                    Foto_Bus.create({
+                        idTipe: id,
+                        nama: foto
+                    }, { transaction })
+                )
+            );
+        }
+
         await transaction.commit();
-        return existingTipe;
+
+        // Return updated data with new photo URLs
+        const updatedTipe = await findTipeOrFail(id);
+        return updatedTipe;
 
     } catch (error) {
         await transaction.rollback();
 
-        await Promise.all(
-            fotos.map(foto => hapusFileStorage(foto))
-        );
+        // Jika error, hapus foto baru yang terlanjur diupload
+        if (fotos && fotos.length > 0) {
+            await Promise.all(
+                fotos.map(foto => hapusFileStorage(foto))
+            );
+        }
 
         throw error;
     }
-
-    return data;
 };
 
 const destroyTipeBus = async (id) => {
@@ -335,7 +323,6 @@ const destroyTipeBus = async (id) => {
 
 module.exports = {
     getAllTipe,
-    getTipeByMitra,
     getTipeBusByMitra,
     getTipeBusById,
     storeTipeBus,

@@ -24,6 +24,7 @@ const getAllTerminal = async () => {
     return Terminal.findAll();
 };
 
+
 const getTerminalById = async (id) => {
     const terminal = await findTerminalOrFail(id);
 

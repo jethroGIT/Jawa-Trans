@@ -3,6 +3,7 @@ const Jadwal = db.Jadwal;
 const Payment = db.Payment;
 const reservasiService = require('../services/reservasi.service');
 const midtransService = require('../services/midtrans.service');
+const { get } = require('../app');
 
 const getAllReservasi = async (req, res) => {
     try {
@@ -17,6 +18,22 @@ const getAllReservasi = async (req, res) => {
             message: error
         })
     };
+};
+
+const getReservasiByMitra = async (req, res) => {
+    try {
+        const { idMitra } = req.params;
+        const reservasi = await reservasiService.getReservasiByMitra(idMitra);
+        return res.status(200).json({
+            success: true,
+            data: reservasi
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
 };
 
 const show = async (req, res) => {
@@ -169,6 +186,7 @@ const storeAndPay = async (req, res) => {
 
 module.exports = {
     getAllReservasi,
+    getReservasiByMitra,
     show,
     store,
     update,

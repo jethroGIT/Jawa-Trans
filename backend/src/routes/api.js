@@ -15,6 +15,7 @@ const reservasiController = require('../controllers/reservasi.controller');
 const kursiController = require('../controllers/kursi.controller');
 const midtransController = require('../controllers/midtrans.controller');
 const tipeBusController = require('../controllers/tipeBus.controller');
+const daftarPenumpangController = require('../controllers/daftarPenumpang.controller');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
 router.get('/', (req, res) => {
@@ -43,6 +44,10 @@ router.route('/users')
   .all(authorize(['admin']))
   .get(userController.allUsers)
   .post(userController.store)
+
+router.route('/users/mitra')
+  .all(authorize(['admin']))
+  .get(userController.userMitra)
 
 router.route('/users/:id')
   .get(authorize(['admin', 'customer']), userController.show)
@@ -87,12 +92,14 @@ router.post('/tipeBus', uploadFotoBus.array('fotos', 5), multerErrorHandler, tip
 router.put('/tipeBus/:id', uploadFotoBus.array('fotos', 5), multerErrorHandler, tipeBusController.update);
 router.delete('/tipeBus/:id', tipeBusController.destroy);
 
+router.get('/mitra/:idMitra/jadwal', jadwalController.getJadwalByMitra);
 router.get('/jadwal', jadwalController.getAllJadwal);
 router.get('/jadwal/:id', jadwalController.show);
 router.post('/jadwal', jadwalController.store);
 router.put('/jadwal/:id', jadwalController.update);
 router.delete('/jadwal/:id', jadwalController.destroy);
 
+router.get('/mitra/:idMitra/reservasi', reservasiController.getReservasiByMitra);
 router.get('/reservasi', reservasiController.getAllReservasi);
 router.get('/reservasi/:id', reservasiController.show);
 router.post('/reservasi', reservasiController.store);
@@ -100,13 +107,16 @@ router.put('/reservasi/:id', reservasiController.update);
 router.delete('/reservasi/:id', reservasiController.destroy);
 router.get('/reservasi/user/:id', reservasiController.getReservasiByUser);
 
-router.get('/mitra/:idMitra/bus', busController.getBusByMitra);
+router.get('/tipe/:idTipe/bus', busController.getBusByTipe);
 router.get('/bus/:idBus/kursi', kursiController.getKursiByIdBus);
 router.get('/bus/:idBus/kursi/:idKursi', kursiController.show);
 router.post('/bus/:idBus/kursi', kursiController.store);
 router.put('/bus/:idBus/kursi/:idKursi', kursiController.update);
 router.delete('/bus/:idBus/kursi/:idKursi', kursiController.destroy);
 router.get('/kursi', kursiController.getAllKursi);
+
+router.get('/mitra/:idMitra/daftarpenumpang', jadwalController.getJadwalByMitra);
+router.get('/daftarpenumpang/:id', daftarPenumpangController.getDaftarPenumpangById);
 
 //opsional
 router.post('/midtrans/recurring', midtransController.handleRecurring);
