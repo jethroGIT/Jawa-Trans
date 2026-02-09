@@ -20,11 +20,17 @@ const defineBusModel = (sequelize) => {
     },
     kode_bus: {
       type: DataTypes.STRING(10),
-      allowNull: true
+      allowNull: false
+    },
+    kapasitas: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
     status: {
-      type: DataTypes.STRING(45),
-      allowNull: true
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+      comment: '0 = tidak aktif, 1 = aktif'
     }
   }, {
     tableName: 'bus',

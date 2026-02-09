@@ -34,9 +34,11 @@ export default function ProfileForm({
                 email: initialData.email || '',
                 telephone: initialData.telephone || '',
                 alamat: initialData.alamat || '',
-                logo: initialData.logo || ''
+                // keep raw logo for form payload if needed
+                logo: initialData.logo || initialData.logoURL || ''
             });
-            setPreviewLogo(initialData.logo || '');
+            // Prefer backend-provided full URL when available
+            setPreviewLogo(initialData.logoURL || initialData.logo || '');
         }
     }, [initialData]);
 

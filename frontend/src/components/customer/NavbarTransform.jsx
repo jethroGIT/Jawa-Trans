@@ -4,7 +4,7 @@ import { Settings, CreditCard, LogOut, ChevronDown, ChevronUp } from 'lucide-rea
 import logo from '../../assets/BW/banner.png';
 import logo2 from '../../assets/CL/banner.png';
 
-export default function Navbar() {
+export default function Navbar({ scrollSections }) {
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -63,6 +63,25 @@ export default function Navbar() {
         navigate('/login');
     };
 
+    // Handle navigation dengan smooth scroll untuk menu di home page
+    const handleNavClick = (item) => {
+        if (scrollSections) {
+            if (item.name === 'Home') {
+                scrollSections.scrollToSection(scrollSections.heroRef);
+            } else if (item.name === 'Tentang Kami') {
+                scrollSections.scrollToSection(scrollSections.aboutRef);
+            } else if (item.name === 'Layanan') {
+                scrollSections.scrollToSection(scrollSections.benefitRef);
+            } else if (item.name === 'Kontak') {
+                scrollSections.scrollToSection(scrollSections.footerRef);
+            } else {
+                navigate(item.path);
+            }
+        } else {
+            navigate(item.path);
+        }
+    };
+
     const navItems = [
         { name: 'Home', path: '/' },
         { name: 'Tentang Kami', path: '/about' },
@@ -92,16 +111,16 @@ export default function Navbar() {
                     <div className="hidden md:block">
                         <div className="ml-10 flex items-baseline space-x-8">
                             {navItems.map((item) => (
-                                <Link
+                                <button
                                     key={item.name}
-                                    to={item.path}
+                                    onClick={() => handleNavClick(item)}
                                     className={`px-3 py-2 rounded-md text-sm font-medium transition duration-200 ${isScrolled
                                         ? 'text-gray-700 hover:text-blue-600'
                                         : 'text-white hover:text-blue-300'
                                         }`}
                                 >
                                     {item.name}
-                                </Link>
+                                </button>
                             ))}
                         </div>
                     </div>

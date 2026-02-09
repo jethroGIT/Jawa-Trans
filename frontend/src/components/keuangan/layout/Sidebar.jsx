@@ -4,6 +4,7 @@ import {
     LogOut,
     History,
     FilePieChart,
+    TrendingUp,
 } from 'lucide-react';
 
 import Swal from 'sweetalert2';
@@ -37,7 +38,7 @@ export default function Sidebar() {
             if (result.isConfirmed) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                navigate('/login');
+                navigate('/employee/login');
             }
         });
     };

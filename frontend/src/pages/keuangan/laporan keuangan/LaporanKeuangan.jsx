@@ -1,13 +1,14 @@
 import KeuanganLayout from '../../../layouts/KeuanganLayout';
 import { useState, useMemo, useEffect } from 'react';
-import { 
-    Search, 
-    Calendar, 
-    CalendarDays, 
-    Filter, 
-    Loader2, 
-    CreditCard, 
-    BusFront 
+import { useNavigate } from 'react-router-dom';
+import {
+    Search,
+    Calendar,
+    CalendarDays,
+    Loader2,
+    CreditCard,
+    BusFront,
+    TrendingUp
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import reservasiService from '../../../services/keuangan/reservasiService';
@@ -20,42 +21,42 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 DataTable.use(DT);
 
 export default function LaporanKeuangan() {
+    const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [totalPendapatan, setTotalPendapatan] = useState(0);
-    const [totalTiket, setTotalTiket] = useState(0);
 
     // --- STATE FILTER & SEARCH ---
     const [selectedMonth, setSelectedMonth] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Fetch data reservasi dari API
+    // Fetch data jadwal dengan tiket terjual dan pemasukan dari API
     useEffect(() => {
         const loadReports = async () => {
             try {
                 setIsLoading(true);
                 setError(null);
-                const reservasiData = await reservasiService.fetchReservasiByMitra();
-                
-                // Transform data reservasi ke format laporan
-                const transformedData = reservasiData.map((res, idx) => ({
-                    id: res.idReservasi,
-                    bus: res.jadwal?.bus?.tipe_bus?.tipe ? `${res.jadwal.bus.tipe_bus.tipe} - ${res.jadwal.bus.plat_nomor}` : 'N/A',
-                    penumpang: res.penumpang,
-                    total: res.totalHarga,
-                    status: res.status === 'paid' ? 'Lunas' : res.status === 'pending' ? 'Pending' : res.status === 'expired' ? 'Dibatalkan' : res.status, 
-                    waktu: res.waktuBayar ? new Date(res.waktuBayar) : null
+
+                // Backend sudah mengembalikan data jadwal dengan tiketTerjual dan pemasukan
+                const scheduleData = await reservasiService.fetchReservasiByMitra();
+
+                // Transform data untuk tampilan
+                const jadwalArray = scheduleData.map((jadwal) => ({
+                    idJadwal: jadwal.idJadwal,
+                    rute: `${jadwal.terminalNaik?.nama || 'N/A'} → ${jadwal.terminalTurun?.nama || 'N/A'} `,
+                    tanggal: jadwal.tanggal_keberangkatan,
+                    jam: jadwal.jam_keberangkatan,
+                    bus: `${jadwal.bus?.jenis_kendaraan?.tipe || 'N/A'} - ${jadwal.bus?.plat_nomor || 'N/A'} `,
+                    operator: jadwal.bus?.jenis_kendaraan?.mitra?.nama || 'N/A',
+                    hargaSatuan: jadwal.harga || 0,
+                    kapasitas: jadwal.bus?.kapasitas || 0,
+                    tiketTerjual: jadwal.jumlahTerjual || 0,
+                    pemasukan: jadwal.totalPendapatan || 0
                 }));
-                
-                setReports(transformedData);
-                
-                // Hitung total pendapatan dan tiket
-                const total = transformedData.reduce((sum, item) => sum + item.total, 0);
-                const tiket = transformedData.reduce((sum, item) => sum + item.penumpang, 0);
-                setTotalPendapatan(total);
-                setTotalTiket(tiket);
+
+                setReports(jadwalArray);
+
             } catch (err) {
                 setError(err.message);
                 Swal.fire({
@@ -71,6 +72,7 @@ export default function LaporanKeuangan() {
         loadReports();
     }, []);
 
+
     const months = [
         { value: '1', label: 'Januari' }, { value: '2', label: 'Februari' },
         { value: '3', label: 'Maret' }, { value: '4', label: 'April' },
@@ -81,92 +83,161 @@ export default function LaporanKeuangan() {
     ];
 
     const uniqueYears = useMemo(() => {
-        const years = reports
-            .filter(item => item.waktu)
-            .map(item => item.waktu.getFullYear());
-        return [...new Set(years)].sort((a, b) => b - a);
+        const currentYear = new Date().getFullYear(); // 2026
+
+        // Extract tahun dari data reports
+        const yearsFromData = reports
+            .filter(item => item.tanggal)
+            .map(item => new Date(item.tanggal).getFullYear());
+
+        // Gabung dengan tahun terkini dan 3 tahun sebelumnya
+        const allYears = new Set([
+            currentYear,
+            currentYear - 1,
+            currentYear - 2,
+            currentYear - 3,
+            ...yearsFromData
+        ]);
+
+        return Array.from(allYears).sort((a, b) => b - a);
     }, [reports]);
 
     const filteredData = useMemo(() => {
         return reports.filter(item => {
-            const itemMonth = item.waktu ? item.waktu.getMonth() + 1 : null;
-            const itemYear = item.waktu ? item.waktu.getFullYear() : null;
+            const itemMonth = item.tanggal ? new Date(item.tanggal).getMonth() + 1 : null;
+            const itemYear = item.tanggal ? new Date(item.tanggal).getFullYear() : null;
 
             const matchMonth = selectedMonth ? itemMonth === parseInt(selectedMonth) : true;
             const matchYear = selectedYear ? itemYear === parseInt(selectedYear) : true;
-            const matchSearch = item.bus.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchSearch = item.rute.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.bus.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.operator.toLowerCase().includes(searchTerm.toLowerCase());
 
             return matchMonth && matchYear && matchSearch;
         });
     }, [reports, selectedMonth, selectedYear, searchTerm]);
 
+    // --- KPI DINAMIS BERDASARKAN FILTER ---
+    const { totalJadwal, totalTiketTerjual, totalPendapatan } = useMemo(() => {
+        const totalJadwal = filteredData.length;
+        const totalTiketTerjual = filteredData.reduce((sum, item) => sum + (item.tiketTerjual || 0), 0);
+        const totalPendapatan = filteredData.reduce((sum, item) => sum + (item.pemasukan || 0), 0);
+        return { totalJadwal, totalTiketTerjual, totalPendapatan };
+    }, [filteredData]);
+
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
     };
 
-    const formatWaktuBayar = (waktuBayar) => {
-        if (!waktuBayar) return 'Belum Bayar';
-        const date = new Date(waktuBayar);
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = months[date.getMonth()];
-        const year = date.getFullYear();
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${day} ${month} ${year}, ${hours}:${minutes}`;
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    };
+
+    const formatTime = (timeString) => {
+        if (!timeString) return '-';
+        try {
+            const date = new Date(timeString);
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace('.', ':');
+        } catch (e) {
+            return '-';
+        }
+    };
+
+    const handleViewDetail = (jadwalData) => {
+        Swal.fire({
+            title: 'Detail Jadwal',
+            titleClass: 'text-2xl font-bold',
+            html: `
+                <div class="text-left space-y-4 text-base">
+                    <div class="border-b pb-3"><strong class="text-slate-700">Rute:</strong> <span class="text-slate-600">${jadwalData.rute}</span></div>
+                    <div class="border-b pb-3"><strong class="text-slate-700">Tanggal:</strong> <span class="text-slate-600">${formatDate(jadwalData.tanggal)}</span></div>
+                    <div class="border-b pb-3"><strong class="text-slate-700">Jam:</strong> <span class="text-slate-600">${formatTime(jadwalData.jam)}</span></div>
+                    <div class="border-b pb-3"><strong class="text-slate-700">Armada:</strong> <span class="text-slate-600">${jadwalData.bus}</span></div>
+                    <div class="border-b pb-3"><strong class="text-slate-700">Operator:</strong> <span class="text-slate-600">${jadwalData.operator}</span></div>
+                    <div class="border-b pb-3"><strong class="text-slate-700">Kapasitas:</strong> <span class="text-slate-600">${jadwalData.kapasitas} kursi</span></div>
+                    <div class="border-b pb-3"><strong class="text-slate-700">Tiket Terjual:</strong> <span class="text-slate-600">${jadwalData.tiketTerjual}</span></div>
+                    <div class="border-b pb-3"><strong class="text-slate-700">Harga Satuan:</strong> <span class="text-slate-600">${formatCurrency(jadwalData.hargaSatuan)}</span></div>
+                    <div><strong class="text-slate-700">Pemasukan:</strong> <span class="text-green-600 font-bold text-lg">${formatCurrency(jadwalData.pemasukan)}</span></div>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Tutup',
+            confirmButtonClass: 'text-base px-6 py-2',
+            width: 600,
+            didOpen: () => {
+                const htmlContainer = Swal.getHtmlContainer();
+                if (htmlContainer) htmlContainer.style.fontSize = '1rem';
+            }
+        });
     };
 
     const columns = [
-        { 
-            data: 'bus', 
-            title: 'Bus',
-            render: (data) => `<span class="font-bold text-slate-800 text-xs">${data}</span>`
-        },
-        { 
-            data: 'penumpang', 
-            title: 'Jumlah Penumpang',
-            className: 'text-center text-slate-600',
-            render: (data) => `${data} Orang`
-        },
-        { 
-            data: 'total', 
-            title: 'Total Harga',
-            className: 'text-right font-bold text-blue-600',
-            render: (data) => formatCurrency(data)
-        },
-        { 
-            data: 'status', 
-            title: 'Status',
-            className: 'text-center',
-            render: (data) => {
-                const color = data === 'Lunas' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
-                return `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${color}">${data}</span>`;
-            }
+        {
+            data: 'rute',
+            title: 'Rute Perjalanan',
+            render: (data) => `<div class="font-medium text-slate-800 text-sm">${data}</div>`
         },
         {
-            data: 'waktu',
-            title: 'Waktu Bayar',
-            render: (data) => `<span class="text-xs text-slate-500">${data ? formatWaktuBayar(data) : 'Belum Bayar'}</span>`
+            data: 'tanggal',
+            title: 'Tanggal',
+            render: (data) => `<div class="text-sm text-slate-700">${formatDate(data)}</div>`
+        },
+        {
+            data: 'bus',
+            title: 'Armada',
+            render: (data) => `<span class="text-xs text-slate-700">${data}</span>`
+        },
+        {
+            data: 'tiketTerjual',
+            title: 'Tiket Terjual',
+            className: 'text-center',
+            render: (data) => `<span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full font-bold text-sm">${data}</span>`
+        },
+        {
+            data: 'pemasukan',
+            title: 'Pemasukan',
+            className: 'text-right',
+            render: (data) => `<div class="font-bold text-green-600">${formatCurrency(data)}</div>`
+        },
+        {
+            data: 'idJadwal',
+            title: 'Action',
+            orderable: false,
+            searchable: false,
+            render: (data, type, row) => `<button class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200" onclick="window.showJadwalDetail(${row.idJadwal})">Detail</button>`
         }
     ];
+
+    window.showJadwalDetail = (idJadwal) => {
+        navigate(`/keuangan/detail-jadwal/${idJadwal}`);
+    };
 
     return (
         <KeuanganLayout>
             <div className="space-y-6">
                 {/* KPI Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-4">
-                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><CreditCard className="w-6 h-6" /></div>
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><BusFront className="w-6 h-6" /></div>
                         <div>
-                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Pendapatan</p>
-                            <h3 className="text-xl font-bold text-slate-900">{formatCurrency(totalPendapatan)}</h3>
+                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Jadwal</p>
+                            <h3 className="text-xl font-bold text-slate-900">{totalJadwal}</h3>
                         </div>
                     </div>
                     <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-4">
-                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><BusFront className="w-6 h-6" /></div>
+                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><TrendingUp className="w-6 h-6" /></div>
                         <div>
                             <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tiket Terjual</p>
-                            <h3 className="text-xl font-bold text-slate-900">{totalTiket} Tiket</h3>
+                            <h3 className="text-xl font-bold text-slate-900">{totalTiketTerjual} Tiket</h3>
+                        </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-4">
+                        <div className="p-3 bg-green-50 text-green-600 rounded-xl"><CreditCard className="w-6 h-6" /></div>
+                        <div>
+                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Pemasukan</p>
+                            <h3 className="text-xl font-bold text-slate-900">{formatCurrency(totalPendapatan)}</h3>
                         </div>
                     </div>
                 </div>
@@ -186,7 +257,7 @@ export default function LaporanKeuangan() {
                                         type="text"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        placeholder="Cari bus..."
+                                        placeholder="Cari rute, armada, operator..."
                                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent transition-all hover:bg-slate-100 hover:border-slate-300"
                                     />
                                 </div>
@@ -254,16 +325,16 @@ export default function LaporanKeuangan() {
                                 options={{
                                     responsive: true,
                                     destroy: true,
-                                    searching: false, 
+                                    searching: false,
                                     paging: true,
-                                    lengthMenu: [ [5, 10, 20, 50, -1], [5, 10, 20, 50, "Semua"] ],
+                                    lengthMenu: [[5, 10, 20, 50, -1], [5, 10, 20, 50, "Semua"]],
                                     pageLength: 5,
                                     dom: 'tr<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4"lip>',
-                                     language: {
+                                    language: {
                                         lengthMenu: "_MENU_",
-                                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ jadwal",
                                         infoEmpty: "Tidak ada data",
-                                        zeroRecords: "Laporan tidak ditemukan",
+                                        zeroRecords: "Jadwal tidak ditemukan",
                                         paginate: {
                                             next: "Next",
                                             previous: "Prev"
@@ -273,11 +344,11 @@ export default function LaporanKeuangan() {
                             >
                                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
                                     <tr>
-                                        <th className="px-6 py-4 font-semibold text-slate-600">Bus</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600 text-center">Jumlah Penumpang</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600 text-right">Total Harga</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600 text-center">Status</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600">Waktu Bayar</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Rute</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Tanggal</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Armada</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600 text-center">Tiket Terjual</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600 text-right">Pemasukan</th>
                                     </tr>
                                 </thead>
                             </DataTable>

@@ -2,7 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import {
     Users,
     Armchair,
-    LogOut
+    LogOut,
+    Building2
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +16,7 @@ export default function Sidebar() {
     // Menu Admin
     const menuItems = [
         {
-            name: 'User Mitra',
+            name: 'Karyawan Mitra',
             path: '/admin/user-mitra',
             icon: Users
         },
@@ -23,6 +24,11 @@ export default function Sidebar() {
             name: 'Fasilitas',
             path: '/admin/fasilitas',
             icon: Armchair
+        },
+        {
+            name: 'Profil Mitra',
+            path: '/admin/profil-mitra',
+            icon: Building2
         },
     ];
 
@@ -40,7 +46,7 @@ export default function Sidebar() {
             if (result.isConfirmed) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                navigate('/login');
+                navigate('/employee/login');
             }
         });
     };

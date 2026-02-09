@@ -24,7 +24,7 @@ async function fetchJadwalByMitra(idMitra) {
         return response.data || [];
     } catch (error) {
         throw new Error(error.message || 'Gagal memuat jadwal');
-    } 
+    }
 }
 
 async function fetchCreateJadwal(payload) {
@@ -41,7 +41,7 @@ async function fetchJadwalById(id) {
         const response = await apiRequest(`jadwal/${id}`, "GET");
         return response.data;
     } catch (error) {
-        return error.message;
+        throw new Error(error.message || 'Gagal memuat detail jadwal');
     }
 }
 

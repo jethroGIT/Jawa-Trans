@@ -104,22 +104,22 @@ const updatePaymentStatus = async (callbackData) => {
 
     if (transaction_status === 'capture') {
         if (fraud_status === 'challenge') {
-            newStatus = 'pending';
+            newStatus = 0;
         } else if (fraud_status === 'accept') {
-            newStatus = 'paid';
+            newStatus = 1;
         }
     }
     else if (transaction_status === 'settlement') {
-        newStatus = 'paid';
-    }
-    else if (transaction_status === 'cancel' || transaction_status === 'deny') {
-        newStatus = 'failed';
+        newStatus = 1;
     }
     else if (transaction_status === 'expire') {
-        newStatus = 'expired';
+        newStatus = 2;
+    }
+    else if (transaction_status === 'cancel' || transaction_status === 'deny') {
+        newStatus = 3;
     }
     else {
-        newStatus = 'pending';
+        newStatus = 0;
     }
 
     // Update reservasi
@@ -128,7 +128,7 @@ const updatePaymentStatus = async (callbackData) => {
         { where: { idReservasi: reservasiId } }
     );
 
-    if (newStatus === 'paid') {
+    if (newStatus = 1) {
         await Reservasi.update(
             { waktuBayar: transaction_time },
             { where: { idReservasi: reservasiId } }

@@ -1,8 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../models');
-const User = db.User;
-const Role = db.Role;
+const Customer = db.Customer;
+const Employee = db.Employee;
 require('dotenv').config();
 
 // Reusable Helper 
@@ -34,27 +34,6 @@ const registerValidation = ({ nama, alamat, telephone, email, password }) => {
     return true;
 }
 
-const findUserOrFail = async (email, password) => {
-    const existingUser = await User.findOne({
-        where: { email },
-        include: [
-            {
-                model: Role,
-                as: 'role'
-            }
-        ]
-    });
-    if (!existingUser) {
-        throw new Error('Email atau password salah')
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-    if (!isPasswordValid) {
-        throw new Error('Email atau password salah')
-    }
-    return existingUser;
-};
-
 const JWTSecretFinder = () => {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -63,35 +42,165 @@ const JWTSecretFinder = () => {
     return secret;
 };
 
-
-const login = async (email, password) => {
+// LOGIN CUSTOMER
+const loginCustomer = async (email, password) => {
     fieldValidation(email, password);
 
-    const user = await findUserOrFail(email, password);
+    const customer = await Customer.findOne({
+        where: { email }
+    });
+
+    if (!customer) {
+        throw new Error('Email atau password salah');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, customer.password);
+    if (!isPasswordValid) {
+        throw new Error('Email atau password salah');
+    }
 
     const payload = {
-        idUser: user.idUser,
-        idRole: user.idRole,
-        role: user.role.nama,
-        nama: user.nama,
-        email: user.email,
-        telephone: user.telephone,
+        idUser: customer.idUser,
+        userType: 'customer',
+        idRole: 4, // customer role
+        role: 'customer',
+        nama: customer.nama,
+        email: customer.email,
+        telephone: customer.telephone,
         iat: Math.floor(Date.now() / 1000)
     };
-    const expiresIn = '2h';
-    JWTSecretFinder();
 
+    const expiresIn = '2h';
     const token = jwt.sign(payload, JWTSecretFinder(), { expiresIn });
+
     return {
         user: {
-            idUser: user.idUser,
-            idMitra: user.idMitra || null,
-            idRole: user.idRole,
-            role: user.role.nama,
-            nama: user.nama,
-            email: user.email,
-            telephone: user.telephone
+            idUser: customer.idUser,
+            userType: 'customer',
+            idRole: 4,
+            role: 'customer',
+            nama: customer.nama,
+            email: customer.email,
+            telephone: customer.telephone
         },
+        token
+    };
+};
+
+// LOGIN EMPLOYEE (admin, staff, keuangan)
+const loginEmployee = async (email, password) => {
+    fieldValidation(email, password);
+
+    const employee = await db.Employee.findOne({
+        where: { email },
+        include: [
+            {
+                model: db.Role,
+                as: 'role'
+            },
+            {
+                model: db.Mitra,
+                as: 'mitra'
+            }
+        ]
+    });
+
+    if (!employee) {
+        throw new Error('Email atau password salah');
+    }
+
+    if (employee.status === 0) {
+        throw new Error('Akun Anda tidak aktif. Hubungi administrator.');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, employee.password);
+    if (!isPasswordValid) {
+        throw new Error('Email atau password salah');
+    }
+
+    const payload = {
+        idEmployee: employee.idEmployee,
+        userType: 'employee',
+        idMitra: employee.idMitra,
+        idRole: employee.idRole,
+        role: employee.role.nama,
+        nama: employee.nama,
+        email: employee.email,
+        telephone: employee.telephone,
+        iat: Math.floor(Date.now() / 1000)
+    };
+
+    const expiresIn = '2h';
+    const token = jwt.sign(payload, JWTSecretFinder(), { expiresIn });
+
+    return {
+        user: {
+            idEmployee: employee.idEmployee,
+            userType: 'employee',
+            idMitra: employee.idMitra,
+            idRole: employee.idRole,
+            role: employee.role.nama,
+            nama: employee.nama,
+            email: employee.email,
+            telephone: employee.telephone,
+            mitra: employee.mitra ? {
+                idMitra: employee.mitra.idMitra,
+                nama: employee.mitra.nama
+            } : null
+        },
+        token
+    };
+};
+
+// LOGIN SUPERADMIN
+const loginSuperAdmin = async (email, password) => {
+    fieldValidation(email, password);
+
+    const SuperAdmin = db.SuperAdmin;
+
+    if (!SuperAdmin) {
+        throw new Error('Model SuperAdmin tidak tersedia');
+    }
+
+    const superAdmin = await SuperAdmin.findOne({
+        where: { email }
+    });
+
+    if (!superAdmin) {
+        throw new Error('Email atau password salah');
+    }
+
+    if (superAdmin.status === 0) {
+        throw new Error('Akun Anda tidak aktif. Hubungi administrator.');
+    }
+
+    let isPasswordValid = false;
+
+    if (password === superAdmin.password) {
+        isPasswordValid = true;
+    }
+
+    if (!isPasswordValid) {
+        throw new Error('Email atau password salah');
+    }
+
+
+    const payload = {
+        idSuperAdmin: superAdmin.id,
+        userType: 'superadmin',
+        role: 'superadmin',
+        email: superAdmin.email,
+        iat: Math.floor(Date.now() / 1000)
+    };
+
+    const expiresIn = '2h';
+    const token = jwt.sign(payload, JWTSecretFinder(), { expiresIn });
+
+    const userCopy = superAdmin.toJSON ? superAdmin.toJSON() : { ...superAdmin };
+    delete userCopy.password;
+
+    return {
+        user: userCopy,
         token
     };
 };
@@ -100,55 +209,31 @@ const blacklistedTokens = new Set();
 
 const logout = async (token) => {
     try {
-        console.log('=== DEBUG LOGOUT ===');
-        console.log('1. Token yang diterima:', token);
-        console.log('2. Type of token:', typeof token);
-
-        // Cek apakah token ada
         if (!token) {
             throw new Error('Token tidak ditemukan');
         }
 
         const secret = JWTSecretFinder();
-        console.log('3. JWT_SECRET exists:', !!secret);
-        console.log('4. JWT_SECRET length:', secret ? secret.length : 0);
-
-        // Verifikasi token
-        console.log('5. Attempting to verify token...');
         const decoded = jwt.verify(token, secret);
-        console.log('6. Token verified successfully:', decoded);
+
         const timeNow = Math.floor(Date.now() / 1000);
-        console.log('7. Current timestamp:', timeNow);
-        console.log('8. Token exp:', decoded.exp);
-        console.log('9. Token expired?', decoded.exp < timeNow);
-        console.log('10. Time until expiry (seconds):', decoded.exp - timeNow);
 
         // Tambahkan ke blacklist
         blacklistedTokens.add(token);
-        console.log('11. Token added to blacklist');
-        console.log(blacklistedTokens);
 
         const timeUntilExpiry = (decoded.exp - timeNow) * 1000;
 
         if (timeUntilExpiry > 0) {
             setTimeout(() => {
                 blacklistedTokens.delete(token);
-                console.log('Token removed from blacklist (expired)');
             }, timeUntilExpiry);
         }
 
-        console.log('12. Logout successful');
         return {
             success: true,
             message: 'Logout berhasil'
         };
     } catch (error) {
-        console.log('=== ERROR LOGOUT ===');
-        console.log('Error name:', error.name);
-        console.log('Error message:', error.message);
-        console.log('Error stack:', error.stack);
-
-        // Cek jenis error JWT
         if (error.name === 'TokenExpiredError') {
             throw new Error('Token sudah expired');
         } else if (error.name === 'JsonWebTokenError') {
@@ -161,29 +246,29 @@ const logout = async (token) => {
     }
 };
 
-const register = async ({ nama, alamat, telephone, email, password }) => {
+// REGISTER CUSTOMER
+const registerCustomer = async ({ nama, alamat, telephone, email, password }) => {
     registerValidation({ nama, alamat, telephone, email, password });
-    
-    const existingPhone = await User.findOne({
+
+    const existingPhone = await db.Customer.findOne({
         where: { telephone }
     });
 
-    const existingUser = await User.findOne({
+    const existingEmail = await db.Customer.findOne({
         where: { email }
     });
 
     if (existingPhone) {
         throw new Error('Nomor telepon sudah digunakan!');
     }
-    
-    if (existingUser) {
+
+    if (existingEmail) {
         throw new Error('Email sudah digunakan!');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    return await User.create({
-        idRole: 4,
+    return await db.Customer.create({
         nama,
         alamat,
         telephone,
@@ -193,7 +278,10 @@ const register = async ({ nama, alamat, telephone, email, password }) => {
 }
 
 module.exports = {
-    login,
+    loginCustomer,
+    loginEmployee,
+    loginSuperAdmin,
     logout,
-    register
+    registerCustomer,
+    blacklistedTokens
 }

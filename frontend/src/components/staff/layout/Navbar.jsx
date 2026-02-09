@@ -22,15 +22,6 @@ export default function Navbar() {
 
             {/* Right Side: Search & Profile */}
             <div className="flex items-center gap-6 ml-auto">
-                {/* Notifications */}
-                <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
-                    <Bell className="w-6 h-6" />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
-
-                {/* Divider */}
-                <div className="h-8 w-px bg-gray-200"></div>
-
                 {/* Profile Dropdown Trigger */}
                 <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
                     <div className="bg-blue-100 p-2 rounded-full">

@@ -55,8 +55,8 @@ const urlLogoMitra = (req, mitras) => {
 
         return {
             ...data,
-            logoURL: data.logo 
-                ? `${baseURL}/uploads/mitra/${data.logo}` 
+            logoURL: data.logo
+                ? `${baseURL}/uploads/mitra/${data.logo}`
                 : null
         };
     };
@@ -118,25 +118,38 @@ const updateMitra = async ({ id, logo, nama, alamat, telephone, email }) => {
     const mitra = await findMitraOrFail(id);
 
     try {
-        fieldValidation({ logo, nama, alamat, telephone, email });
+        // Validate non-logo fields (logo is optional for update)
+        if (!nama || !alamat || !telephone || !email) {
+            throw new Error('Nama, alamat, telephone, dan email wajib diisi');
+        }
 
         await checkDuplicateMitra({ nama, telephone, email, id });
 
-        if (logo && mitra.logo && logo !== mitra.logo) {
-            hapusFileStorage(mitra.logo);
-        }
-
-        await mitra.update({
-            logo,
+        // Prepare update data
+        const updateData = {
             nama,
             alamat,
             telephone,
             email
-        });
+        };
+
+        // Only update logo if a new file is provided
+        if (logo) {
+            // Delete old logo if exists and different from new one
+            if (mitra.logo && logo !== mitra.logo) {
+                hapusFileStorage(mitra.logo);
+            }
+            updateData.logo = logo;
+        }
+
+        await mitra.update(updateData);
 
         return mitra;
     } catch (error) {
-        if (mitra) { hapusFileStorage(logo); }
+        // Only delete the new uploaded logo if update fails
+        if (logo && logo !== mitra.logo) {
+            hapusFileStorage(logo);
+        }
 
         throw error;
     }

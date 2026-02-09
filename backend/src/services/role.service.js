@@ -10,12 +10,17 @@ const findRoleOrFail = async (id) => {
     return role;
 };
 
-const checkDuplicateRole = async (nama) => {
-    const existingRole = await Role.findOne({
-        where: { nama }
-    });
+const checkDuplicateRole = async (nama, excludeId = null) => {
+    const where = { nama };
+
+    // If updating, exclude the current role ID from duplicate check
+    if (excludeId) {
+        where.idRole = { [db.Sequelize.Op.ne]: excludeId };
+    }
+
+    const existingRole = await Role.findOne({ where });
     if (existingRole) {
-        throw new Error('Role sudah ada!');
+        throw new Error('Role dengan nama tersebut sudah ada!');
     }
     return true;
 };
@@ -31,22 +36,32 @@ const getRoleById = async (id) => {
     return role;
 };
 
-const createRole = async (nama) => {
+const createRole = async (nama, guard_name = 'web') => {
     if (!nama || nama.trim() === '') {
         throw new Error('Nama role tidak boleh kosong.');
     }
 
     await checkDuplicateRole(nama);
 
-    return await Role.create({ nama });
+    return await Role.create({
+        nama: nama.trim(),
+        guard_name: guard_name.trim() || 'web'
+    });
 };
 
-const updateRole = async (id, nama) => {
+const updateRole = async (id, nama, guard_name = 'web') => {
     const role = await findRoleOrFail(id);
 
-    await checkDuplicateRole(nama);
+    if (!nama || nama.trim() === '') {
+        throw new Error('Nama role tidak boleh kosong.');
+    }
 
-    return await role.update({ nama });
+    await checkDuplicateRole(nama, id);
+
+    return await role.update({
+        nama: nama.trim(),
+        guard_name: guard_name.trim() || 'web'
+    });
 };
 
 const destroyRole = async (id) => {

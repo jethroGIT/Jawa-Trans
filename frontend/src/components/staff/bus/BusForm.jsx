@@ -13,9 +13,9 @@ import Swal from 'sweetalert2';
 import tipebusService from '../../../services/mitra/tipebusService';
 
 export default function BusForm({
-    initialData = {}, 
-    onSubmit,         
-    isLoading         
+    initialData = {},
+    onSubmit,
+    isLoading
 }) {
     const navigate = useNavigate();
     const isEditMode = !!initialData.idBus;
@@ -25,7 +25,7 @@ export default function BusForm({
         kode_bus: '',
         idTipe: '',
         kapasitas: '',
-        status: 'aktif'
+        status: 1 // Default: aktif (1)
     });
 
     const [tipeBusList, setTipeBusList] = useState([]);
@@ -49,25 +49,37 @@ export default function BusForm({
 
     useEffect(() => {
         if (initialData.idBus) {
+            // Convert status to tinyint if it's a string from backend
+            let statusValue = initialData.status;
+            if (typeof statusValue === 'string') {
+                // Convert string to tinyint
+                if (statusValue === 'aktif') statusValue = 1;
+                else if (statusValue === 'tidak aktif') statusValue = 0;
+                else if (statusValue === 'perbaikan') statusValue = 2;
+                else statusValue = 1; // default to aktif
+            }
+
             setFormData({
                 plat_nomor: initialData.plat_nomor || '',
                 kode_bus: initialData.kode_bus || '',
                 idTipe: initialData.idTipe || '',
                 kapasitas: initialData.kapasitas || '',
-                status: initialData.status || 'aktif'
+                status: statusValue || 1
             });
         }
     }, [initialData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        // Parse status as integer since it's tinyint in database
+        const parsedValue = name === 'status' ? parseInt(value) : value;
+        setFormData(prev => ({ ...prev, [name]: parsedValue }));
     };
 
     const handleSubmitLocal = (e) => {
         e.preventDefault();
-        if (!formData.plat_nomor || !formData.kode_bus || !formData.idTipe) {
-            Swal.fire('Error', 'Mohon lengkapi field wajib.', 'error');
+        if (!formData.plat_nomor || !formData.kode_bus || !formData.idTipe || !formData.kapasitas) {
+            Swal.fire('Error', 'Mohon lengkapi semua field wajib.', 'error');
             return;
         }
         onSubmit(formData);
@@ -79,7 +91,7 @@ export default function BusForm({
 
                 {/* Grid Layout - Menyamping */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                    
+
                     {/* Baris 1: Plat Nomor & Kode Bus */}
                     <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">
@@ -111,10 +123,10 @@ export default function BusForm({
                         />
                     </div>
 
-                    {/* Baris 2: Tipe Kelas & Status (Hanya Muncul saat Edit) */}
+                    {/* Baris 2: Tipe Kelas & Kapasitas */}
                     <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">
-                            Tipe Kelas <span className="text-red-500">*</span>
+                            Jenis Kendaraan <span className="text-red-500">*</span>
                         </label>
                         <select
                             name="idTipe"
@@ -124,7 +136,7 @@ export default function BusForm({
                             required
                             disabled={loadingTipe}
                         >
-                            <option value="">Pilih Tipe Bus</option>
+                            <option value="">Pilih Jenis Kendaraan</option>
                             {tipeBusList.map((item) => (
                                 <option key={item.idTipe} value={item.idTipe}>
                                     {item.tipe}
@@ -133,6 +145,23 @@ export default function BusForm({
                         </select>
                     </div>
 
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700">
+                            Kapasitas Penumpang <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            name="kapasitas"
+                            value={formData.kapasitas}
+                            onChange={handleChange}
+                            placeholder="Contoh: 40"
+                            min="1"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all font-medium"
+                            required
+                        />
+                    </div>
+
+                    {/* Baris 3: Status (Hanya Muncul saat Edit) */}
                     {isEditMode && (
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-700">
@@ -144,14 +173,14 @@ export default function BusForm({
                                 onChange={handleChange}
                                 className={`
                                     w-full px-4 py-2.5 border rounded-xl focus:ring-2 outline-none font-bold transition-all
-                                    ${formData.status === 'aktif' ? 'bg-green-50 border-green-200 text-green-700' : ''}
-                                    ${formData.status === 'perbaikan' ? 'bg-amber-50 border-amber-200 text-amber-700' : ''}
-                                    ${formData.status === 'tidak aktif' ? 'bg-red-50 border-red-200 text-red-700' : ''}
+                                    ${formData.status === 1 ? 'bg-green-50 border-green-200 text-green-700' : ''}
+                                    ${formData.status === 2 ? 'bg-amber-50 border-amber-200 text-amber-700' : ''}
+                                    ${formData.status === 0 ? 'bg-red-50 border-red-200 text-red-700' : ''}
                                 `}
                             >
-                                <option value="aktif">Aktif</option>
-                                <option value="perbaikan">Perbaikan</option>
-                                <option value="tidak aktif">Tidak Aktif</option>
+                                <option value={1}>Aktif</option>
+                                <option value={2}>Perbaikan</option>
+                                <option value={0}>Tidak Aktif</option>
                             </select>
                         </div>
                     )}
@@ -172,8 +201,8 @@ export default function BusForm({
                     disabled={isLoading}
                     className={`
                         flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold text-white shadow-lg transition-all
-                        ${isLoading 
-                            ? 'bg-blue-400 cursor-not-allowed' 
+                        ${isLoading
+                            ? 'bg-blue-400 cursor-not-allowed'
                             : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}
                     `}
                 >

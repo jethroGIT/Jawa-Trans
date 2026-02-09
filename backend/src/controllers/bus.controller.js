@@ -48,9 +48,9 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { idTipe, plat_nomor, kode_bus } = req.body;
+    const { idTipe, plat_nomor, kode_bus, kapasitas } = req.body;
     try {
-        const createBus = await busService.createBus({ idTipe, plat_nomor, kode_bus });
+        const createBus = await busService.createBus({ idTipe, plat_nomor, kode_bus, kapasitas });
         return res.status(200).json({
             success: true,
             message: 'Bus berhasil ditambahkan.'
@@ -65,9 +65,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { idTipe, plat_nomor, kode_bus, status } = req.body;
+    const { idTipe, plat_nomor, kode_bus, kapasitas, status } = req.body;
     try {
-        const updateBus = await busService.updatebus({ id, idTipe, plat_nomor, kode_bus, status });
+        const updateBus = await busService.updatebus({ id, idTipe, plat_nomor, kode_bus, kapasitas, status });
         return res.status(200).json({
             success: true,
             message: 'Bus berhasil diperbarui.'

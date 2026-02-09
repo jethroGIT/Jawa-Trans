@@ -1,7 +1,15 @@
 // File: src/components/common/StatusBadge.jsx
 
 export default function StatusBadge({ status }) {
-    const normalizedStatus = status ? status.toLowerCase() : '';
+    // Convert tinyint to string if needed
+    let normalizedStatus = status;
+    if (typeof status === 'number') {
+        if (status === 1) normalizedStatus = 'aktif';
+        else if (status === 0) normalizedStatus = 'tidak aktif';
+        else if (status === 2) normalizedStatus = 'perbaikan';
+    } else if (typeof status === 'string') {
+        normalizedStatus = status.toLowerCase();
+    }
 
     switch (normalizedStatus) {
         case 'aktif':

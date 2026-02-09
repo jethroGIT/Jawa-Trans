@@ -3,7 +3,6 @@ const Jadwal = db.Jadwal;
 const Payment = db.Payment;
 const reservasiService = require('../services/reservasi.service');
 const midtransService = require('../services/midtrans.service');
-const { get } = require('../app');
 
 const getAllReservasi = async (req, res) => {
     try {
@@ -15,7 +14,7 @@ const getAllReservasi = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             succes: false,
-            message: error
+            message: error.message
         })
     };
 };
@@ -24,6 +23,22 @@ const getReservasiByMitra = async (req, res) => {
     try {
         const { idMitra } = req.params;
         const reservasi = await reservasiService.getReservasiByMitra(idMitra);
+        return res.status(200).json({
+            success: true,
+            data: reservasi
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+const getJumlahReservasiPerStatus = async (req, res) => {
+    try {
+        const { idJadwal } = req.params;
+        const reservasi = await reservasiService.getJumlahReservasiPerStatus(idJadwal);
         return res.status(200).json({
             success: true,
             data: reservasi
@@ -53,12 +68,22 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { idUser, idJadwal, penumpang, namaPenumpang, kursi, status } = req.body;
+    const { idUser, idJadwal, namaPenumpang, kursi, method, hargaSatuan } = req.body || {};
     try {
-        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, namaPenumpang, kursi })
+        // Validation handled in service
+        const reservasi = await reservasiService.createReservasi({
+            idUser,
+            idJadwal,
+            method: method || 'manual', // Fallback default
+            hargaSatuan,
+            namaPenumpang,
+            kursi
+        });
+
         return res.status(200).json({
             succes: true,
-            data: 'Reservasi berhasil ditambahkan'
+            data: 'Reservasi berhasil ditambahkan',
+            reservasi
         });
     } catch (error) {
         return res.status(400).json({
@@ -70,9 +95,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { idUser, idJadwal, penumpang, status } = req.body;
+    const { status } = req.body || {};
     try {
-        const reservasi = await reservasiService.updateReservasi({ id, idUser, idJadwal, penumpang, status })
+        const reservasi = await reservasiService.updateReservasi({ id, status })
         return res.status(200).json({
             succes: true,
             message: 'Reservasi berhasil diperbaharui'
@@ -118,6 +143,22 @@ const getReservasiByUser = async (req, res) => {
     }
 };
 
+const getJadwalByMitra = async (req, res) => {
+    try {
+        const { idMitra } = req.params;
+        const reservasi = await reservasiService.getReservasiByMitra(idMitra);
+        return res.status(200).json({
+            success: true,
+            data: reservasi
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 const getReservasiByJadwal = async (req, res) => {
     try {
         const { idJadwal } = req.params;
@@ -137,7 +178,7 @@ const getReservasiByJadwal = async (req, res) => {
 const updateStatusReservasi = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status } = req.body || {};
         const reservasi = await reservasiService.updateStatusReservasi(id, status);
         return res.status(200).json({
             success: true,
@@ -153,11 +194,23 @@ const updateStatusReservasi = async (req, res) => {
 }
 
 const storeAndPay = async (req, res) => {
-    const { idUser, idJadwal, penumpang, namaPenumpang, kursi, method, customer, hargaSatuan, totalHarga } = req.body;
+    const { idUser, idJadwal, namaPenumpang, kursi, method, customer, hargaSatuan } = req.body || {};
+
+    // Hitung totalHarga berdasarkan jumlah kursi yang dipesan
+    // Jumlah kursi = jumlah data reservasi_detail yang akan dibuat
+    const totalHarga = (hargaSatuan * kursi.length);
     console.log("Received storeAndPay request:", totalHarga);
+
     try {
         // 1. Buat reservasi
-        const reservasi = await reservasiService.createReservasi({ idUser, idJadwal, penumpang, method, hargaSatuan, totalHarga, namaPenumpang, kursi });
+        const reservasi = await reservasiService.createReservasi({
+            idUser,
+            idJadwal,
+            method,
+            hargaSatuan,
+            namaPenumpang,
+            kursi
+        });
         const reservasiId = reservasi.idReservasi;
 
         // 2. Buat transaksi Midtrans
@@ -173,10 +226,7 @@ const storeAndPay = async (req, res) => {
             reservasiId,
             payment
         });
-
-
     } catch (error) {
-        // await reservasiService.destroyReservasi(reservasiId);
         return res.status(500).json({
             success: false,
             message: error.message
@@ -187,6 +237,8 @@ const storeAndPay = async (req, res) => {
 module.exports = {
     getAllReservasi,
     getReservasiByMitra,
+    getJadwalByMitra,
+    getJumlahReservasiPerStatus,
     show,
     store,
     update,

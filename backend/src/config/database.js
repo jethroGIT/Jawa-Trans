@@ -6,10 +6,11 @@ const { Sequelize } = require('sequelize');
 //   port: 3306,
 // });
 
-const sequelize = new Sequelize('old-jawatrans', 'root', '', {
+const sequelize = new Sequelize('new-jawatrans', 'root', '', {
   host: 'localhost',
   dialect: 'mysql',
   port: 3306,
+  logging: false  // Nonaktifkan logging SQL query ke console
 });
 
 module.exports = sequelize;

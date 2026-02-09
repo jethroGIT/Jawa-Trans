@@ -14,23 +14,23 @@ export default function EditTipeBus() {
     const [fasilitasOptions, setFasilitasOptions] = useState([]);
     const [isFetchingFasilitas, setIsFetchingFasilitas] = useState(true);
 
-    // Load tipe bus data dan fasilitas pada mount
+    // Load jenis kendaraan data dan fasilitas pada mount
     useEffect(() => {
         const loadData = async () => {
             try {
                 setIsFetchingData(true);
                 setIsFetchingFasilitas(true);
 
-                // Fetch tipe bus data by ID
+                // Fetch jenis kendaraan data by ID
                 const tipeBusData = await tipebusService.fetchTipeBusById(id);
-                console.log("Fetched tipe bus data:", tipeBusData);
-                
+                console.log("Fetched jenis kendaraan data:", tipeBusData);
+
                 // Transform data untuk form
                 const transformedData = {
                     tipe: tipeBusData?.tipe || '',
                     kapasitas: tipeBusData?.kapasitas || '',
-                    fasilitas: tipeBusData?.fasilitas && Array.isArray(tipeBusData.fasilitas) 
-                        ? tipeBusData.fasilitas.map(f => f.idFasilitas) 
+                    fasilitas: tipeBusData?.fasilitas && Array.isArray(tipeBusData.fasilitas)
+                        ? tipeBusData.fasilitas.map(f => f.idFasilitas)
                         : [],
                     existingPhotos: tipeBusData?.foto_bus && Array.isArray(tipeBusData.foto_bus)
                         ? tipeBusData.foto_bus.map(f => f.url || f.nama)
@@ -45,11 +45,11 @@ export default function EditTipeBus() {
                 console.error("Gagal memuat data:", error);
                 Swal.fire({
                     title: 'Error',
-                    text: error.message || 'Gagal memuat data tipe bus',
+                    text: error.message || 'Gagal memuat data jenis kendaraan',
                     icon: 'error',
                     confirmButtonColor: '#2563EB'
                 }).then(() => {
-                    navigate('/mitra/tipe-bus');
+                    navigate('/mitra/jenis-kendaraan');
                 });
             } finally {
                 setIsFetchingData(false);
@@ -79,15 +79,15 @@ export default function EditTipeBus() {
 
             Swal.fire({
                 title: 'Berhasil!',
-                text: 'Tipe bus berhasil diperbarui.',
+                text: 'Jenis kendaraan berhasil diperbarui.',
                 icon: 'success',
                 confirmButtonColor: '#2563EB'
             }).then(() => {
-                navigate('/mitra/tipe-bus');
+                navigate('/mitra/jenis-kendaraan');
             });
 
         } catch (error) {
-            console.error("Error updating tipe bus:", error);
+            console.error("Error updating jenis kendaraan:", error);
             Swal.fire({
                 title: 'Gagal!',
                 text: error.message || 'Terjadi kesalahan saat menyimpan data.',
@@ -109,7 +109,7 @@ export default function EditTipeBus() {
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </div>
-                        <p className="text-slate-600">Memuat data tipe bus...</p>
+                        <p className="text-slate-600">Memuat data jenis kendaraan...</p>
                     </div>
                 </div>
             </StaffLayout>
@@ -121,8 +121,8 @@ export default function EditTipeBus() {
             <div className="space-y-6 max-w-5xl mx-auto">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-800">Edit Tipe Bus</h1>
-                        <p className="text-slate-500 text-sm mt-1">Ubah informasi tipe bus di bawah</p>
+                        <h1 className="text-2xl font-bold text-slate-800">Edit Jenis Kendaraan</h1>
+                        <p className="text-slate-500 text-sm mt-1">Ubah informasi jenis kendaraan di bawah</p>
                     </div>
                 </div>
 

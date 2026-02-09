@@ -14,39 +14,33 @@ const defineReservasiModel = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        idJadwal: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        penumpang: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
         method: {
             type: DataTypes.STRING(45),
-            allowNull: false
+            allowNull: false,
+            comment: 'Metode pembayaran: gopay, bca, bni, mandiri, qris'
         },
         hargaSatuan: {
             type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        totalHarga: {
-            type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: false,
+            comment: 'Harga per tiket/kursi'
         },
         waktuBayar: {
             type: DataTypes.DATE,
-            allowNull: true
+            allowNull: true,
+            comment: 'Timestamp pembayaran berhasil (NULL jika belum dibayar)'
         },
         status: {
-            type: DataTypes.STRING(45),
-            allowNull: true
+            type: DataTypes.TINYINT,
+            allowNull: false,
+            defaultValue: 0,
+            comment: '0 = pending, 1 = paid, 2 = expire'
         }
     }, {
         tableName: 'reservasi',
         timestamps: true,
         createdAt: 'created_at',
-        updatedAt: 'updated_at'
+        updatedAt: 'updated_at',
+        comment: 'Tabel header reservasi. Catatan: Tabel ini tidak memiliki kolom jumlah kursi. Jumlah kursi dihitung dari COUNT(reservasidetail). Total harga = hargaSatuan * COUNT(reservasidetail).'
     });
 
     return Reservasi;

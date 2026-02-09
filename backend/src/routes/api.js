@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const roleController = require('../controllers/role.controller');
-const userController = require('../controllers/user.controller');
+const customerController = require('../controllers/customer.controller');
+const employeeController = require('../controllers/employee.controller');
 const authController = require('../controllers/auth.controller');
 const uploadLogoMitra = require('../config/multerMitra');
 const mitraController = require('../controllers/mitra.controller');
@@ -22,14 +23,26 @@ router.get('/', (req, res) => {
   res.render('index', { title: 'Hello EJS' });
 });
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.post('/logout', authController.logout);
+// Authentication routes - Customer
+router.post('/auth/customer/register', authController.registerCustomer);
+router.post('/auth/customer/login', authController.loginCustomer);
+
+// Authentication routes - Employee (admin, staff, keuangan)
+router.post('/auth/employee/login', authController.loginEmployee);
+// Authentication routes - Super Admin
+router.post('/auth/superadmin/login', authController.loginSuperAdmin);
+
+// Logout (same for both)
+router.post('/auth/logout', authController.logout);
+
+// Legacy routes (backward compatibility) - akan dihapus nanti
+router.post('/register', authController.registerCustomer);
+router.post('/login', authController.loginCustomer);
 
 // versi menggunakan idRole
 // router.get('/roles', authenticate, authorize([1, 5]), roleController.getAllRoles);
 // versi menggunakan nama role
-router.use('/roles', authenticate, authorize(['admin']));
+router.use('/roles', authenticate);
 router.route('/roles')
   .get(roleController.getAllRoles)
   .post(roleController.store);
@@ -39,29 +52,41 @@ router.route('/roles/:id')
   .put(roleController.update)
   .delete(roleController.destroy);
 
-router.use('/users', authenticate);
-router.route('/users')
-  .all(authorize(['admin']))
-  .get(userController.allUsers)
-  .post(userController.store)
+// CUSTOMER ROUTES
+router.use('/customers', authenticate);
+router.route('/customers')
+  // .all(authorize(['admin']))
+  .get(customerController.index) // List all customers
 
-router.route('/users/mitra')
-  .all(authorize(['admin']))
-  .get(userController.userMitra)
+router.route('/customers/:id')
+  .get(customerController.show)
+  .put(customerController.update)
+  .delete(customerController.destroy);
 
-router.route('/users/:id')
-  .get(authorize(['admin', 'customer']), userController.show)
-  .put(authorize(['admin', 'customer']), userController.update)
-  .delete(authorize(['admin']), userController.destroy)
+// EMPLOYEE ROUTES
+router.use('/employees', authenticate);
+router.route('/employees')
+  // .all(authorize(['admin']))
+  .get(employeeController.index)
+  .post(employeeController.store);
+
+router.get('/employees/admins', authenticate, authorize(['admin']), employeeController.getAllAdmin);
+
+router.route('/employees/mitra/:idMitra')
+  .get(authorize(['admin']), employeeController.getByMitra);
+
+router.route('/employees/:id')
+  .all(authorize(['admin']))
+  .get(employeeController.show)
+  .put(employeeController.update)
+  .delete(employeeController.destroy);
 
 router.use('/mitra', authenticate);
 router.route('/mitra')
-  .all(authorize(['admin']))
   .get(mitraController.gettAllMitra)
   .post(uploadLogoMitra.single('logo'), mitraController.store)
 
-router.route('/mitra/:id')
-  .all(authorize(['staff']))
+router.route('/mitra/:id', authenticate)
   .get(mitraController.show)
   .put(uploadLogoMitra.single('logo'), mitraController.update)
   .delete(mitraController.destroy)
@@ -95,9 +120,13 @@ router.delete('/tipeBus/:id', tipeBusController.destroy);
 router.get('/mitra/:idMitra/jadwal', jadwalController.getJadwalByMitra);
 router.get('/jadwal', jadwalController.getAllJadwal);
 router.get('/jadwal/:id', jadwalController.show);
+router.get('/jadwal/:id/reservasi', jadwalController.getJadwalWithReservasi);
 router.post('/jadwal', jadwalController.store);
 router.put('/jadwal/:id', jadwalController.update);
 router.delete('/jadwal/:id', jadwalController.destroy);
+
+router.get('/mitra/:idMitra/keuangan', reservasiController.getReservasiByMitra);
+router.get('/mitra/keuangan/:idJadwal', reservasiController.getJumlahReservasiPerStatus);
 
 router.get('/mitra/:idMitra/reservasi', reservasiController.getReservasiByMitra);
 router.get('/reservasi', reservasiController.getAllReservasi);

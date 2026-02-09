@@ -38,15 +38,18 @@ export default function LoginPage() {
                 width: "350px",
             });
 
-            if (data.data.role === 'admin') {
-                navigate('/admin/user-mitra');
-            } else if (data.data.role === 'staff') {
-                navigate('/mitra/bus');
-            } else if (data.data.role === 'keuangan') {
-                navigate('/keuangan/laporan');
-            } else {
-                navigate('/');
+            if (data.data.role !== 'customer') {
+                // Just in case non-customer tries to login here (though backend should handle it)
+                Swal.fire({
+                    icon: "warning",
+                    title: "Akses Ditolak",
+                    text: "Halaman ini khusus untuk Customer.",
+                    width: "350px"
+                });
+                return;
             }
+
+            navigate('/');
         } catch (err) {
             setError(err.message);
 

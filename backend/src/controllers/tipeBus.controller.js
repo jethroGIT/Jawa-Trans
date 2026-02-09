@@ -49,10 +49,10 @@ const show = async (req, res) => {
 };
 
 const store = async (req, res) => {
-    const { idMitra, tipe, kapasitas, fasilitas } = req.body;
+    const { idMitra, tipe, fasilitas } = req.body;
     const fotos = req.files ? req.files.map(file => file.filename) : [];
     try {
-        const data = await tipeBusServices.storeTipeBus({ idMitra, tipe, kapasitas, fasilitas, fotos });
+        const data = await tipeBusServices.storeTipeBus({ idMitra, tipe, fasilitas, fotos });
         return res.status(200).json({
             success: true,
             message: 'Tipe bus berhasil ditambahkan'
@@ -67,7 +67,7 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { idMitra, tipe, kapasitas, fasilitas, existingPhotos } = req.body;
+    const { idMitra, tipe, fasilitas, existingPhotos } = req.body;
     const fotos = req.files ? req.files.map(file => file.filename) : [];
 
     // existingPhotos bisa berupa string (jika cuma 1) atau array (jika > 1), atau undefined (jika 0)
@@ -86,7 +86,6 @@ const update = async (req, res) => {
             id,
             idMitra,
             tipe,
-            kapasitas,
             fasilitas,
             fotos,
             existingPhotos: existingPhotosArray

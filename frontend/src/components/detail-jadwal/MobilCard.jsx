@@ -4,8 +4,8 @@ import { AirVent, Cctv, Armchair, Wifi, Users } from 'lucide-react';
 export default function MobilCard({ jadwal }) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    // Akses foto dari struktur data: jadwal.bus.tipe_bus.foto_bus
-    const fotos = jadwal?.bus?.tipe_bus?.foto_bus || [];
+    // Akses foto dari struktur data: jadwal.bus.jenis_kendaraan.foto_bus
+    const fotos = jadwal?.bus?.jenis_kendaraan?.foto_bus || [];
 
     const nextSlide = () => {
         setCurrentIndex((prevIndex) => 
@@ -124,16 +124,16 @@ export default function MobilCard({ jadwal }) {
                 {/* Header Compact */}
                 <div className="mb-3">
                     <h2 className="text-lg font-semibold text-gray-900">
-                        {jadwal?.bus?.tipe_bus?.mitra?.nama || "Nama Travel"}
+                        {jadwal?.bus?.jenis_kendaraan?.mitra?.nama || "Nama Travel"}
                     </h2>
-                    <p className="text-gray-500 text-sm mt-1">{jadwal?.bus?.tipe_bus?.tipe || "Jenis Mobil"}</p>
+                    <p className="text-gray-500 text-sm mt-1">{jadwal?.bus?.jenis_kendaraan?.tipe || "Jenis Mobil"}</p>
                 </div>
 
                 {/* Info Compact */}
                 <div className="flex items-center justify-between text-sm mb-3">
                     <div className="flex items-center gap-1">
                         <Users className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600">{jadwal?.bus?.tipe_bus?.kapasitas || "0"} Kursi</span>
+                        <span className="text-gray-600">{jadwal?.bus?.kapasitas || "0"} Kursi</span>
                     </div>
                 </div>
 
@@ -143,9 +143,9 @@ export default function MobilCard({ jadwal }) {
                         Fasilitas
                     </h3>
 
-                    {jadwal?.bus?.tipe_bus?.fasilitas && jadwal.bus.tipe_bus.fasilitas.length > 0 ? (
+                    {jadwal?.bus?.jenis_kendaraan?.fasilitas && jadwal.bus.jenis_kendaraan.fasilitas.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
-                            {jadwal.bus.tipe_bus.fasilitas.map((fasilitas, index) => {
+                            {jadwal.bus.jenis_kendaraan.fasilitas.map((fasilitas, index) => {
                                 let IconComponent;
 
                                 switch (fasilitas.nama.toLowerCase()) {

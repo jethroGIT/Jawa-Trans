@@ -6,78 +6,85 @@ const db = {};
 db.sequelize = sequelize;  // Koneksi database
 db.Sequelize = Sequelize; // Kelas Sequelize
 
+// Models - Only NEW structure
 db.Role = require('./role')(sequelize, DataTypes);
-db.User = require('./user')(sequelize, DataTypes);
+db.Customer = require('./customer')(sequelize, DataTypes);
+db.Employee = require('./employee')(sequelize, DataTypes);
 db.Mitra = require('./mitra')(sequelize, DataTypes);
+db.SuperAdmin = require('./superAdmin')(sequelize, DataTypes);
 db.Terminal = require('./terminal')(sequelize, DataTypes);
 db.Bus = require('./bus')(sequelize, DataTypes);
-db.Tipe_Bus = require('./tipe_bus')(sequelize, DataTypes);
+db.Jenis_Kendaraan = require('./jenis_kendaraan')(sequelize, DataTypes);
 db.Fasilitas = require('./fasilitas')(sequelize, DataTypes);
 db.Bus_Fasilitas = require('./bus_fasilitas')(sequelize, DataTypes);
 db.Jadwal = require('./jadwal')(sequelize, DataTypes);
 db.Reservasi = require('./reservasi')(sequelize, DataTypes);
 db.Reservasi_Detail = require('./reservasi_detail')(sequelize, DataTypes);
 db.Foto_Bus = require('./foto_bus')(sequelize, DataTypes);
-db.Kursi = require('./kursi')(sequelize, DataTypes);
 
-// Mitra -||---<- User ->|---||- Role
-db.Mitra.hasMany(db.User, {
+// ============================================
+// RELATIONS - NEW DATABASE STRUCTURE
+// ============================================
+
+// Employee Relations
+// Employee ->|---||- Mitra
+db.Mitra.hasMany(db.Employee, {
     foreignKey: 'idMitra',
-    as: 'user'
+    as: 'employee'
 });
 
-db.User.belongsTo(db.Mitra, {
+db.Employee.belongsTo(db.Mitra, {
     foreignKey: 'idMitra',
     as: 'mitra'
-})
+});
 
-db.User.belongsTo(db.Role, {
+// Employee ->|---||- Role
+db.Employee.belongsTo(db.Role, {
     foreignKey: 'idRole',
     as: 'role'
 });
 
-db.Role.hasMany(db.User, {
+db.Role.hasMany(db.Employee, {
     foreignKey: 'idRole',
-    as: 'user'
+    as: 'employee'
 });
 
-
-// Tipe Bus -||---|<- Bus_Fasilitas ->|---||- Fasilitas
-db.Tipe_Bus.belongsToMany(db.Fasilitas, {
+// Jenis_Kendaraan Relations
+// Jenis_Kendaraan -||---|<- Bus_Fasilitas ->|---||- Fasilitas
+db.Jenis_Kendaraan.belongsToMany(db.Fasilitas, {
     through: db.Bus_Fasilitas,
     foreignKey: 'idTipe',
     otherKey: 'idFasilitas',
     as: 'fasilitas'
 });
 
-db.Fasilitas.belongsToMany(db.Tipe_Bus, {
+db.Fasilitas.belongsToMany(db.Jenis_Kendaraan, {
     through: db.Bus_Fasilitas,
     foreignKey: 'idFasilitas',
     otherKey: 'idTipe',
-    as: 'tipe_bus'
+    as: 'jenis_kendaraan'
 });
 
-
-// Bus ->|---||- Tipe_Bus
-db.Tipe_Bus.hasMany(db.Bus, {
+// Bus ->|---||- Jenis_Kendaraan
+db.Jenis_Kendaraan.hasMany(db.Bus, {
     foreignKey: 'idTipe',
     as: 'bus'
 });
 
-db.Bus.belongsTo(db.Tipe_Bus, {
+db.Bus.belongsTo(db.Jenis_Kendaraan, {
     foreignKey: 'idTipe',
-    as: 'tipe_bus'
+    as: 'jenis_kendaraan'
 });
 
-
-// Terminal -||---|<- Jadwal ->|---||- Bus
+// Jadwal Relations
+// Terminal -||---|<- Jadwal
 db.Terminal.hasMany(db.Jadwal, {
-    foreignKey: 'titik_naik', // atau idTerminalNaik
+    foreignKey: 'titik_naik',
     as: 'jadwalKeberangkatan'
 });
 
 db.Terminal.hasMany(db.Jadwal, {
-    foreignKey: 'titik_turun', // atau idTerminalTurun
+    foreignKey: 'titik_turun',
     as: 'jadwalKedatangan'
 });
 
@@ -91,6 +98,7 @@ db.Jadwal.belongsTo(db.Terminal, {
     as: 'terminalTurun'
 });
 
+// Bus -||---|<- Jadwal
 db.Bus.hasMany(db.Jadwal, {
     foreignKey: 'idBus',
     as: 'jadwal'
@@ -101,51 +109,42 @@ db.Jadwal.belongsTo(db.Bus, {
     as: 'bus'
 });
 
-// User -||---|<- Reservasi ->|---||- Jadwal
-db.User.hasMany(db.Reservasi, {
+// Reservasi Relations
+// Customer -||---|<- Reservasi
+db.Customer.hasMany(db.Reservasi, {
     foreignKey: 'idUser',
     as: 'reservasi'
 });
 
-db.Reservasi.belongsTo(db.User, {
+db.Reservasi.belongsTo(db.Customer, {
     foreignKey: 'idUser',
-    as: 'user'
+    as: 'customer'
 });
 
-db.Jadwal.hasMany(db.Reservasi, {
-    foreignKey: 'idJadwal',
-    as: 'reservasi'
-});
-
-db.Reservasi.belongsTo(db.Jadwal, {
-    foreignKey: 'idJadwal',
-    as: 'jadwal'
-});
-
-
-// Mitra -||---|<- Tipe Bus -||---|<- Foto_Bus
-db.Mitra.hasMany(db.Tipe_Bus, {
+// Mitra Relations
+// Mitra -||---|<- Jenis_Kendaraan -||---|<- Foto_Bus
+db.Mitra.hasMany(db.Jenis_Kendaraan, {
     foreignKey: 'idMitra',
-    as: 'tipe_bus'
+    as: 'jenis_kendaraan'
 });
 
-db.Tipe_Bus.belongsTo(db.Mitra, {
+db.Jenis_Kendaraan.belongsTo(db.Mitra, {
     foreignKey: 'idMitra',
     as: 'mitra'
 });
 
-db.Tipe_Bus.hasMany(db.Foto_Bus, {
+db.Jenis_Kendaraan.hasMany(db.Foto_Bus, {
     foreignKey: 'idTipe',
     as: 'foto_bus'
 });
 
-db.Foto_Bus.belongsTo(db.Tipe_Bus, {
+db.Foto_Bus.belongsTo(db.Jenis_Kendaraan, {
     foreignKey: 'idTipe',
-    as: 'tipe_bus'
+    as: 'jenis_kendaraan'
 });
 
-
-// Reservasi --||---|<- Reservasi Detail
+// Reservasi Detail Relations
+// Reservasi -||---|<- Reservasi_Detail
 db.Reservasi.hasMany(db.Reservasi_Detail, {
     foreignKey: 'idReservasi',
     as: 'reservasi_detail'
@@ -156,28 +155,15 @@ db.Reservasi_Detail.belongsTo(db.Reservasi, {
     as: 'reservasi'
 });
 
-
-// Bus --||---|<- Kursi
-db.Bus.hasMany(db.Kursi, {
-    foreignKey: 'idBus',
-    as: 'kursi'
-});
-
-db.Kursi.belongsTo(db.Bus, {
-    foreignKey: 'idBus',
-    as: 'bus'
-});
-
-// Kursi --||---|<- Reservasi_Detail
-db.Kursi.hasMany(db.Reservasi_Detail, {
-    foreignKey: 'idKursi',
+// Jadwal -||---|<- Reservasi_Detail
+db.Jadwal.hasMany(db.Reservasi_Detail, {
+    foreignKey: 'idJadwal',
     as: 'reservasi_detail'
 });
 
-db.Reservasi_Detail.belongsTo(db.Kursi, {
-    foreignKey: 'idKursi',
-    as: 'kursi'
+db.Reservasi_Detail.belongsTo(db.Jadwal, {
+    foreignKey: 'idJadwal',
+    as: 'jadwal'
 });
-
 
 module.exports = db;

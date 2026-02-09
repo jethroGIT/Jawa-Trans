@@ -27,6 +27,7 @@ async function fetchCreateBus(payload) {
             idTipe: payload.idTipe,
             plat_nomor: payload.plat_nomor,
             kode_bus: payload.kode_bus,
+            kapasitas: payload.kapasitas
         });
 
         if (response.success === false) {
@@ -58,6 +59,7 @@ async function fetchUpdateBus(id, payload) {
             idTipe: payload.idTipe,
             plat_nomor: payload.plat_nomor,
             kode_bus: payload.kode_bus,
+            kapasitas: payload.kapasitas,
             status: payload.status
         });
 

@@ -1,9 +1,9 @@
 const { DataTypes } = require('sequelize');
 
-let Tipe_Bus; 
+let Jenis_Kendaraan;
 
-const defineTipeBusModel = (sequelize) => {
-    Tipe_Bus = sequelize.define('Tipe_Bus', {
+const defineJenisKendaraanModel = (sequelize) => {
+    Jenis_Kendaraan = sequelize.define('Jenis_Kendaraan', {
         idTipe: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -17,19 +17,15 @@ const defineTipeBusModel = (sequelize) => {
         tipe: {
             type: DataTypes.STRING(255),
             allowNull: false
-        },
-        kapasitas: {
-            type: DataTypes.INTEGER,
-            allowNull: true
         }
     }, {
-        tableName: 'tipe_bus',
+        tableName: 'jenis_kendaraan',
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at'
     });
 
-    return Tipe_Bus;
+    return Jenis_Kendaraan;
 };
 
-module.exports = defineTipeBusModel;
+module.exports = defineJenisKendaraanModel;

@@ -29,11 +29,11 @@ export default function IndexUser() {
 
                 // Transform data to match table format
                 const transformedData = data.map(user => ({
-                    idUser: user.idUser,
+                    idEmployee: user.idEmployee,
                     nama: user.nama || '-',
+                    telephone: user.telephone || '-',
                     email: user.email || '-',
                     role: user.role?.nama || '-',
-                    mitra: user.mitra?.nama || '-',
                 }));
 
                 setUsers(transformedData);
@@ -55,9 +55,9 @@ export default function IndexUser() {
             const lowerSearch = searchTerm.toLowerCase();
             return (
                 user.nama.toLowerCase().includes(lowerSearch) ||
+                user.telephone.toLowerCase().includes(lowerSearch) ||
                 user.email.toLowerCase().includes(lowerSearch) ||
-                user.role.toLowerCase().includes(lowerSearch) ||
-                user.mitra.toLowerCase().includes(lowerSearch)
+                user.role.toLowerCase().includes(lowerSearch)
             );
         });
     }, [searchTerm, users]);
@@ -88,6 +88,12 @@ export default function IndexUser() {
             render: (data) => `<span class="font-bold text-slate-900 tracking-wide">${data}</span>`
         },
         {
+            data: 'telephone',
+            title: 'No. Telepon',
+            type: 'string',
+            className: 'text-slate-600'
+        },
+        {
             data: 'email',
             title: 'Email',
             className: 'text-slate-600'
@@ -97,11 +103,6 @@ export default function IndexUser() {
             title: 'Role User',
             className: 'text-slate-600',
             render: (data) => `<span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">${data}</span>`
-        },
-        {
-            data: 'mitra',
-            title: 'Nama Mitra',
-            className: 'text-slate-600 font-medium'
         },
         {
             data: null,
@@ -198,7 +199,7 @@ export default function IndexUser() {
                                         const actionCell = row.querySelector('.action-cell');
                                         if (actionCell) {
                                             const root = createRoot(actionCell);
-                                            root.render(<ActionButtons id={data.idUser} />);
+                                            root.render(<ActionButtons id={data.idEmployee} />);
                                         }
                                     }
                                 }}
@@ -206,9 +207,9 @@ export default function IndexUser() {
                                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
                                     <tr>
                                         <th className="px-6 py-4 font-semibold text-slate-600">Nama User</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">No. Telepon</th>
                                         <th className="px-6 py-4 font-semibold text-slate-600">Email</th>
                                         <th className="px-6 py-4 font-semibold text-slate-600">Role User</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600">Nama Mitra</th>
                                         <th className="px-6 py-4 font-semibold text-slate-600 text-center">Aksi</th>
                                     </tr>
                                 </thead>

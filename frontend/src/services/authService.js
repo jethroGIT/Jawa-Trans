@@ -2,11 +2,19 @@
 import { apiRequest } from "./api";
 
 function loginRequest(email, password) {
-    return apiRequest("login", "POST", { email, password });
+    return apiRequest("auth/customer/login", "POST", { email, password });
 }
 
 function registerRequest({ nama, alamat, telephone, email, password }) {
-    return apiRequest("register", "POST", { nama, alamat, telephone, email, password });
+    return apiRequest("auth/customer/register", "POST", { nama, alamat, telephone, email, password });
+}
+
+function loginEmployeeRequest(email, password) {
+    return apiRequest("auth/employee/login", "POST", { email, password });
+}
+
+function loginSuperAdminRequest(email, password) {
+    return apiRequest("auth/superadmin/login", "POST", { email, password });
 }
 
 function saveAuth(token, userData) {
@@ -37,6 +45,8 @@ function logout() {
 export default {
     loginRequest,
     registerRequest,
+    loginEmployeeRequest,
+    loginSuperAdminRequest,
     saveAuth,
     getToken,
     getUser,

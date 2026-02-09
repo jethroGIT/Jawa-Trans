@@ -19,8 +19,9 @@ export default function UpdateUser() {
                 const data = await userMitraService.getUserById(id);
                 // Ensure data matches what UserForm expects
                 setInitialData({
-                    idUser: data.idUser,
+                    idEmployee: data.idEmployee,
                     nama: data.nama,
+                    nik: data.nik,
                     email: data.email,
                     telephone: data.telephone,
                     alamat: data.alamat,

@@ -1,19 +1,23 @@
 const db = require('../models');
 const Reservasi = db.Reservasi;
 const Reservasi_Detail = db.Reservasi_Detail;
-const Kursi = db.Kursi;
-const User = db.User;
+const Customer = db.Customer;
 const Jadwal = db.Jadwal;
 const Terminal = db.Terminal;
 const Bus = db.Bus;
-const Tipe_Bus = db.Tipe_Bus;
+const Jenis_Kendaraan = db.Jenis_Kendaraan;
 const Mitra = db.Mitra;
+const jadwalService = require('./jadwal.service');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
+const { get } = require('../routes/api');
 
-const fieldValidation = ({ idUser, idJadwal, penumpang, method, hargaSatuan, totalHarga, namaPenumpang, kursi }) => {
-    if (!idUser || !idJadwal || !penumpang || !method || !hargaSatuan || !totalHarga) {
-        throw new Error('Field idUser, idJadwal, method, hargaSatuan, totalHarga dan penumpang wajib diisi!');
+const fieldValidation = ({ idUser, idJadwal, method, hargaSatuan, namaPenumpang, kursi }) => {
+    // idUser, method, hargaSatuan are for Reservasi
+    // idJadwal, namaPenumpang, kursi are for Reservasi_Detail logic
+
+    if (!idUser || !idJadwal || !method || !hargaSatuan) {
+        throw new Error('Field idUser, idJadwal, method, dan hargaSatuan wajib diisi!');
     }
 
     if (!Array.isArray(namaPenumpang) || namaPenumpang.length === 0) {
@@ -24,12 +28,8 @@ const fieldValidation = ({ idUser, idJadwal, penumpang, method, hargaSatuan, tot
         throw new Error('Mohon masukan nomor kursi');
     }
 
-    if (namaPenumpang.length !== penumpang) {
-        throw new Error(`Jumlah nama penumpang (${namaPenumpang.length}) harus sama dengan jumlah penumpang (${penumpang})!`);
-    }
-
-    if (kursi.length !== penumpang) {
-        throw new Error(`Jumlah kursi (${kursi.length}) harus sama dengan jumlah penumpang (${penumpang})!`);
+    if (namaPenumpang.length !== kursi.length) {
+        throw new Error(`Jumlah nama penumpang (${namaPenumpang.length}) harus sama dengan jumlah kursi (${kursi.length})!`);
     }
 
     return true;
@@ -39,47 +39,29 @@ const findReservasiOrFail = async (id) => {
     const reservasi = await Reservasi.findByPk(id, {
         include: [
             {
-                model: User,
-                as: 'user'
-            },
-            {
-                model: Jadwal,
-                as: 'jadwal',
-                include: [
-                    {
-                        model: Terminal,
-                        as: 'terminalNaik'
-                    },
-                    {
-                        model: Terminal,
-                        as: 'terminalTurun'
-                    },
-                    {
-                        model: Bus,
-                        as: 'bus',
-                        include: [
-                            {
-                                model: Tipe_Bus,
-                                as: 'tipe_bus',
-                                include: [
-                                    {
-                                        model: Mitra,
-                                        as: 'mitra'
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-
-                ]
+                model: Customer,
+                as: 'customer'
             },
             {
                 model: Reservasi_Detail,
                 as: 'reservasi_detail',
                 include: [
                     {
-                        model: Kursi,
-                        as: 'kursi'
+                        model: Jadwal,
+                        as: 'jadwal',
+                        include: [
+                            { model: Terminal, as: 'terminalNaik' },
+                            { model: Terminal, as: 'terminalTurun' },
+                            {
+                                model: Bus,
+                                as: 'bus',
+                                include: [{
+                                    model: Jenis_Kendaraan,
+                                    as: 'jenis_kendaraan',
+                                    include: [{ model: Mitra, as: 'mitra' }]
+                                }]
+                            }
+                        ]
                     }
                 ]
             }
@@ -91,69 +73,57 @@ const findReservasiOrFail = async (id) => {
     return reservasi;
 };
 
-const checkDuplicateReservasi = async (idUser, idJadwal, kursi = [], id = null) => {
-    // Jika diberikan array kursi, cek apakah ada kursi yang sudah dipesan (status pending)
+// Check if seats are already booked for a specific schedule
+const checkDuplicateReservasi = async (idJadwal, kursi = []) => {
     if (Array.isArray(kursi) && kursi.length > 0) {
         const kursiBooking = await Reservasi_Detail.findAll({
+            where: {
+                idJadwal: idJadwal,
+                noKursi: { [Op.in]: kursi }
+            },
             include: [
                 {
                     model: Reservasi,
                     as: 'reservasi',
                     where: {
-                        idJadwal,
                         status: {
-                            [Op.in]: ['pending', 'paid']
+                            [Op.in]: [0, 1] // 0: Pending, 1: Paid
                         }
                     }
                 }
-            ],
-            where: { idKursi: kursi }
+            ]
         });
 
-        // Jika sedang melakukan update, abaikan detail reservasi milik reservasi yang sama
-        const filtered = id ? kursiBooking.filter(d => d.idReservasi != id) : kursiBooking;
-
-        if (filtered.length > 0) {
-            const kursiSudahDipesan = filtered.map(item => item.idKursi);
-            throw new Error(`Kursi ${kursiSudahDipesan.join(', ')} sudah dipesan`);
+        if (kursiBooking.length > 0) {
+            const kursiSudahDipesan = kursiBooking.map(item => item.noKursi);
+            throw new Error(`Kursi nomor ${kursiSudahDipesan.join(', ')} sudah dipesan`);
         }
-
         return true;
     }
-
-    // Jika tidak ada kursi yang dikirim, fallback ke cek berdasarkan user + jadwal
-    const whereCondition = {
-        idUser,
-        idJadwal
-    };
-
-    const existingReservasi = await Reservasi.findOne({
-        where: whereCondition
-    });
-
-    if (existingReservasi && existingReservasi.idReservasi != id) {
-        throw new Error('Reservasi dengan jadwal tersebut sudah ada!');
-    }
-
     return true;
 };
 
-const checkUserExist = async (idUser) => {
-    const user = await User.findByPk(idUser);
-    if (!user) {
-        throw new Error('User tidak ditemukan!');
+const checkCustomerExist = async (idUser) => {
+    const customer = await Customer.findByPk(idUser);
+    if (!customer) {
+        throw new Error('Customer tidak ditemukan!');
     }
-
     return true;
 };
 
 const checkJadwalExist = async (idJadwal) => {
-    const jadwal = await Jadwal.findByPk(idJadwal);
+    const jadwal = await Jadwal.findByPk(idJadwal, {
+        include: [{
+            model: Bus,
+            as: 'bus',
+            include: [{ model: Jenis_Kendaraan, as: 'jenis_kendaraan' }]
+        }]
+    });
+
     if (!jadwal) {
         throw new Error('Jadwal tidak ditemukan!');
     }
-
-    return true;
+    return jadwal;
 };
 
 
@@ -161,154 +131,232 @@ const getAllReservasi = async () => {
     return await Reservasi.findAll({
         include: [
             {
-                model: User,
-                as: 'user'
+                model: Customer,
+                as: 'customer'
             },
             {
-                model: Jadwal,
-                as: 'jadwal'
+                model: Reservasi_Detail,
+                as: 'reservasi_detail',
+                include: [{
+                    model: Jadwal,
+                    as: 'jadwal'
+                }]
             }
         ]
     });
 };
 
-const getReservasiByMitra = async (idMitra) => {
-    return await Reservasi.findAll({
+const getJumlahKursiTerjual = async (idJadwal) => {
+    const count = await Reservasi_Detail.count({
+        where: { idJadwal: idJadwal },
         include: [
             {
-                model: Jadwal,
-                as: 'jadwal',
-                required: true,
+                model: Reservasi,
+                as: 'reservasi',
+                where: { status: 1 } // Hanya yang sudah dibayar
+            }
+        ]
+    });
+    return count;
+};
+
+const getTotalHargaJadwal = async (jadwal) => {
+    const jumlahKursi = await getJumlahKursiTerjual(jadwal.idJadwal);
+    return jadwal.harga * jumlahKursi;
+};
+
+const getJumlahReservasiPerStatus = async (idJadwal) => {
+    const jadwal = await Jadwal.findByPk(idJadwal, {
+        include: [
+            {
+                model: Bus,
+                as: 'bus',
                 include: [
                     {
-                        model: Bus,
-                        as: 'bus',
-                        required: true,
-                        include: [
-                            {
-                                model: Tipe_Bus,
-                                as: 'tipe_bus',
-                                where: { idMitra: idMitra },
-                                required: true,
-                                include: [
-                                    {
-                                        model: Mitra,
-                                        as: 'mitra'
-                                    }
-                                ]
-                            }
-                        ]
+                        model: Jenis_Kendaraan,
+                        as: 'jenis_kendaraan',
                     }
                 ]
             },
+            { model: Terminal, as: 'terminalNaik' },
+            { model: Terminal, as: 'terminalTurun' }
         ]
     });
+
+    if (!jadwal) {
+        throw new Error('Jadwal tidak ditemukan!');
+    }
+
+    const pending = await Reservasi.count({
+        where: { status: 0 },
+        include: [
+            {
+                model: Reservasi_Detail,
+                as: 'reservasi_detail',
+                where: { idJadwal: idJadwal }
+            }
+        ]
+    });
+    const totalPending = jadwal.harga * pending;
+
+    const paid = await Reservasi.count({
+        where: { status: 1 },
+        include: [
+            {
+                model: Reservasi_Detail,
+                as: 'reservasi_detail',
+                where: { idJadwal: idJadwal }
+            }
+        ]
+    });
+    const totalPaid = jadwal.harga * paid;
+
+    const expire = await Reservasi.count({
+        where: { status: 2 },
+        include: [
+            {
+                model: Reservasi_Detail,
+                as: 'reservasi_detail',
+                where: { idJadwal: idJadwal }
+            }
+        ]
+    });
+    const totalExpire = jadwal.harga * expire;
+
+    const reservasiJadwal = await Reservasi.findAll({
+        include: [
+            {
+                model: Reservasi_Detail,
+                as: 'reservasi_detail',
+                where: { idJadwal: idJadwal }
+            },
+            {
+                model: Customer,
+                as: 'customer'
+            }
+        ]
+    })
+
+    const count = {
+        jadwal,
+        pending,
+        paid,
+        expire,
+        totalPending,
+        totalPaid,
+        totalExpire,
+        reservasiJadwal
+    };
+
+    return count;
 }
+
+const getDetailKeuanganJadwal = async (idJadwal) => {
+    const jadwal = await Jadwal.findByPk(idJadwal);
+    const count = await getJumlahReservasiPerStatus(idJadwal);
+    return {
+        ...jadwal.toJSON(),
+        ...count
+    };
+}
+
+const getReservasiByMitra = async (idMitra) => {
+    // Dapatkan semua jadwal yang terkait dengan mitra
+    const jadwalList = await Jadwal.findAll({
+        include: [
+            {
+                model: Bus,
+                as: 'bus',
+                include: [
+                    {
+                        model: Jenis_Kendaraan,
+                        as: 'jenis_kendaraan',
+                        where: { idMitra: idMitra },
+                        include: [{ model: Mitra, as: 'mitra' }]
+                    }
+                ]
+            },
+            { model: Terminal, as: 'terminalNaik' },
+            { model: Terminal, as: 'terminalTurun' }
+        ]
+    });
+
+    // Tambahkan informasi total pendapatan untuk setiap jadwal
+    const jadwalWithPendapatan = await Promise.all(
+        jadwalList.map(async (jadwal) => {
+            // Hitung jumlah reservasi detail yang sudah dibayar (status = 1)
+            const jumlahTerjual = await getJumlahKursiTerjual(jadwal.idJadwal);
+
+            const totalPendapatan = await getTotalHargaJadwal(jadwal);
+
+            return {
+                ...jadwal.toJSON(),
+                jumlahTerjual,
+                totalPendapatan
+            };
+        })
+    );
+
+    return jadwalWithPendapatan;
+};
 
 const getReservasiById = async (id) => {
     return await findReservasiOrFail(id);
 };
 
-const createReservasi = async ({ idUser, idJadwal, penumpang, method, hargaSatuan, totalHarga, namaPenumpang, kursi }) => {
-    fieldValidation({ idUser, idJadwal, penumpang, method, hargaSatuan, totalHarga, namaPenumpang, kursi });
+const createReservasi = async ({ idUser, idJadwal, method, hargaSatuan, namaPenumpang, kursi }) => {
+    await checkCustomerExist(idUser);
+    const jadwal = await checkJadwalExist(idJadwal);
 
-    await checkUserExist(idUser);
-
-    await checkJadwalExist(idJadwal);
-
-    await checkDuplicateReservasi(idUser, idJadwal, kursi);
-
-    const jadwal = await Jadwal.findByPk(idJadwal);
-    if (!jadwal) {
-        throw new Error('Jadwal tidak ditemukan!');
-    }
-
-    const kursiValid = await Kursi.findAll({
-        where: {
-            idBus: jadwal.idBus,
-            idKursi: kursi
+    const capacity = jadwal.bus.kapasitas;
+    for (const seatNo of kursi) {
+        if (seatNo < 1 || seatNo > capacity) {
+            throw new Error(`Kursi nomor ${seatNo} tidak valid for bus ini (Kapasitas: ${capacity})`);
         }
-    });
-    if (kursiValid.length !== kursi.length) {
-        throw new Error('Ada kursi yang tidak valid untuk bus ini!');
     }
 
-    const kursiBooking = await Reservasi_Detail.findAll({
-        include: [
-            {
-                model: Reservasi,
-                as: 'reservasi',
-                where: {
-                    idJadwal,
-                    status: 'pending'
-                }
-            }
-        ],
-        where: { idKursi: kursi }
-    });
-
-    if (kursiBooking.length > 0) {
-        // Ambil nomor kursi yang sudah dipesan
-        const kursiSudahDipesan = kursiBooking.map(item => item.idKursi);
-        let errorMessage = `Kursi ${kursiSudahDipesan.join(', ')} sudah dipesan`;
-        throw new Error(errorMessage);
-    }
+    await checkDuplicateReservasi(idJadwal, kursi);
 
     const transaction = await sequelize.transaction();
     try {
-        // Buat data reservasi
         const reservasi = await Reservasi.create({
             idUser,
-            idJadwal,
-            penumpang,
             method,
             hargaSatuan,
-            totalHarga,
             waktuBayar: null,
         }, { transaction });
 
-        // Buat data reservasi detail untuk setiap kursi
         const reservasiDetails = [];
         for (let i = 0; i < kursi.length; i++) {
             const detail = await Reservasi_Detail.create({
+                idJadwal: idJadwal,
                 idReservasi: reservasi.idReservasi,
-                namaPenumpang: namaPenumpang[i],
-                idKursi: kursi[i],
+                noKursi: kursi[i],
+                namaPenumpang: namaPenumpang[i]
             }, { transaction });
 
             reservasiDetails.push(detail);
         }
 
-        // Commit transaksi
         await transaction.commit();
 
-        return reservasi;
+        return await findReservasiOrFail(reservasi.idReservasi);
 
     } catch (error) {
-        // Rollback transaksi jika ada error
         await transaction.rollback();
         throw error;
     }
 
 };
 
-const updateReservasi = async ({ id, idUser, idJadwal, penumpang, status }) => {
+const updateReservasi = async ({ id, status }) => {
     const existingReservasi = await findReservasiOrFail(id);
 
-    if (!idUser || !idJadwal || !penumpang) {
-        throw new Error('Field idUser, idJadwal, dan penumpang wajib diisi!');
+    if (status === undefined) {
+        throw new Error('Status wajib diisi!');
     }
 
-    await checkUserExist(idUser);
-
-    await checkJadwalExist(idJadwal);
-
-    await checkDuplicateReservasi(idUser, idJadwal, [], id);
-
     return await existingReservasi.update({
-        idUser,
-        idJadwal,
-        penumpang,
         status
     });
 };
@@ -324,38 +372,17 @@ const getReservasiByUser = async (idUser) => {
         order: [['idReservasi', 'DESC']],
         include: [
             {
-                model: Jadwal,
-                as: 'jadwal',
-                include: [
-                    {
-                        model: Terminal,
-                        as: 'terminalNaik'
-                    },
-                    {
-                        model: Terminal,
-                        as: 'terminalTurun'
-                    }
-                ]
-            },
-        ]
-    });
-};
-
-const getReservasiByJadwal = async (idJadwal) => {
-    return await Reservasi.findAll({
-        where: { idJadwal },
-        include: [
-            {
-                model: User,
-                as: 'user'
-            },
-            {
                 model: Reservasi_Detail,
                 as: 'reservasi_detail',
                 include: [
                     {
-                        model: Kursi,
-                        as: 'kursi'
+                        model: Jadwal,
+                        as: 'jadwal',
+                        include: [
+                            { model: Terminal, as: 'terminalNaik' },
+                            { model: Terminal, as: 'terminalTurun' },
+                            { model: Bus, as: 'bus' } // Simple bus info
+                        ]
                     }
                 ]
             }
@@ -363,15 +390,32 @@ const getReservasiByJadwal = async (idJadwal) => {
     });
 };
 
+const getReservasiByJadwal = async (idJadwal) => {
+    return await Reservasi_Detail.findAll({
+        where: { idJadwal },
+        include: [
+            {
+                model: Reservasi,
+                as: 'reservasi',
+                include: [{ model: Customer, as: 'customer' }]
+            }
+        ]
+    });
+};
+
 const updateStatusReservasi = async (id, status) => {
-    if (!status) {
+    if (status === undefined) {
         throw new Error('Status wajib diisi!');
     }
 
     const existingReservasi = await findReservasiOrFail(id);
-
     return await existingReservasi.update({ status });
 };
+
+const updateStatusByOrderId = async (orderId, status) => {
+    return await updateStatusReservasi(orderId, status);
+}
+
 
 module.exports = {
     getAllReservasi,
@@ -382,5 +426,9 @@ module.exports = {
     destroyReservasi,
     getReservasiByUser,
     getReservasiByJadwal,
-    updateStatusReservasi
+    updateStatusReservasi,
+    updateStatusByOrderId,
+    getJumlahKursiTerjual,
+    getTotalHargaJadwal,
+    getJumlahReservasiPerStatus,
 };

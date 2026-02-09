@@ -1,8 +1,7 @@
 const db = require('../models');
 const Bus = db.Bus;
-const Tipe_Bus = db.Tipe_Bus;
+const Jenis_Kendaraan = db.Jenis_Kendaraan; // Changed from Tipe_Bus
 const Fasilitas = db.Fasilitas;
-const Foto_Bus = db.Foto_Bus;
 const { sequelize } = require('../models');
 const fs = require('fs');
 const path = require('path');
@@ -11,8 +10,8 @@ const findBusOrFail = async (id) => {
     const existingBus = await Bus.findByPk(id, {
         include: [
             {
-                model: Tipe_Bus,
-                as: 'tipe_bus',
+                model: Jenis_Kendaraan,
+                as: 'jenis_kendaraan',
                 include: [
                     {
                         model: Fasilitas,
@@ -31,12 +30,12 @@ const findBusOrFail = async (id) => {
     return existingBus;
 };
 
-const fieldValidation = async ({ idTipe, plat_nomor, kode_bus }) => {
-    if (!idTipe || !plat_nomor || !kode_bus) {
-        throw new Error('Semua field wajib diisi');
+const fieldValidation = async ({ idTipe, plat_nomor, kode_bus, kapasitas }) => {
+    if (!idTipe || !plat_nomor || !kode_bus || !kapasitas) {
+        throw new Error('Semua field wajib diisi (termasuk kapasitas)');
     }
 
-    const existingTipe = await Tipe_Bus.findByPk(idTipe);
+    const existingTipe = await Jenis_Kendaraan.findByPk(idTipe);
     if (!existingTipe) {
         console.log(existingTipe);
         throw new Error('Tipe kendaraan tidak ditemukan');
@@ -48,6 +47,12 @@ const fieldValidation = async ({ idTipe, plat_nomor, kode_bus }) => {
 
     if (kode_bus.length > 10) {
         throw new Error('Kode bus maksimal 10 karakter');
+    }
+
+    // Validate kapasitas
+    const kapasitasNum = parseInt(kapasitas);
+    if (isNaN(kapasitasNum) || kapasitasNum < 1 || kapasitasNum > 100) {
+        throw new Error('Kapasitas harus antara 1-100 penumpang');
     }
 
     return true;
@@ -75,8 +80,8 @@ const getAllBus = async (req) => {
     const data = await Bus.findAll({
         include: [
             {
-                model: Tipe_Bus,
-                as: 'tipe_bus',
+                model: Jenis_Kendaraan,
+                as: 'jenis_kendaraan',
                 include: [
                     {
                         model: Fasilitas,
@@ -96,8 +101,8 @@ const getBusByTipe = async (idTipe) => {
         where: { idTipe },
         include: [
             {
-                model: Tipe_Bus,
-                as: 'tipe_bus',
+                model: Jenis_Kendaraan,
+                as: 'jenis_kendaraan',
                 include: [
                     {
                         model: Fasilitas,
@@ -117,10 +122,10 @@ const getBusById = async (req, id) => {
     return bus;
 };
 
-const createBus = async ({ idTipe, plat_nomor, kode_bus }) => {
+const createBus = async ({ idTipe, plat_nomor, kode_bus, kapasitas }) => {
     const transaction = await sequelize.transaction();
     try {
-        await fieldValidation({ idTipe, plat_nomor, kode_bus });
+        await fieldValidation({ idTipe, plat_nomor, kode_bus, kapasitas });
 
         await checkDuplicateBus(plat_nomor, kode_bus);
 
@@ -128,6 +133,8 @@ const createBus = async ({ idTipe, plat_nomor, kode_bus }) => {
             idTipe,
             plat_nomor,
             kode_bus,
+            kapasitas: parseInt(kapasitas),
+            status: 1 // Default status: 1 = aktif
         }, { transaction });
 
         await transaction.commit();
@@ -139,20 +146,30 @@ const createBus = async ({ idTipe, plat_nomor, kode_bus }) => {
     };
 };
 
-const updatebus = async ({ id, idTipe, plat_nomor, kode_bus, status }) => {
+const updatebus = async ({ id, idTipe, plat_nomor, kode_bus, kapasitas, status }) => {
     const transaction = await sequelize.transaction();
 
     try {
         const existingBus = await findBusOrFail(id);
 
-        await fieldValidation({ idTipe, plat_nomor, kode_bus });
+        await fieldValidation({ idTipe, plat_nomor, kode_bus, kapasitas });
         await checkDuplicateBus(plat_nomor, kode_bus, id);
+
+        // Ensure status is a tinyint (0, 1, or 2)
+        let statusValue = parseInt(status);
+        if (isNaN(statusValue) || ![0, 1, 2].includes(statusValue)) {
+            statusValue = 1; // Default to aktif if invalid
+        }
+
+        // Parse kapasitas, default to existing value if not provided
+        const kapasitasValue = kapasitas ? parseInt(kapasitas) : existingBus.kapasitas;
 
         await existingBus.update({
             idTipe,
             plat_nomor,
             kode_bus,
-            status: status
+            kapasitas: kapasitasValue,
+            status: statusValue
         }, { transaction });
 
         await transaction.commit();
@@ -168,19 +185,7 @@ const updatebus = async ({ id, idTipe, plat_nomor, kode_bus, status }) => {
 
 const destroyBus = async (id) => {
     const existingBus = await findBusOrFail(id);
-
-    const oldFotoRecords = await Foto_Bus.findAll({
-        where: { idBus: id },
-    });
-
-    const oldFotoNames = oldFotoRecords.map(foto => foto.nama);
-
-    await Promise.all(
-        oldFotoNames.map(async foto => {
-            hapusFileStorage(foto);
-        })
-    );
-
+    // Removed Foto_Bus deletion logic because photos now belong to Jenis_Kendaraan, not Bus directly.
     return existingBus.destroy();
 };
 

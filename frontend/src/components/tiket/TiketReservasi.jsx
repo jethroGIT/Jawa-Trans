@@ -12,7 +12,31 @@ export default function TiketReservasi() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 
-    const renderStatusBadge = (status) => {
+    // Helper function untuk extract jadwal dari reservasi_detail
+    // Struktur data: reservasi.reservasi_detail[0].jadwal
+    const getJadwalFromReservasi = (item) => {
+        if (item?.reservasi_detail && item.reservasi_detail.length > 0) {
+            return item.reservasi_detail[0].jadwal;
+        }
+        return null;
+    };
+
+    // Helper function untuk mapping status numeric ke label
+    // Status: 0 = pending, 1 = paid, 2 = expired, 3 = failed
+    const getStatusLabel = (statusCode) => {
+        const statusMap = {
+            0: "pending",
+            1: "paid",
+            2: "expired",
+            3: "failed",
+        };
+        return statusMap[statusCode] || "pending";
+    };
+
+    const renderStatusBadge = (statusCode) => {
+        // Convert numeric status to label
+        const statusLabel = getStatusLabel(statusCode);
+
         const statusConfig = {
             paid: {
                 label: "Paid",
@@ -29,9 +53,14 @@ export default function TiketReservasi() {
                 icon: <XCircle className="w-4 h-4 text-red-600" />,
                 className: "bg-red-100 text-red-700 border-red-300",
             },
+            failed: {
+                label: "Failed",
+                icon: <XCircle className="w-4 h-4 text-red-600" />,
+                className: "bg-red-100 text-red-700 border-red-300",
+            },
         };
 
-        const data = statusConfig[status] || statusConfig.pending;
+        const data = statusConfig[statusLabel] || statusConfig.pending;
 
         return (
             <div
@@ -163,7 +192,7 @@ export default function TiketReservasi() {
 
                                             <div className="flex items-center gap-2 flex-1">
                                                 <span className="text-base font-semibold text-gray-800">
-                                                    {item.jadwal.terminalNaik.nama}
+                                                    {getJadwalFromReservasi(item)?.terminalNaik?.nama || '-'}
                                                 </span>
 
                                                 <svg
@@ -181,7 +210,7 @@ export default function TiketReservasi() {
                                                 </svg>
 
                                                 <span className="text-base font-semibold text-gray-800">
-                                                    {item.jadwal.terminalTurun.nama}
+                                                    {getJadwalFromReservasi(item)?.terminalTurun?.nama || '-'}
                                                 </span>
                                             </div>
                                         </div>
@@ -190,14 +219,14 @@ export default function TiketReservasi() {
                                     {/* Bottom Section */}
                                     <div className="flex justify-between items-center">
                                         <p className="text-sm text-gray-600 font-medium">
-                                            {new Date(item.jadwal.tanggal_keberangkatan).toLocaleDateString("id-ID", {
+                                            {new Date(getJadwalFromReservasi(item)?.tanggal_keberangkatan).toLocaleDateString("id-ID", {
                                                 weekday: "long",
                                                 day: "numeric",
                                                 month: "long",
                                                 year: "numeric",
                                             })}
                                             {" - "}
-                                            {new Date(item.jadwal.tanggal_keberangkatan)
+                                            {new Date(getJadwalFromReservasi(item)?.tanggal_keberangkatan)
                                                 .toLocaleTimeString("id-ID", {
                                                     hour: "2-digit",
                                                     minute: "2-digit",

@@ -4,29 +4,35 @@ let ReservasiDetail; // Inisialisasi variabel model
 
 const defineReservasiDetailModel = (sequelize) => {
     ReservasiDetail = sequelize.define('ReservasiDetail', {
-        idDetail: {
+        idJadwal: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
-            autoIncrement: true
+            comment: 'Referensi ke jadwal perjalanan'
         },
         idReservasi: {
             type: DataTypes.INTEGER,
+            primaryKey: true,
             allowNull: false,
+            comment: 'Referensi ke reservasi header'
+        },
+        noKursi: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            allowNull: false,
+            comment: 'Nomor kursi yang dipesan'
         },
         namaPenumpang: {
             type: DataTypes.STRING(100),
-            allowNull: true,
-        },
-        idKursi: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
+            allowNull: false,
+            comment: 'Nama penumpang untuk kursi ini'
         },
     }, {
         tableName: 'reservasidetail',
         timestamps: true,
         createdAt: 'created_at',
-        updatedAt: 'updated_at'
+        updatedAt: 'updated_at',
+        comment: 'Tabel detail reservasi. Satu baris = satu penumpang di satu kursi. Composite key = (idJadwal, idReservasi, noKursi)'
     });
 
     return ReservasiDetail;

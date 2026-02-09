@@ -20,10 +20,11 @@ export default function UserForm({
     isLoading
 }) {
     const navigate = useNavigate();
-    const isEditMode = !!initialData.idUser;
+    const isEditMode = !!initialData.idEmployee;
 
     const [formData, setFormData] = useState({
         nama: '',
+        nik: '',
         email: '',
         password: '',
         telephone: '',
@@ -57,9 +58,10 @@ export default function UserForm({
     }, []);
 
     useEffect(() => {
-        if (initialData.idUser) {
+        if (initialData.idEmployee) {
             setFormData({
                 nama: initialData.nama || '',
+                nik: initialData.nik || '',
                 email: initialData.email || '',
                 // Password tidak diisi saat edit kecuali user mau ubah
                 password: '',
@@ -80,7 +82,7 @@ export default function UserForm({
         e.preventDefault();
 
         // Basic validation
-        if (!formData.nama || !formData.email || !formData.telephone || !formData.idRole || !formData.idMitra) {
+        if (!formData.nama || !formData.nik || !formData.email || !formData.telephone || !formData.idRole || !formData.idMitra) {
             Swal.fire('Error', 'Mohon lengkapi field wajib.', 'error');
             return;
         }
@@ -109,6 +111,21 @@ export default function UserForm({
                             value={formData.nama}
                             onChange={handleChange}
                             placeholder="Contoh: John Doe"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all font-medium"
+                            required
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-1">
+                            <User className="w-4 h-4 text-slate-400" /> NIK <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="nik"
+                            value={formData.nik}
+                            onChange={handleChange}
+                            placeholder="Contoh: 3201234567890001"
                             className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all font-medium"
                             required
                         />

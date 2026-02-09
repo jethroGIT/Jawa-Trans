@@ -7,7 +7,7 @@ const Fasilitas = db.Fasilitas;
 const Terminal = db.Terminal;
 const Foto_Bus = db.Foto_Bus;
 const Mitra = db.Mitra;
-const Tipe_Bus = db.Tipe_Bus;
+const Jenis_Kendaraan = db.Jenis_Kendaraan;
 const ReservasiDetail = db.Reservasi_Detail;
 const Reservasi = db.Reservasi;
 const { Op } = require('sequelize');
@@ -24,8 +24,8 @@ const findOrFail = async (id) => {
                 include:
                     [
                         {
-                            model: Tipe_Bus,
-                            as: 'tipe_bus',
+                            model: Jenis_Kendaraan,
+                            as: 'jenis_kendaraan',
                             include:
                                 [
                                     {
@@ -149,8 +149,8 @@ const urlFotoBusJadwal = (req, jadwal) => {
 
     const jadwalJSON = jadwal.toJSON();
 
-    if (jadwalJSON.bus && jadwalJSON.bus.tipe_bus && jadwalJSON.bus.tipe_bus.foto_bus) {
-        jadwalJSON.bus.tipe_bus.foto_bus = addUrlToFotoBus(req, jadwalJSON.bus.tipe_bus.foto_bus);
+    if (jadwalJSON.bus && jadwalJSON.bus.jenis_kendaraan && jadwalJSON.bus.jenis_kendaraan.foto_bus) {
+        jadwalJSON.bus.jenis_kendaraan.foto_bus = addUrlToFotoBus(req, jadwalJSON.bus.jenis_kendaraan.foto_bus);
     }
 
     return jadwalJSON;
@@ -158,16 +158,18 @@ const urlFotoBusJadwal = (req, jadwal) => {
 
 const getKursiTerjual = async (idJadwal) => {
     const kursiTerjual = await ReservasiDetail.findAll({
-        attributes: ['idKursi'],
+        attributes: ['noKursi'],
+        where: {
+            idJadwal: idJadwal
+        },
         include: [
             {
                 model: Reservasi,
                 as: 'reservasi',
                 where: {
-                    idJadwal: idJadwal,
                     status: {
-                        [Op.in]: ['pending', 'paid']
-                    } // atau status lain yang menandakan kursi sudah dibooking
+                        [Op.in]: [0, 1] // 0 = pending, 1 = paid
+                    }
                 },
                 attributes: [] // Tidak perlu ambil data reservasi
             }
@@ -175,7 +177,7 @@ const getKursiTerjual = async (idJadwal) => {
         raw: true
     });
 
-    return kursiTerjual.map(k => k.idKursi).sort((a, b) => a - b);
+    return kursiTerjual.map(k => k.noKursi).sort((a, b) => a - b);
 };
 
 
@@ -189,8 +191,8 @@ const getAllJadwal = async () => {
                 include:
                     [
                         {
-                            model: Tipe_Bus,
-                            as: 'tipe_bus',
+                            model: Jenis_Kendaraan,
+                            as: 'jenis_kendaraan',
                             include:
                                 [
                                     {
@@ -226,7 +228,7 @@ const getJadwalById = async (req, id) => {
     return {
         ...jadwalWithUrl,
         kursiTerjual,
-        kursiTersedia: jadwal.bus.tipe_bus.kapasitas - kursiTerjual.length
+        kursiTersedia: jadwal.bus.kapasitas - kursiTerjual.length
     }
 };
 
@@ -239,8 +241,8 @@ const getJadwalByMitra = async (idMitra) => {
                 required: true,
                 include: [
                     {
-                        model: Tipe_Bus,
-                        as: 'tipe_bus',
+                        model: Jenis_Kendaraan,
+                        as: 'jenis_kendaraan',
                         where: { idMitra: idMitra },
                         required: true,
                         include: [
@@ -414,10 +416,51 @@ const getJadwalByBus = async (idBus, tanggal = null) => {
     });
 };
 
+const getJadwalWithReservasi = async (req, id) => {
+    // Get schedule details
+    const jadwal = await findOrFail(id);
+    const jadwalWithUrl = urlFotoBusJadwal(req, jadwal);
+    const kursiTerjual = await getKursiTerjual(id);
+
+    // Get all reservations for this schedule
+    const Customer = db.Customer;
+    const reservasiList = await Reservasi.findAll({
+        include: [
+            {
+                model: ReservasiDetail,
+                as: 'reservasi_detail',
+                where: {
+                    idJadwal: id
+                },
+                required: true
+            },
+            {
+                model: Customer,
+                as: 'customer',
+                attributes: ['idUser', 'nama_lengkap', 'nomor_identitas', 'nomor_telepon', 'email', 'alamat']
+            }
+        ],
+        where: {
+            status: 1 // Only paid reservations
+        },
+        order: [['createdAt', 'ASC']]
+    });
+
+    return {
+        jadwal: {
+            ...jadwalWithUrl,
+            kursiTerjual,
+            kursiTersedia: jadwal.bus.kapasitas - kursiTerjual.length
+        },
+        reservasi: reservasiList
+    };
+};
+
 module.exports = {
     getAllJadwal,
     getJadwalByMitra,
     getJadwalById,
+    getJadwalWithReservasi,
     createJadwal,
     updateJadwal,
     destroyJadwal,

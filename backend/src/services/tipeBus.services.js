@@ -1,6 +1,6 @@
 const db = require('../models');
 const Mitra = db.Mitra;
-const Tipe_Bus = db.Tipe_Bus;
+const Jenis_Kendaraan = db.Jenis_Kendaraan; // Changed from Tipe_Bus
 const Foto_Bus = db.Foto_Bus;
 const Fasilitas = db.Fasilitas;
 const { sequelize } = require('../models');
@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const findTipeOrFail = async (id) => {
-    const existingTipe = await Tipe_Bus.findByPk(id, {
+    const existingTipe = await Jenis_Kendaraan.findByPk(id, {
         include: [
             {
                 model: Foto_Bus,
@@ -27,8 +27,8 @@ const findTipeOrFail = async (id) => {
     return existingTipe;
 };
 
-const fieldValidation = async ({ idMitra, tipe, kapasitas, fotos, isUpdate = false }) => {
-    if (!idMitra || !tipe || !kapasitas) {
+const fieldValidation = async ({ idMitra, tipe, fasilitas, fotos, isUpdate = false }) => {
+    if (!idMitra || !tipe) {
         throw new Error('Semua field harus diisi!');
     }
 
@@ -37,9 +37,7 @@ const fieldValidation = async ({ idMitra, tipe, kapasitas, fotos, isUpdate = fal
         throw new Error('Mitra tidak ditemukan!');
     }
 
-    if (kapasitas < 1 || kapasitas > 50) {
-        throw new Error('Kapasitas harus antara 1 sampai 50!');
-    }
+    // Kapasitas checked removed as field is deleted from Tipe_Bus/Jenis_Kendaraan
 
     if (!isUpdate) {
         if (!Array.isArray(fotos) || fotos.length < 1 || fotos.length > 5) {
@@ -55,7 +53,7 @@ const fieldValidation = async ({ idMitra, tipe, kapasitas, fotos, isUpdate = fal
 };
 
 const checkDuplicateTipe = async (tipe, idMitra, id = null) => {
-    const existingTipe = await Tipe_Bus.findOne({
+    const existingTipe = await Jenis_Kendaraan.findOne({
         where: { tipe, idMitra }
     });
     if (existingTipe && existingTipe.idTipe != id) {
@@ -109,24 +107,26 @@ const addUrlToFotoBus = (req, fotoBusArray) => {
 
 
 const urlFotoBus = (req, data) => {
+    // Helper to format foto_bus URLs
+    const formatFotos = (fotos) => {
+        if (!fotos) return [];
+        return fotos.map(foto => ({
+            ...foto.toJSON(),
+            url: `${req.protocol}://${req.get('host')}/uploads/foto_bus/${foto.nama}`
+        }));
+    };
+
     if (Array.isArray(data)) {
         return data.map(item => ({
             ...item.toJSON(),
-            foto_bus: item.foto_bus.map(foto => ({
-                ...foto.toJSON(),
-                url: `${req.protocol}://${req.get('host')}/uploads/foto_bus/${foto.nama}`
-            }))
+            foto_bus: formatFotos(item.foto_bus)
         }));
     } else {
         return {
             ...data.toJSON(),
-            foto_bus: data.foto_bus.map(foto => ({
-                ...foto.toJSON(),
-                url: `${req.protocol}://${req.get('host')}/uploads/foto_bus/${foto.nama}`
-            }))
+            foto_bus: formatFotos(data.foto_bus)
         };
     }
-
 };
 
 const hapusFileStorage = (fotoFile) => {
@@ -139,7 +139,7 @@ const hapusFileStorage = (fotoFile) => {
 }
 
 const getAllTipe = async (req) => {
-    const data = await Tipe_Bus.findAll({
+    const data = await Jenis_Kendaraan.findAll({
         include: [
             {
                 model: Foto_Bus,
@@ -157,8 +157,19 @@ const getAllTipe = async (req) => {
 };
 
 const getTipeBusByMitra = async (idMitra) => {
-    const data = await Tipe_Bus.findAll({
+    const data = await Jenis_Kendaraan.findAll({
         where: { idMitra },
+        include: [
+            {
+                model: Foto_Bus,
+                as: 'foto_bus'
+            },
+            {
+                model: Fasilitas,
+                as: 'fasilitas',
+                through: { attributes: [] }
+            }
+        ]
     });
 
     return data;
@@ -171,17 +182,18 @@ const getTipeBusById = async (req, id) => {
     return urlFotoBus(req, data);
 };
 
-const storeTipeBus = async ({ idMitra, tipe, kapasitas, fasilitas, fotos }) => {
+const storeTipeBus = async ({ idMitra, tipe, fasilitas, fotos }) => {
     const transaction = await sequelize.transaction();
     try {
-        await fieldValidation({ idMitra, tipe, kapasitas, fotos });
+        await fieldValidation({ idMitra, tipe, fotos });
 
         await checkDuplicateTipe(tipe, idMitra);
 
         const fasilitasArray = konversiStringToIntArray(fasilitas);
         const validFasilitas = await validateFasilitas(fasilitasArray);
 
-        const newTipe = await Tipe_Bus.create({ idMitra, tipe, kapasitas }, { transaction });
+        // removed kapasitas
+        const newTipe = await Jenis_Kendaraan.create({ idMitra, tipe }, { transaction });
 
         await Promise.all(fotos.map(async (foto) => {
             await Foto_Bus.create({
@@ -210,13 +222,13 @@ const storeTipeBus = async ({ idMitra, tipe, kapasitas, fasilitas, fotos }) => {
     return data;
 };
 
-const updateTipeBus = async ({ id, idMitra, tipe, kapasitas, fasilitas, fotos, existingPhotos = [] }) => {
+const updateTipeBus = async ({ id, idMitra, tipe, fasilitas, fotos, existingPhotos = [] }) => {
     const transaction = await sequelize.transaction();
     try {
         // Validasi field, note: kita perlu sesuaikan validasi foto karena sekarang kombinasi fotos (baru) + existingPhotos
         const totalPhotos = (fotos ? fotos.length : 0) + (existingPhotos ? existingPhotos.length : 0);
 
-        await fieldValidation({ idMitra, tipe, kapasitas, fotos: [], isUpdate: true }); // Skip validasi array foto default dulu
+        await fieldValidation({ idMitra, tipe, fotos: [], isUpdate: true }); // Skip validasi array foto default dulu
 
         if (totalPhotos < 1 || totalPhotos > 5) {
             throw new Error('Total foto harus antara 1 sampai 5!');
@@ -229,7 +241,7 @@ const updateTipeBus = async ({ id, idMitra, tipe, kapasitas, fasilitas, fotos, e
         const fasilitasArray = konversiStringToIntArray(fasilitas);
         const validFasilitas = await validateFasilitas(fasilitasArray);
 
-        await existingTipe.update({ idMitra, tipe, kapasitas }, { transaction });
+        await existingTipe.update({ idMitra, tipe }, { transaction }); // removed kapasitas
 
         await existingTipe.setFasilitas(validFasilitas, { transaction });
         console.log(`Linked ${validFasilitas.length} fasilitas to tipe bus ${existingTipe.idTipe}`);

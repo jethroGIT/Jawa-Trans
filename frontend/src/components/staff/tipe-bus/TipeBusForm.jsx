@@ -29,8 +29,7 @@ export default function BusForm({
     // --- STATE FORM ---
     // Gunakan initialData jika ada, atau default value kosong
     const [formData, setFormData] = useState({
-        tipe: initialData.tipe || '',
-        kapasitas: initialData.kapasitas || '',
+        tipe: initialData.tipe || ''
     });
 
     // State Fasilitas & Foto
@@ -43,8 +42,7 @@ export default function BusForm({
     useEffect(() => {
         if (initialData.tipe) {
             setFormData({
-                tipe: initialData.tipe || '',
-                kapasitas: initialData.kapasitas || ''
+                tipe: initialData.tipe || ''
             });
         }
     }, [initialData]);
@@ -103,8 +101,8 @@ export default function BusForm({
         e.preventDefault();
 
         // Validasi
-        if (!formData.tipe || !formData.kapasitas) {
-            Swal.fire('Error', 'Mohon lengkapi data wajib (Nama Tipe dan Kapasitas).', 'error');
+        if (!formData.tipe) {
+            Swal.fire('Error', 'Mohon lengkapi Nama Tipe Bus.', 'error');
             return;
         }
 
@@ -117,7 +115,6 @@ export default function BusForm({
         // Kirim data ke parent component
         onSubmit({
             ...formData,
-            kapasitas: parseInt(formData.kapasitas),
             fasilitas: selectedFasilitas,
             fotos: photos, // File baru
             existingPhotos: existingPhotos // Foto lama yg dipertahankan
@@ -134,40 +131,19 @@ export default function BusForm({
                         <Bus className="w-5 h-5 text-blue-600" />
                         Informasi Tipe Bus
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Nama Tipe Bus <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="tipe"
-                                value={formData.tipe}
-                                onChange={handleChange}
-                                placeholder="Contoh: Ekonomi, Bisnis, Super Executive"
-                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Kapasitas Penumpang <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="number"
-                                    name="kapasitas"
-                                    value={formData.kapasitas}
-                                    onChange={handleChange}
-                                    placeholder="Contoh: 32"
-                                    className="w-full pl-4 pr-12 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                    required
-                                    min="1"
-                                />
-                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">Kursi</span>
-                            </div>
-                        </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Nama Tipe Bus <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="tipe"
+                            value={formData.tipe}
+                            onChange={handleChange}
+                            placeholder="Contoh: Ekonomi, Bisnis, Super Executive"
+                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            required
+                        />
                     </div>
                 </div>
 
@@ -286,7 +262,7 @@ export default function BusForm({
             <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-3">
                 <button
                     type="button"
-                    onClick={() => navigate('/mitra/bus')}
+                    onClick={() => navigate('/mitra/jenis-kendaraan')}
                     className="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
                 >
                     Batal

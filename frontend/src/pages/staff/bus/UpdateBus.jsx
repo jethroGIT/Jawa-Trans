@@ -70,6 +70,7 @@ export default function EditBus() {
                 idTipe: formData.idTipe,
                 plat_nomor: formData.plat_nomor,
                 kode_bus: formData.kode_bus,
+                kapasitas: formData.kapasitas,
                 status: formData.status
             };
 

@@ -18,9 +18,10 @@ export default function DetailJadwalPenumpang() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
     const [jadwal, setJadwal] = useState(null);
-    const [reservations, setReservations] = useState([]);
-    const [selectedReservation, setSelectedReservation] = useState(null);
+    const [penumpangList, setPenumpangList] = useState([]);
+    const [selectedPemesan, setSelectedPemesan] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPemesanModalOpen, setIsPemesanModalOpen] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -32,8 +33,8 @@ export default function DetailJadwalPenumpang() {
                     setJadwal(data.jadwal);
                 }
 
-                if (data.reservasi) {
-                    setReservations(data.reservasi);
+                if (data.reservasi_detail) {
+                    setPenumpangList(data.reservasi_detail);
                 }
 
             } catch (error) {
@@ -50,14 +51,19 @@ export default function DetailJadwalPenumpang() {
         }
     }, [id, navigate]);
 
-    const handleViewPassengers = (reservation) => {
-        setSelectedReservation(reservation);
-        setIsModalOpen(true);
+    const handleViewPassengers = (penumpang) => {
+        setSelectedPemesan(penumpang.reservasi?.customer || null);
+        setIsPemesanModalOpen(true);
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setSelectedReservation(null);
+        setSelectedPemesan(null);
+    };
+
+    const closePemesanModal = () => {
+        setIsPemesanModalOpen(false);
+        setSelectedPemesan(null);
     };
 
     const formatDate = (dateString) => {
@@ -77,29 +83,32 @@ export default function DetailJadwalPenumpang() {
     };
 
 
-    const getStatusBadge = (status) => {
-        const styles = {
-            paid: 'bg-green-100 text-green-800 border-green-200',
-            pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-            cancelled: 'bg-red-100 text-red-800 border-red-200',
-            failed: 'bg-red-100 text-red-800 border-red-200'
+    const getStatusBadge = (idReservasi) => {
+        // Find reservasi status based on idReservasi
+        const reservasi = penumpangList.find(p => p.idReservasi === idReservasi)?.reservasi;
+        const status = reservasi?.status;
+        
+        const statusMap = {
+            0: { label: 'PENDING', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+            1: { label: 'PAID', color: 'bg-green-100 text-green-800 border-green-200' },
+            2: { label: 'EXPIRED', color: 'bg-red-100 text-red-800 border-red-200' },
+            3: { label: 'FAILED', color: 'bg-red-100 text-red-800 border-red-200' }
         };
 
-        const label = status ? status.toUpperCase() : 'UNKNOWN';
-        const style = styles[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+        const statusInfo = statusMap[status] || { label: 'UNKNOWN', color: 'bg-gray-100 text-gray-800 border-gray-200' };
 
-        return `<span class="px-2.5 py-0.5 rounded-full text-xs font-medium border ${style}">${label}</span>`;
+        return `<span class="px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusInfo.color}">${statusInfo.label}</span>`;
     };
 
     // Component for Action Buttons inside React Root
-    const ActionButtons = ({ reservation }) => (
+    const ActionButtons = ({ penumpang }) => (
         <div className="flex items-center justify-center">
             <button
-                onClick={() => handleViewPassengers(reservation)}
+                onClick={() => handleViewPassengers(penumpang)}
                 className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg transition-all bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:shadow-md mx-auto"
             >
-                <Users className="w-4 h-4" />
-                <span className="text-xs font-medium">Lihat Penumpang</span>
+                <User className="w-4 h-4" />
+                <span className="text-xs font-medium">Lihat Pemesan</span>
             </button>
         </div>
     );
@@ -111,30 +120,25 @@ export default function DetailJadwalPenumpang() {
             render: (data, type, row, meta) => meta.row + 1
         },
         {
-            data: 'user.nama',
-            title: 'Nama Pemesan',
-            render: (data) => `<div class="font-medium text-slate-800">${data || 'Non-Member'}</div>`
+            data: 'namaPenumpang',
+            title: 'Nama Penumpang',
+            render: (data) => `<div class="font-medium text-slate-800">${data || '-'}</div>`
         },
         {
-            data: 'user.telephone',
-            title: 'Kontak',
-            render: (data) => data || '-'
-        },
-        {
-            data: 'penumpang',
-            title: 'Jumlah Kursi',
+            data: 'noKursi',
+            title: 'Nomor Kursi',
             className: 'text-center',
-            render: (data) => `<span class="font-bold text-blue-600">${data}</span>`
+            render: (data) => `<span class="font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">${data || '-'}</span>`
         },
         {
-            data: 'totalHarga',
-            title: 'Total Harga',
-            render: (data) => `Rp ${parseInt(data).toLocaleString('id-ID')}`
+            data: 'reservasi.customer.nama',
+            title: 'Pemesan',
+            render: (data) => `<div class="font-medium text-slate-800 cursor-pointer hover:text-blue-600 transition">${data || 'Non-Member'}</div>`
         },
         {
-            data: 'status',
+            data: 'reservasi.status',
             title: 'Status',
-            render: (data) => getStatusBadge(data)
+            render: (data, type, row) => getStatusBadge(row.idReservasi)
         },
         {
             data: null,
@@ -146,7 +150,7 @@ export default function DetailJadwalPenumpang() {
     ];
 
     // Total Seats Sold Calculation
-    const totalSeatsSold = reservations.reduce((acc, curr) => acc + (curr.status === 'paid' ? curr.penumpang : 0), 0);
+    const totalSeatsSold = penumpangList.filter(p => p.reservasi?.status === 1).length;
 
     if (isLoading) {
         return (
@@ -179,20 +183,20 @@ export default function DetailJadwalPenumpang() {
                 {/* Info Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Route Info */}
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg shadow-blue-200 flex flex-col justify-center items-center h-full">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                <Bus className="w-6 h-6" />
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-7 text-white shadow-lg shadow-blue-200 flex flex-col justify-center items-center h-full">
+                        <div className="flex items-center gap-3 mb-7">
+                            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                                <Bus className="w-8 h-8" />
                             </div>
                             <div>
-                                <p className="text-blue-100 text-xs font-medium uppercase tracking-wider">Armada Bus</p>
-                                <h3 className="font-bold text-lg">{jadwal?.bus?.kode_bus || '-'}</h3>
+                                <p className="text-blue-100 text-sm font-medium uppercase tracking-wider">Armada Bus</p>
+                                <h3 className="font-bold text-xl">{jadwal?.bus?.kode_bus || '-'}</h3>
                             </div>
                         </div>
 
                         <div className="space-y-4 relative">
                             {/* Connector Line */}
-                            <div className="absolute left-[11px] top-3 bottom-0 w-0.5 bg-blue-400/50 h-16"></div>
+                            <div className="absolute left-3 top-7 w-0.5 bg-blue-400/50 h-20"></div>
 
                             <div className="flex gap-4 relative z-10">
                                 <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center shrink-0">
@@ -238,9 +242,9 @@ export default function DetailJadwalPenumpang() {
                                         <span className="text-xs font-semibold uppercase tracking-wider">Ketersediaan Kursi</span>
                                     </div>
                                     <p className="font-medium text-slate-800 text-lg">
-                                        <span className="text-green-600 font-bold">{jadwal?.kursiTersedia || 0}</span>
+                                        <span className="text-green-600 font-bold">{(jadwal?.bus?.kapasitas || 0) - totalSeatsSold}</span>
                                         <span className="text-slate-400 mx-1">/</span>
-                                        {jadwal?.bus?.tipe_bus?.kapasitas || 0}
+                                        {jadwal?.bus?.kapasitas || 0}
                                         <span className="text-sm text-slate-500 font-normal ml-1">Kursi</span>
                                     </p>
                                 </div>
@@ -265,24 +269,24 @@ export default function DetailJadwalPenumpang() {
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-3">
-                                    <div className="flex justify-between items-center border-b border-slate-50 pb-2">
-                                        <span className="text-slate-500 text-sm">Operator</span>
-                                        <span className="font-medium text-slate-800">{jadwal?.bus?.tipe_bus?.mitra?.nama || '-'}</span>
+                                    <div className="flex gap-4 items-center border-b border-slate-50 pb-2">
+                                        <span className="text-slate-500 text-sm w-32">Operator</span>
+                                        <span className="font-medium text-slate-800">{jadwal?.bus?.jenis_kendaraan?.mitra?.nama || '-'}</span>
                                     </div>
-                                    <div className="flex justify-between items-center border-b border-slate-50 pb-2">
-                                        <span className="text-slate-500 text-sm">Kelas Bus</span>
-                                        <span className="font-medium text-slate-800">{jadwal?.bus?.tipe_bus?.tipe || '-'}</span>
+                                    <div className="flex gap-4 items-center border-b border-slate-50 pb-2">
+                                        <span className="text-slate-500 text-sm w-32">Jenis Kendaraan</span>
+                                        <span className="font-medium text-slate-800">{jadwal?.bus?.jenis_kendaraan?.tipe || '-'}</span>
                                     </div>
-                                    <div className="flex justify-between items-center border-b border-slate-50 pb-2">
-                                        <span className="text-slate-500 text-sm">Plat Nomor</span>
+                                    <div className="flex gap-4 items-center border-b border-slate-50 pb-2">
+                                        <span className="text-slate-500 text-sm w-32">Plat Nomor</span>
                                         <span className="font-medium text-slate-800">{jadwal?.bus?.plat_nomor || '-'}</span>
                                     </div>
                                 </div>
                                 <div>
                                     <p className="text-slate-500 text-sm mb-3">Fasilitas:</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {jadwal?.bus?.tipe_bus?.fasilitas && jadwal.bus.tipe_bus.fasilitas.length > 0 ? (
-                                            jadwal.bus.tipe_bus.fasilitas.map((fasilitas, idx) => (
+                                        {jadwal?.bus?.jenis_kendaraan?.fasilitas && jadwal.bus.jenis_kendaraan.fasilitas.length > 0 ? (
+                                            jadwal.bus.jenis_kendaraan.fasilitas.map((fasilitas, idx) => (
                                                 <span key={idx} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-100">
                                                     <CheckCircle2 className="w-3 h-3" />
                                                     {fasilitas.nama}
@@ -302,17 +306,17 @@ export default function DetailJadwalPenumpang() {
                 {/* Reservations List */}
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-slate-100">
-                        <h2 className="text-lg font-bold text-slate-800">Daftar Pemesan</h2>
+                        <h2 className="text-lg font-bold text-slate-800">Daftar Penumpang</h2>
                     </div>
                     <div className="p-0">
-                        {reservations.length === 0 ? (
+                        {penumpangList.length === 0 ? (
                             <div className="p-12 text-center text-slate-500">
                                 <User className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-                                <p>Belum ada pemesanan untuk jadwal ini.</p>
+                                <p>Belum ada penumpang untuk jadwal ini.</p>
                             </div>
                         ) : (
                             <DataTable
-                                data={reservations}
+                                data={penumpangList}
                                 columns={columns}
                                 className="display w-full text-left border-collapse"
                                 options={{
@@ -325,9 +329,9 @@ export default function DetailJadwalPenumpang() {
                                     dom: 'tr<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4"lip>',
                                     language: {
                                         search: "",
-                                        searchPlaceholder: "Cari pemesan...",
+                                        searchPlaceholder: "Cari penumpang...",
                                         lengthMenu: "_MENU_",
-                                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ pemesan",
+                                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ penumpang",
                                         infoEmpty: "Tidak ada data",
                                         infoFiltered: "(disaring dari _MAX_ total data)",
                                         zeroRecords: "Pencarian tidak ditemukan",
@@ -340,7 +344,7 @@ export default function DetailJadwalPenumpang() {
                                         const actionCell = row.querySelector('.action-cell');
                                         if (actionCell) {
                                             const root = createRoot(actionCell);
-                                            root.render(<ActionButtons reservation={data} />);
+                                            root.render(<ActionButtons penumpang={data} />);
                                         }
                                     }
                                 }}
@@ -348,10 +352,9 @@ export default function DetailJadwalPenumpang() {
                                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
                                     <tr>
                                         <th className="px-6 py-4 font-semibold text-slate-600 w-16">No</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600">Nama Pemesan</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600">Kontak</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600 text-center">Jumlah Kursi</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600">Total Harga</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Nama Penumpang</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600 text-center">Nomor Kursi</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Pemesan</th>
                                         <th className="px-6 py-4 font-semibold text-slate-600">Status</th>
                                         <th className="px-6 py-4 font-semibold text-slate-600 text-center">Aksi</th>
                                     </tr>
@@ -361,6 +364,75 @@ export default function DetailJadwalPenumpang() {
                     </div>
                 </div>
             </div>
+
+            {/* Pemesan Modal */}
+            {
+                isPemesanModalOpen && selectedPemesan && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-slide-up">
+                            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800">Identitas Pemesan</h3>
+                                    <p className="text-sm text-slate-500">Detail informasi pemesan</p>
+                                </div>
+                                <button onClick={closePemesanModal} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500 hover:text-slate-800">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-4">
+                                {/* Name Card */}
+                                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                                    <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider mb-1">Nama Lengkap</p>
+                                    <p className="text-lg font-bold text-slate-800">{selectedPemesan.nama || '-'}</p>
+                                </div>
+
+                                {/* Contact Info */}
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-3 pb-3 border-b border-slate-100">
+                                        <div className="p-2 bg-blue-50 rounded-lg mt-0.5">
+                                            <CreditCard className="w-4 h-4 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs text-slate-500 font-semibold">Email</p>
+                                            <p className="font-medium text-slate-800">{selectedPemesan.email || '-'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3 pb-3 border-b border-slate-100">
+                                        <div className="p-2 bg-blue-50 rounded-lg mt-0.5">
+                                            <User className="w-4 h-4 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs text-slate-500 font-semibold">Nomor Telepon</p>
+                                            <p className="font-medium text-slate-800">{selectedPemesan.telephone || '-'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                        <div className="p-2 bg-blue-50 rounded-lg mt-0.5">
+                                            <MapPin className="w-4 h-4 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs text-slate-500 font-semibold">Alamat</p>
+                                            <p className="font-medium text-slate-800">{selectedPemesan.alamat || '-'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+                                <button
+                                    onClick={closePemesanModal}
+                                    className="px-4 py-2 bg-white border border-slate-300 rounded-xl text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* Passenger Modal */}
             {

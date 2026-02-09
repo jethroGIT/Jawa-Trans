@@ -20,24 +20,9 @@ export default function Sidebar() {
     // Menu khusus untuk Staff Mitra
     const menuItems = [
         {
-            name: 'Manajemen Bus',
-            path: '/mitra/bus',
-            icon: Bus
-        },
-        {
-            name: 'Tipe Bus',
-            path: '/mitra/tipe-bus',
-            icon: Layers
-        },
-        {
             name: 'Jadwal',
             path: '/mitra/jadwal',
             icon: CalendarClock
-        },
-        {
-            name: 'Daftar Penumpang',
-            path: '/mitra/daftar-penumpang',
-            icon: Users
         },
         {
             name: 'Data Terminal',
@@ -45,9 +30,19 @@ export default function Sidebar() {
             icon: MapPin
         },
         {
-            name: 'Profil Mitra',
-            path: '/mitra/profil',
-            icon: Building2
+            name: 'Daftar Penumpang',
+            path: '/mitra/daftar-penumpang',
+            icon: Users
+        },
+        {
+            name: 'Tipe Bus',
+            path: '/mitra/jenis-kendaraan',
+            icon: Layers
+        },
+        {
+            name: 'Manajemen Bus',
+            path: '/mitra/bus',
+            icon: Bus
         },
     ];
 
@@ -65,7 +60,7 @@ export default function Sidebar() {
             if (result.isConfirmed) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                navigate('/login');
+                navigate('/employee/login');
             }
         });
     };

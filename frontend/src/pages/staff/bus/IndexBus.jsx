@@ -31,13 +31,26 @@ export default function IndexBus() {
                 const data = await busService.fetchAllBus();
 
                 // Transform data to match table format
-                const transformedData = data.map(bus => ({
-                    idBus: bus.idBus,
-                    platNomor: bus.plat_nomor || '-',
-                    kodeBus: bus.kode_bus || '-',
-                    tipe: bus.tipe_bus?.tipe || '-',
-                    status: bus.status
-                }));
+                const transformedData = data.map(bus => {
+                    // Convert tinyint status to string for display
+                    let statusString = 'tidak aktif'; // default
+                    if (typeof bus.status === 'number') {
+                        if (bus.status === 1) statusString = 'aktif';
+                        else if (bus.status === 0) statusString = 'tidak aktif';
+                        else if (bus.status === 2) statusString = 'perbaikan';
+                    } else if (typeof bus.status === 'string') {
+                        // Handle legacy string values
+                        statusString = bus.status;
+                    }
+
+                    return {
+                        idBus: bus.idBus,
+                        platNomor: bus.plat_nomor || '-',
+                        kodeBus: bus.kode_bus || '-',
+                        tipe: bus.jenis_kendaraan?.tipe || '-',
+                        status: statusString
+                    };
+                });
 
                 setBuses(transformedData);
             } catch (error) {
@@ -100,7 +113,7 @@ export default function IndexBus() {
         },
         {
             data: 'tipe',
-            title: 'Tipe Bus',
+            title: 'Jenis Kendaraan',
             className: 'text-slate-600'
         },
         {
@@ -164,7 +177,7 @@ export default function IndexBus() {
                             </div>
 
                             <div className="w-full md:w-48 group">
-                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Tipe Bus</label>
+                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Jenis Kendaraan</label>
                                 <div className="relative">
                                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
                                         <BusFront className="w-4 h-4" />
@@ -247,7 +260,7 @@ export default function IndexBus() {
                                     <tr>
                                         <th className="px-6 py-4 font-semibold text-slate-600">Plat Nomor</th>
                                         <th className="px-6 py-4 font-semibold text-slate-600">Kode Bus</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-600">Tipe Bus</th>
+                                        <th className="px-6 py-4 font-semibold text-slate-600">Jenis Kendaraan</th>
                                         <th className="px-6 py-4 font-semibold text-slate-600 text-center">Status</th>
                                         <th className="px-6 py-4 font-semibold text-slate-600 text-center">Aksi</th>
                                     </tr>

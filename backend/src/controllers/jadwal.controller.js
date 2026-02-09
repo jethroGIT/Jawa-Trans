@@ -96,10 +96,27 @@ const destroy = async (req, res) => {
     };
 };
 
+const getJadwalWithReservasi = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const data = await jadwalService.getJadwalWithReservasi(req, id);
+        return res.status(200).json({
+            success: true,
+            data: data
+        });
+    } catch (error) {
+        return res.status(404).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
     getAllJadwal,
     getJadwalByMitra,
     show,
+    getJadwalWithReservasi,
     store,
     update,
     destroy

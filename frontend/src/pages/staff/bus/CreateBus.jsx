@@ -29,7 +29,8 @@ export default function CreateBus() {
             const payload = {
                 plat_nomor: formData.plat_nomor,
                 kode_bus: formData.kode_bus,
-                idTipe: formData.idTipe
+                idTipe: formData.idTipe,
+                kapasitas: formData.kapasitas
             };
 
             const result = await busService.fetchCreateBus(payload);

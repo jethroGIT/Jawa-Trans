@@ -35,7 +35,7 @@ export default function CreateTipeBus() {
         setIsLoading(true);
         try {
             const user = authService.getUser();
-            
+
             // Siapkan payload
             const payload = {
                 tipe: formData.tipe,
@@ -48,11 +48,11 @@ export default function CreateTipeBus() {
 
             Swal.fire({
                 title: 'Berhasil!',
-                text: 'Tipe bus baru berhasil ditambahkan.',
+                text: 'Jenis kendaraan baru berhasil ditambahkan.',
                 icon: 'success',
                 confirmButtonColor: '#2563EB'
             }).then(() => {
-                navigate('/mitra/tipe-bus');
+                navigate('/mitra/jenis-kendaraan');
             });
 
         } catch (error) {
@@ -72,13 +72,13 @@ export default function CreateTipeBus() {
             <div className="space-y-6 max-w-5xl mx-auto">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-800">Tambah Tipe Bus Baru</h1>
-                        <p className="text-slate-500 text-sm mt-1">Isi formulir di bawah untuk membuat tipe bus baru</p>
+                        <h1 className="text-2xl font-bold text-slate-800">Tambah Jenis Kendaraan Baru</h1>
+                        <p className="text-slate-500 text-sm mt-1">Isi formulir di bawah untuk membuat jenis kendaraan baru</p>
                     </div>
                 </div>
 
-                <TipeBusForm 
-                    initialData={{}} 
+                <TipeBusForm
+                    initialData={{}}
                     onSubmit={handleCreateSubmit}
                     isLoading={isLoading}
                     fasilitasOptions={fasilitasOptions}

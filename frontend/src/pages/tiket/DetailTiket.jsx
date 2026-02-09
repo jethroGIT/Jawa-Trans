@@ -59,38 +59,51 @@ export default function DetailTiket() {
         );
     }
 
+    // Extract jadwal dari reservasi_detail (struktur: reservasi_detail[0].jadwal)
+    const jadwal = dataTiket.reservasi_detail?.[0]?.jadwal;
+    
+    if (!jadwal) {
+        return (
+            <CustomerLayout>
+                <div className="min-h-screen bg-blue-50 flex items-center justify-center pt-20">
+                    <p className="text-center text-lg">Data jadwal tidak ditemukan.</p>
+                </div>
+            </CustomerLayout>
+        );
+    }
+
     const reservasiData = {
-        idJadwal: dataTiket.jadwal.idJadwal,
-        mitra: dataTiket.jadwal.bus.tipe_bus?.mitra?.nama || '-',
-        tlpMitra: dataTiket.jadwal.bus.tipe_bus?.mitra?.telephone || '-',
-        emailMitra: dataTiket.jadwal.bus.tipe_bus?.mitra?.email || '-',
-        terminalAsal: dataTiket.jadwal.terminalNaik.nama,
-        terminalTujuan: dataTiket.jadwal.terminalTurun.nama,
-        tanggal: new Date(dataTiket.jadwal.tanggal_keberangkatan).toLocaleDateString('id-ID', {
+        idJadwal: jadwal?.idJadwal || '-',
+        mitra: jadwal?.bus?.jenis_kendaraan?.mitra?.nama || '-',
+        tlpMitra: jadwal?.bus?.jenis_kendaraan?.mitra?.telephone || '-',
+        emailMitra: jadwal?.bus?.jenis_kendaraan?.mitra?.email || '-',
+        terminalAsal: jadwal?.terminalNaik?.nama || '-',
+        terminalTujuan: jadwal?.terminalTurun?.nama || '-',
+        tanggal: new Date(jadwal?.tanggal_keberangkatan).toLocaleDateString('id-ID', {
             day: 'numeric',
             month: 'long',
             year: 'numeric'
         }),
-        hari: new Date(dataTiket.jadwal.tanggal_keberangkatan).toLocaleDateString('id-ID', {
+        hari: new Date(jadwal?.tanggal_keberangkatan).toLocaleDateString('id-ID', {
             weekday: 'long'
         }),
-        jamKeberangkatan: new Date(dataTiket.jadwal.jam_keberangkatan).toLocaleTimeString('id-ID', {
+        jamKeberangkatan: new Date(jadwal?.jam_keberangkatan).toLocaleTimeString('id-ID', {
             hour: '2-digit',
             minute: '2-digit'
         }),
-        idUser: dataTiket.user.idUser,
-        namaPemesan: dataTiket.user.nama,
-        emailPemesan: dataTiket.user.email,
-        teleponPemesan: dataTiket.user.telephone,
+        idUser: dataTiket.idUser || '-',
+        namaPemesan: dataTiket.customer?.nama || '-',
+        emailPemesan: dataTiket.customer?.email || '-',
+        teleponPemesan: dataTiket.customer?.telephone || '-',
         penumpang: dataTiket.reservasi_detail.map(detail => ({
             nama: detail.namaPenumpang,
-            kursi: detail.kursi?.noKursi || detail.idKursi
+            kursi: String(detail.noKursi)
         })),
         namaPenumpang: dataTiket.reservasi_detail.map(detail => detail.namaPenumpang),
-        kursi: dataTiket.reservasi_detail.map(detail => detail.kursi?.noKursi || detail.idKursi),
-        hargaTiket: dataTiket.jadwal.harga,
-        jumlahPenumpang: dataTiket.penumpang,
-        totalHarga: dataTiket.jadwal.harga * dataTiket.penumpang
+        kursi: dataTiket.reservasi_detail.map(detail => String(detail.noKursi)),
+        hargaTiket: jadwal?.harga || 0,
+        jumlahPenumpang: dataTiket.reservasi_detail.length,
+        totalHarga: (jadwal?.harga || 0) * dataTiket.reservasi_detail.length
     };
 
     return (

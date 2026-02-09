@@ -28,10 +28,12 @@ const authorize = (allowedRoles) => {
             });
         }
 
-        console.log(allowedRoles);
-        // versi menggunakan idrole
-        // if (!allowedRoles.includes(req.user.idRole)) {
+        // If the authenticated user is a superadmin, allow all actions
+        if (req.user && (req.user.role === 'superadmin' || req.user.userType === 'superadmin')) {
+            return next();
+        }
 
+        console.log(allowedRoles);
         if (!allowedRoles.includes(req.user.role)) {
             return res.status(403).json({ 
                 message: 'Forbidden: insufficient rights' 

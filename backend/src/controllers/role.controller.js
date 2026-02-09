@@ -8,10 +8,10 @@ const getAllRoles = async (req, res) => {
             data: role
         });
     } catch (error) {
-        return res.status(500), json({
+        return res.status(500).json({
             success: false,
             message: error.message
-        })
+        });
     }
 };
 
@@ -33,7 +33,8 @@ const show = async (req, res) => {
 
 const store = async (req, res) => {
     try {
-        const role = await roleService.createRole(req.body.nama);
+        const { nama, guard_name } = req.body;
+        const role = await roleService.createRole(nama, guard_name);
         return res.status(201).json({
             success: true,
             message: 'Role berhasil ditambahkan.',
@@ -49,9 +50,9 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
     const { id } = req.params;
-    const { nama } = req.body
+    const { nama, guard_name } = req.body;
     try {
-        const updateRole = await roleService.updateRole(id, nama);
+        const updateRole = await roleService.updateRole(id, nama, guard_name);
         return res.status(200).json({
             success: true,
             message: 'Role berhasil diperbarui!',
@@ -61,7 +62,7 @@ const update = async (req, res) => {
         return res.status(400).json({
             success: false,
             message: error.message
-        })
+        });
     };
 };
 
@@ -76,9 +77,9 @@ const destroy = async (req, res) => {
         });
     } catch (error) {
         return res.status(400).json({
-            success: true,
-            message: error.message,
-        })
+            success: false,
+            message: error.message
+        });
     };
 };
 
